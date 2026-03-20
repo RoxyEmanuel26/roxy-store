@@ -217,7 +217,7 @@ export default async function HomePage() {
                     </FadeIn>
                     <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
                         {[
-                            { icon: '✨', title: 'Produk Handmade', desc: 'Setiap produk dibuat dengan penuh kasih sayang dan ketelitian tinggi' },
+                            { icon: '✨', title: 'Produk Terpercaya', desc: 'Setiap produk diolah oleh perusahaan terpercaya' },
                             { icon: '💝', title: 'Kualitas Premium', desc: 'Material terbaik dipilih untuk kenyamanan dan ketahanan maksimal' },
                             { icon: '🚀', title: 'Pengiriman Cepat', desc: 'Tersedia di Shopee dan Tokopedia untuk kemudahan berbelanja' },
                         ].map((item) => (

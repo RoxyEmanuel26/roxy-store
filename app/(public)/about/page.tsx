@@ -6,7 +6,7 @@ import { generatePageMetadata } from '@/lib/metadata'
 
 export const metadata = generatePageMetadata({
     title: 'Tentang Kami',
-    description: 'Kenali lebih dekat Roxy Store, toko aksesori wanita favorit yang memproduksi produk handmade dengan penuh cinta.',
+    description: 'Kenali lebih dekat Roxy Store, tempat mencari barang berkualitas dan terpercaya.',
     path: '/about',
 })
 
@@ -34,7 +34,7 @@ export default async function AboutPage() {
             <section className="py-16 bg-white dark:bg-dark-bg">
                 <div className="container mx-auto px-4 max-w-3xl">
                     <div className="prose dark:prose-invert prose-brand max-w-none text-brand-text dark:text-dark-text leading-relaxed whitespace-pre-wrap">
-                        {settings.about_text || 'Roxy Store adalah toko aksesori wanita yang menyajikan koleksi produk handmade berkualitas tinggi.'}
+                        {settings.about_text || 'Roxy Store adalah tempat mencari barang berkualitas dan terpercaya.'}
                     </div>
                 </div>
             </section>
@@ -45,7 +45,7 @@ export default async function AboutPage() {
                     <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text mb-4">Nilai Kami</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
                         {[
-                            { icon: '✨', title: 'Produk Handmade', desc: 'Setiap produk dibuat dengan penuh kasih sayang dan ketelitian tinggi' },
+                            { icon: '✨', title: 'Produk Terpercaya', desc: 'Setiap produk diolah oleh perusahaan terpercaya' },
                             { icon: '💝', title: 'Kualitas Premium', desc: 'Material terbaik dipilih untuk kenyamanan dan ketahanan maksimal' },
                             { icon: '🚀', title: 'Pengiriman Cepat', desc: 'Tersedia di Shopee dan Tokopedia untuk kemudahan berbelanja' },
                         ].map((item) => (
