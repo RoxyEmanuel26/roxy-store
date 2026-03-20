@@ -55,13 +55,13 @@ export default async function HomePage() {
                     <div className="max-w-2xl">
                         <FadeIn delay={0}>
                             <span className="inline-flex items-center gap-2 bg-brand-primary/10 text-brand-primary text-sm font-medium px-4 py-2 rounded-full mb-6">
-                                ✨ Toko Aksesori Wanita
+                                🛍️ Rekomendasi Produk Shopee Terpercaya
                             </span>
                         </FadeIn>
 
                         <FadeIn delay={0.1}>
                             <h1 className="text-4xl md:text-6xl font-bold text-brand-text dark:text-dark-text leading-tight mb-4">
-                                {settings.hero_title || 'Koleksi Aksesori Wanita Terbaik'}
+                                {settings.hero_title || 'Produk terlaris Shopee harga terbaik'}
                             </h1>
                         </FadeIn>
 
@@ -125,7 +125,7 @@ export default async function HomePage() {
                                 <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text">
                                     Belanja Berdasarkan Kategori
                                 </h2>
-                                <p className="text-brand-muted dark:text-dark-muted mt-2">Temukan aksesori favoritmu</p>
+                                <p className="text-brand-muted dark:text-dark-muted mt-2">Dikurasi dari Shopee</p>
                             </div>
                         </FadeIn>
                         <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -146,7 +146,7 @@ export default async function HomePage() {
                         <div className="flex justify-between items-end mb-10">
                             <div>
                                 <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text">Produk Pilihan</h2>
-                                <p className="text-brand-muted dark:text-dark-muted mt-1">Produk terpopuler dari koleksi kami</p>
+                                <p className="text-brand-muted dark:text-dark-muted mt-1">🔥 Produk Pilihan Terlaris Shopee</p>
                             </div>
                             <Link href="/products">
                                 <Button variant="outline" className="border-brand-primary text-brand-primary hidden sm:flex transition-none">
@@ -183,7 +183,7 @@ export default async function HomePage() {
                         <div className="flex justify-between items-end mb-10">
                             <div>
                                 <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text">Baru Masuk 🆕</h2>
-                                <p className="text-brand-muted dark:text-dark-muted mt-1">Koleksi terbaru yang baru saja hadir</p>
+                                <p className="text-brand-muted dark:text-dark-muted mt-1">🆕 Baru Ditambahkan & dikurasi</p>
                             </div>
                             <Link href="/products?sort=newest">
                                 <Button variant="outline" className="border-brand-primary text-brand-primary hidden sm:flex transition-none">
@@ -217,7 +217,7 @@ export default async function HomePage() {
                     </FadeIn>
                     <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
                         {[
-                            { icon: '✨', title: 'Produk Terpercaya', desc: 'Setiap produk diolah oleh perusahaan terpercaya' },
+                            { icon: '✨', title: 'Produk Terpercaya', desc: 'Setiap produk yang diolah sudah diseleksi' },
                             { icon: '💝', title: 'Kualitas Premium', desc: 'Material terbaik dipilih untuk kenyamanan dan ketahanan maksimal' },
                             { icon: '🚀', title: 'Pengiriman Cepat', desc: 'Tersedia di Shopee dan Tokopedia untuk kemudahan berbelanja' },
                         ].map((item) => (

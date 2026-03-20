@@ -180,7 +180,7 @@ export default function AdminSettingsPage() {
                                     <Textarea
                                         id="about_text"
                                         rows={3}
-                                        placeholder="Toko aksesori wanita premium dengan koleksi terbaik..."
+                                        placeholder="Produk premium dengan pilihan terbaik..."
                                         className="resize-y"
                                         {...register('about_text')}
                                     />
@@ -199,7 +199,7 @@ export default function AdminSettingsPage() {
                                     <ImageUpload
                                         value={logo_url || ''}
                                         onChange={(url) => setValue('logo_url', url, { shouldDirty: true })}
-                                        folder="Roxy-lay/settings"
+                                        folder="Roxy-Store/settings"
                                         aspectRatio="1:1"
                                     />
                                 </div>
@@ -277,7 +277,7 @@ export default function AdminSettingsPage() {
                                     <Label htmlFor="wa_number">Nomor WhatsApp (CS)</Label>
                                     <Input
                                         id="wa_number"
-                                        placeholder="6281234567890"
+                                        placeholder="6289610528894"
                                         {...register('wa_number')}
                                     />
                                     {errors.wa_number && (
