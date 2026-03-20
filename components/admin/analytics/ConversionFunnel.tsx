@@ -62,7 +62,7 @@ export function ConversionFunnel({ views, shopeeClicks, tokopediaClicks, waClick
                     setidaknya satu tombol beli/kontak.
                 </p>
                 <p className="text-sm text-brand-muted mt-2 leading-relaxed">
-                    💡 <strong>Tips:</strong> Konversi yang baik untuk toko aksesori handmade: 2-5%. Jika di bawah ini, pertimbangkan untuk meningkatkan kualitas foto produk.
+                    💡 <strong>Tips:</strong> Konversi yang baik untuk Roxy Store: 2-5%. Jika di bawah ini, pertimbangkan untuk meningkatkan kualitas foto produk.
                 </p>
             </div>
         </div >

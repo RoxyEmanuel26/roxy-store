@@ -109,7 +109,7 @@ export default async function HomePage() {
                         <FadeIn delay={0.2}>
                             <div>
                                 <p className="text-2xl font-bold">100%</p>
-                                <p className="text-sm opacity-80">Handmade</p>
+                                <p className="text-sm opacity-80">Terpercaya</p>
                             </div>
                         </FadeIn>
                     </div>
