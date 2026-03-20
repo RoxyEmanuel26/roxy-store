@@ -32,6 +32,8 @@ interface Category {
     id: string
     name: string
     slug: string
+    description?: string | null
+    icon?: string | null
     createdAt: string
     _count: { products: number }
 }
@@ -44,6 +46,8 @@ export default function AdminCategoriesPage() {
     const [dialogOpen, setDialogOpen] = useState(false)
     const [editingCategory, setEditingCategory] = useState<Category | null>(null)
     const [categoryName, setCategoryName] = useState('')
+    const [categoryDescription, setCategoryDescription] = useState('')
+    const [categoryIcon, setCategoryIcon] = useState('')
     const [saving, setSaving] = useState(false)
 
     // Delete dialog
@@ -86,7 +90,11 @@ export default function AdminCategoriesPage() {
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: categoryName.trim() }),
+                body: JSON.stringify({
+                    name: categoryName.trim(),
+                    description: categoryDescription.trim() || '',
+                    icon: categoryIcon.trim() || '',
+                }),
             })
 
             const data = await res.json()
@@ -104,6 +112,8 @@ export default function AdminCategoriesPage() {
 
             setDialogOpen(false)
             setCategoryName('')
+            setCategoryDescription('')
+            setCategoryIcon('')
             setEditingCategory(null)
             fetchCategories()
         } catch {
@@ -142,12 +152,16 @@ export default function AdminCategoriesPage() {
     const openEdit = (cat: Category) => {
         setEditingCategory(cat)
         setCategoryName(cat.name)
+        setCategoryDescription(cat.description || '')
+        setCategoryIcon(cat.icon || '')
         setDialogOpen(true)
     }
 
     const openAdd = () => {
         setEditingCategory(null)
         setCategoryName('')
+        setCategoryDescription('')
+        setCategoryIcon('')
         setDialogOpen(true)
     }
 
@@ -162,9 +176,19 @@ export default function AdminCategoriesPage() {
         {
             header: 'Nama Kategori',
             cell: (item) => (
-                <span className="font-medium text-brand-text dark:text-dark-text">
-                    {item.name}
-                </span>
+                <div className="flex items-center gap-2">
+                    {item.icon && <span className="text-xl">{item.icon}</span>}
+                    <div>
+                        <span className="font-medium text-brand-text dark:text-dark-text">
+                            {item.name}
+                        </span>
+                        {item.description && (
+                            <p className="text-xs text-brand-muted dark:text-dark-muted line-clamp-1 mt-0.5">
+                                {item.description}
+                            </p>
+                        )}
+                    </div>
+                </div>
             ),
         },
         {
@@ -248,7 +272,7 @@ export default function AdminCategoriesPage() {
                                 id="name"
                                 value={categoryName}
                                 onChange={(e) => setCategoryName(e.target.value)}
-                                placeholder="Contoh: Gantungan Kunci"
+                                placeholder="Contoh: Skincare & Kecantikan"
                                 autoFocus
                             />
                             {categoryName && (
@@ -259,6 +283,35 @@ export default function AdminCategoriesPage() {
                                     </code>
                                 </p>
                             )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="icon">Icon (Emoji)</Label>
+                            <Input
+                                id="icon"
+                                value={categoryIcon}
+                                onChange={(e) => setCategoryIcon(e.target.value)}
+                                placeholder="Contoh: 💄 👗 🏠 📱"
+                                className="text-xl"
+                            />
+                            <p className="text-xs text-brand-muted dark:text-dark-muted">
+                                Masukkan emoji sebagai icon kategori (opsional)
+                            </p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="description">Deskripsi</Label>
+                            <textarea
+                                id="description"
+                                value={categoryDescription}
+                                onChange={(e) => setCategoryDescription(e.target.value)}
+                                placeholder="Deskripsi singkat untuk kategori ini..."
+                                rows={3}
+                                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            />
+                            <p className="text-xs text-brand-muted dark:text-dark-muted">
+                                Opsional, maksimal 500 karakter
+                            </p>
                         </div>
                     </div>
                     <DialogFooter>

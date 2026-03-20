@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps) {
     if (!category) return { title: 'Kategori Tidak Ditemukan - Roxy Lay' }
     return generatePageMetadata({
         title: category.name,
-        description: `Koleksi produk kategori ${category.name} dari Roxy Lay. Temukan aksesori favoritmu sekarang!`,
+        description: category.description || `Koleksi produk kategori ${category.name} dari Roxy Lay. Temukan produk favoritmu sekarang!`,
         path: `/category/${slug}`,
     })
 }
@@ -94,6 +94,9 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-brand-text dark:text-dark-text">{category.name}</h1>
+                {category.description && (
+                    <p className="text-brand-muted dark:text-dark-muted mt-2">{category.description}</p>
+                )}
                 <p className="text-brand-muted dark:text-dark-muted mt-1">{total} produk ditemukan</p>
             </div>
 

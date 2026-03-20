@@ -18,12 +18,14 @@ model Admin {
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  slug      String    @unique
-  products  Product[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?   @db.Text
+  icon        String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Product {

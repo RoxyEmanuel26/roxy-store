@@ -49,6 +49,8 @@ export const CategorySchema = z.object({
         .max(50, 'Nama maksimal 50 karakter')
         .trim(),
     slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
+    description: z.string().max(500, 'Deskripsi maksimal 500 karakter').optional().or(z.literal('')),
+    icon: z.string().max(10, 'Icon terlalu panjang').optional().or(z.literal('')),
 })
 
 // Settings

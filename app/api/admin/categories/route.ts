@@ -57,7 +57,12 @@ export async function POST(request: NextRequest) {
     }
 
     const category = await prisma.category.create({
-        data: { name, slug },
+        data: {
+            name,
+            slug,
+            description: validation.data.description || null,
+            icon: validation.data.icon || null,
+        },
     })
 
     revalidateTag('categories', { expire: 0 })

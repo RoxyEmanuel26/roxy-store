@@ -49,7 +49,12 @@ export async function PUT(
 
     const category = await prisma.category.update({
         where: { id },
-        data: { name, slug },
+        data: {
+            name,
+            slug,
+            description: validation.data.description || null,
+            icon: validation.data.icon || null,
+        },
     })
 
     revalidateTag('categories', { expire: 0 })
