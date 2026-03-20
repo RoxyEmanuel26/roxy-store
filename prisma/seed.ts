@@ -206,13 +206,6 @@ async function main() {
             icon: '🍜',
         },
         {
-            name: 'Ibu & Bayi',
-            slug: 'ibu-bayi',
-            description:
-                'Perlengkapan bayi, mainan edukatif, dan produk ibu hamil terlaris di Shopee.',
-            icon: '👶',
-        },
-        {
             name: 'Olahraga',
             slug: 'olahraga',
             description:
