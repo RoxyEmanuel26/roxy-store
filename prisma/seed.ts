@@ -7,15 +7,18 @@ async function main() {
     // ───────────────────────────────────────────
     // ADMIN
     // ───────────────────────────────────────────
-    const passwordHash = await bcrypt.hash('RoxyLay@2026', 12)
+    // Gunakan password dari .env, atau fallback (TIDAK AMAN UNTUK PRODUKSI)
+    const initialEmail = process.env.ADMIN_INITIAL_EMAIL || 'admin@roxystore.com'
+    const initialPassword = process.env.ADMIN_INITIAL_PASSWORD || 'RoxyStore@2026'
+    const passwordHash = await bcrypt.hash(initialPassword, 12)
 
     await prisma.admin.upsert({
-        where: { email: 'admin@roxylay.com' },
+        where: { email: initialEmail },
         update: {},
         create: {
-            email: 'admin@roxylay.com',
+            email: initialEmail,
             passwordHash,
-            name: 'Roxy Emanuel',
+            name: 'Roxy Store Admin',
             role: 'admin',
         },
     })
@@ -245,8 +248,8 @@ async function main() {
     // ───────────────────────────────────────────
     console.log('✅ Seed Roxy Store Affiliate berhasil!')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log('📧 Email admin       : admin@roxylay.com')
-    console.log('🔑 Password          : RoxyLay@2026')
+    console.log(`📧 Email admin       : ${process.env.ADMIN_INITIAL_EMAIL || 'admin@roxystore.com'}`)
+    console.log(`🔑 Password          : ${process.env.ADMIN_INITIAL_PASSWORD ? '******** (dari .env)' : 'RoxyStore@2026'}`)
     console.log('🌐 Jenis website     : Shopee Affiliate')
     console.log('📦 Total kategori    :', categories.length)
     console.log('⚙️  Total settings    :', defaultSettings.length)
