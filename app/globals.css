@@ -130,7 +130,7 @@
 
 /* react-medium-image-zoom overrides */
 [data-rmiz-modal-overlay="visible"] {
-  background-color: rgba(28, 13, 24, 0.85) !important;
+  background-color: rgba(12, 26, 46, 0.85) !important;
 }
 
 /* Reduced motion accessibility */
