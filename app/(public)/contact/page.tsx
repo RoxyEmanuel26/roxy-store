@@ -5,7 +5,7 @@ import { generatePageMetadata } from '@/lib/metadata'
 
 export const metadata = generatePageMetadata({
     title: 'Kontak',
-    description: 'Punya pertanyaan atau ingin komplain? Hubungi Roxy Lay melalui WhatsApp untuk bantuan secepatnya.',
+    description: 'Punya pertanyaan atau ingin komplain? Hubungi Roxy Store melalui WhatsApp untuk bantuan secepatnya.',
     path: '/contact',
 })
 
@@ -40,7 +40,7 @@ export default async function ContactPage() {
                         </svg>
                         <h2 className="text-xl font-bold mb-2">Chat Langsung dengan Admin</h2>
                         <p className="text-white/80 text-sm mb-4">{formatWaNumber(settings.wa_number)}</p>
-                        <a href={`https://wa.me/${settings.wa_number}?text=${encodeURIComponent('Halo Roxy Lay!')}`} target="_blank" rel="noopener noreferrer">
+                        <a href={`https://wa.me/${settings.wa_number}?text=${encodeURIComponent('Halo Roxy Store!')}`} target="_blank" rel="noopener noreferrer">
                             <button className="bg-white text-[#25D366] font-bold px-6 py-3 rounded-xl hover:bg-green-50 transition-colors w-full">
                                 Mulai Chat Sekarang
                             </button>

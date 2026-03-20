@@ -24,10 +24,10 @@ import { generatePageMetadata } from '@/lib/metadata'
 export async function generateMetadata({ params }: PageProps) {
     const { slug } = await params
     const category = await prisma.category.findUnique({ where: { slug } })
-    if (!category) return { title: 'Kategori Tidak Ditemukan - Roxy Lay' }
+    if (!category) return { title: 'Kategori Tidak Ditemukan - Roxy Store' }
     return generatePageMetadata({
         title: category.name,
-        description: category.description || `Koleksi produk kategori ${category.name} dari Roxy Lay. Temukan produk favoritmu sekarang!`,
+        description: category.description || `Koleksi produk kategori ${category.name} dari Roxy Store. Temukan produk favoritmu sekarang!`,
         path: `/category/${slug}`,
     })
 }

@@ -18,7 +18,7 @@ export function FloatingWhatsApp({ waNumber }: FloatingWhatsAppProps) {
 
     const handleClick = () => {
         const message = encodeURIComponent(
-            'Halo Roxy Lay, saya ingin bertanya tentang produk 😊'
+            'Halo Roxy Store, saya ingin bertanya tentang produk 😊'
         )
         window.open(`https://wa.me/${waNumber}?text=${message}`, '_blank')
 

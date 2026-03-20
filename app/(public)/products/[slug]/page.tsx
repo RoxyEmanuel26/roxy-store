@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps) {
         select: { title: true, description: true, image: true },
     })
 
-    if (!product) return { title: 'Produk Tidak Ditemukan - Roxy Lay' }
+    if (!product) return { title: 'Produk Tidak Ditemukan - Roxy Store' }
 
     return generatePageMetadata({
         title: product.title,

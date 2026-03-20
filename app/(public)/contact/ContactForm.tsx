@@ -20,7 +20,7 @@ export default function ContactForm({ waNumber }: ContactFormProps) {
         if (!name.trim() || message.trim().length < 10) return
 
         const text = encodeURIComponent(
-            `Halo Roxy Lay! Nama saya ${name}. Saya ingin bertanya: ${message}`
+            `Halo Roxy Store! Nama saya ${name}. Saya ingin bertanya: ${message}`
         )
         window.open(`https://wa.me/${waNumber}?text=${text}`, '_blank')
     }

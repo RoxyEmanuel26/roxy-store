@@ -91,7 +91,7 @@ export default function AdminSidebar({ userName = 'Admin', onClose }: AdminSideb
                     <Sparkles className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-lg font-bold text-white">Roxy Lay</h1>
+                    <h1 className="text-lg font-bold text-white">Roxy Store</h1>
                     <p className="text-xs text-white/60">Admin Panel</p>
                 </div>
             </div>

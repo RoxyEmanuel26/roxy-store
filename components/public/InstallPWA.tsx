@@ -62,7 +62,7 @@ export function InstallPWA() {
                             <span className="text-white font-bold text-sm">CL</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-brand-text dark:text-dark-text">Install Roxy Lay</p>
+                            <p className="font-semibold text-sm text-brand-text dark:text-dark-text">Install Roxy Store</p>
                             <p className="text-xs text-brand-muted truncate">Tambahkan ke layar utama untuk akses cepat</p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">

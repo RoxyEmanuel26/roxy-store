@@ -13,7 +13,7 @@ import { generatePageMetadata } from '@/lib/metadata'
 
 export const metadata = generatePageMetadata({
     title: 'Koleksi Produk',
-    description: 'Jelajahi semua koleksi produk dan aksesori dari Roxy Lay. Temukan gantungan kunci, beads bracelet, dan lainnya.',
+    description: 'Jelajahi semua koleksi produk dan aksesori dari Roxy Store. Temukan gantungan kunci, beads bracelet, dan lainnya.',
     path: '/products',
 })
 

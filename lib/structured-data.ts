@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXTAUTH_URL || 'https://Roxylay.com'
+const BASE_URL = process.env.NEXTAUTH_URL || 'https://roxystore.com'
 
 export function getOrganizationSchema(settings: {
     tagline: string
@@ -7,7 +7,7 @@ export function getOrganizationSchema(settings: {
     return {
         '@context': 'https://schema.org',
         '@type': 'Store',
-        name: 'Roxy Lay',
+        name: 'Roxy Store',
         description: settings.tagline,
         url: BASE_URL,
         telephone: `+${settings.wa_number}`,
@@ -34,7 +34,7 @@ export function getProductSchema(product: {
         description: product.description,
         image: product.image,
         url: `${BASE_URL}/products/${product.slug}`,
-        brand: { '@type': 'Brand', name: 'Roxy Lay' },
+        brand: { '@type': 'Brand', name: 'Roxy Store' },
         offers: [
             {
                 '@type': 'Offer',
@@ -42,7 +42,7 @@ export function getProductSchema(product: {
                 priceCurrency: 'IDR',
                 availability: 'https://schema.org/InStock',
                 url: product.shopeeUrl,
-                seller: { '@type': 'Organization', name: 'Roxy Lay di Shopee' },
+                seller: { '@type': 'Organization', name: 'Roxy Store di Shopee' },
             },
             {
                 '@type': 'Offer',
@@ -50,7 +50,7 @@ export function getProductSchema(product: {
                 priceCurrency: 'IDR',
                 availability: 'https://schema.org/InStock',
                 url: product.tokopediaUrl,
-                seller: { '@type': 'Organization', name: 'Roxy Lay di Tokopedia' },
+                seller: { '@type': 'Organization', name: 'Roxy Store di Tokopedia' },
             },
         ],
     }
@@ -73,7 +73,7 @@ export function getWebsiteSchema() {
     return {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
-        name: 'Roxy Lay',
+        name: 'Roxy Store',
         url: BASE_URL,
         potentialAction: {
             '@type': 'SearchAction',

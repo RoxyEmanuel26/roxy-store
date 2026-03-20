@@ -40,11 +40,11 @@ export function Header({ settings }: HeaderProps) {
                     {/* LEFT: Logo */}
                     <Link href="/" className="flex items-center gap-2">
                         {settings.logo_url ? (
-                            <Image src={settings.logo_url} alt="Roxy Lay" width={120} height={40} className="h-8 w-auto" />
+                            <Image src={settings.logo_url} alt="Roxy Store" width={120} height={40} className="h-8 w-auto" />
                         ) : (
                             <>
                                 <Sparkles className="h-5 w-5 text-brand-primary" />
-                                <span className="text-xl font-bold text-brand-primary">Roxy Lay</span>
+                                <span className="text-xl font-bold text-brand-primary">Roxy Store</span>
                             </>
                         )}
                     </Link>
@@ -97,7 +97,7 @@ export function Header({ settings }: HeaderProps) {
                             <SheetContent side="left" className="w-72 bg-white dark:bg-dark-surface p-6">
                                 <div className="flex items-center gap-2 mb-8">
                                     <Sparkles className="h-5 w-5 text-brand-primary" />
-                                    <span className="text-xl font-bold text-brand-primary">Roxy Lay</span>
+                                    <span className="text-xl font-bold text-brand-primary">Roxy Store</span>
                                 </div>
                                 <nav className="flex flex-col gap-2">
                                     {navLinks.map((link) => {

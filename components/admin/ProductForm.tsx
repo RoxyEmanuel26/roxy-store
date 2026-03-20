@@ -206,7 +206,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                             </div>
                             <div className="flex items-center rounded-md border border-brand-border dark:border-dark-border bg-brand-surface/50 dark:bg-dark-surface/50">
                                 <span className="px-3 text-sm text-brand-muted dark:text-dark-muted whitespace-nowrap">
-                                    Roxylay.com/products/
+                                    roxystore.com/products/
                                 </span>
                                 <Input
                                     value={slug}

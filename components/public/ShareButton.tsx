@@ -27,7 +27,7 @@ export function ShareButton({ product, className }: ShareButtonProps) {
             try {
                 await navigator.share({
                     title: product.title,
-                    text: `Lihat produk ini dari Roxy Lay: ${product.title}`,
+                    text: `Lihat produk ini dari Roxy Store: ${product.title}`,
                     url: productUrl,
                 })
             } catch { /* user cancelled */ }
@@ -39,7 +39,7 @@ export function ShareButton({ product, className }: ShareButtonProps) {
 
     const handleShareWhatsApp = () => {
         const text = encodeURIComponent(
-            `Hei, cek produk Roxy Lay ini yuk! 🎀\n${product.title}\n${getUrl()}`
+            `Hei, cek produk Roxy Store ini yuk! 🎀\n${product.title}\n${getUrl()}`
         )
         window.open(`https://wa.me/?text=${text}`, '_blank')
         setShowMenu(false)

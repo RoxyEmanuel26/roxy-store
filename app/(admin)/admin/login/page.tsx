@@ -74,7 +74,7 @@ export default function AdminLoginPage() {
                             <Sparkles className="h-7 w-7 text-white" />
                         </div>
                         <h1 className="text-2xl font-bold bg-gradient-to-r from-brand-primary to-brand-accent bg-clip-text text-transparent">
-                            Roxy Lay
+                            Roxy Store
                         </h1>
                         <p className="text-sm text-brand-muted dark:text-dark-muted mt-1">
                             Admin Dashboard
@@ -96,7 +96,7 @@ export default function AdminLoginPage() {
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="admin@Roxylay.com"
+                                    placeholder="admin@roxystore.com"
                                     autoFocus
                                     className="pl-10"
                                     disabled={isLoading}
@@ -171,7 +171,7 @@ export default function AdminLoginPage() {
 
                 {/* Footer */}
                 <p className="text-center text-xs text-brand-muted dark:text-dark-muted mt-6">
-                    &copy; {new Date().getFullYear()} Roxy Lay. Semua hak dilindungi.
+                    &copy; {new Date().getFullYear()} Roxy Store. Semua hak dilindungi.
                 </p>
             </div>
         </div>

@@ -6,7 +6,7 @@ import { generatePageMetadata } from '@/lib/metadata'
 
 export const metadata = generatePageMetadata({
     title: 'Tentang Kami',
-    description: 'Kenali lebih dekat Roxy Lay, toko aksesori wanita favorit yang memproduksi produk handmade dengan penuh cinta.',
+    description: 'Kenali lebih dekat Roxy Store, toko aksesori wanita favorit yang memproduksi produk handmade dengan penuh cinta.',
     path: '/about',
 })
 
@@ -22,7 +22,7 @@ export default async function AboutPage() {
                         ✨ Tentang Kami
                     </span>
                     <h1 className="text-4xl md:text-5xl font-bold text-brand-text dark:text-dark-text">
-                        Tentang Roxy Lay
+                        Tentang Roxy Store
                     </h1>
                     <p className="text-brand-muted dark:text-dark-muted mt-4 max-w-2xl mx-auto text-lg">
                         {settings.tagline}
@@ -34,7 +34,7 @@ export default async function AboutPage() {
             <section className="py-16 bg-white dark:bg-dark-bg">
                 <div className="container mx-auto px-4 max-w-3xl">
                     <div className="prose dark:prose-invert prose-brand max-w-none text-brand-text dark:text-dark-text leading-relaxed whitespace-pre-wrap">
-                        {settings.about_text || 'Roxy Lay adalah toko aksesori wanita yang menyajikan koleksi produk handmade berkualitas tinggi.'}
+                        {settings.about_text || 'Roxy Store adalah toko aksesori wanita yang menyajikan koleksi produk handmade berkualitas tinggi.'}
                     </div>
                 </div>
             </section>

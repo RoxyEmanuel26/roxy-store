@@ -5,12 +5,12 @@ export async function getSiteSettings(): Promise<SiteSettingsType> {
     const settings = await prisma.siteSettings.findMany()
 
     const defaults: SiteSettingsType = {
-        tagline: 'Aksesori Wanita Colorful & Lucu',
+        tagline: 'Rekomendasi Produk Terbaik & Terlaris',
         logo_url: '',
-        hero_title: 'Koleksi Aksesori Wanita Terbaik',
-        hero_subtitle: 'Temukan aksesori favoritmu',
+        hero_title: 'Temukan Produk Terlaris dengan Harga Terbaik',
+        hero_subtitle: 'Temukan produk favoritmu',
         hero_image: '',
-        about_text: 'Roxy Lay adalah toko aksesori wanita.',
+        about_text: 'Roxy Store adalah website rekomendasi produk terlaris.',
         wa_number: '6281234567890',
     }
 

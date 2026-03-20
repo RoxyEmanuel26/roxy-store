@@ -35,7 +35,7 @@ const breadcrumbMap: Record<string, string> = {
 
 export default function AdminHeader({
     userName = 'Admin',
-    userEmail = 'admin@Roxylay.com',
+    userEmail = 'admin@roxystore.com',
 }: AdminHeaderProps) {
     const pathname = usePathname()
     const [sheetOpen, setSheetOpen] = useState(false)

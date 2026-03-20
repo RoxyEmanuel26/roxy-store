@@ -15,7 +15,7 @@ interface FooterProps {
 }
 
 export function Footer({ settings }: FooterProps) {
-    const waUrl = `https://wa.me/${settings.wa_number}?text=${encodeURIComponent('Halo Roxy Lay, saya ingin bertanya tentang produk 😊')}`
+    const waUrl = `https://wa.me/${settings.wa_number}?text=${encodeURIComponent('Halo Roxy Store, saya ingin bertanya tentang produk 😊')}`
 
     return (
         <footer className="bg-brand-surface dark:bg-dark-surface border-t border-brand-border dark:border-dark-border mt-auto">
@@ -26,11 +26,11 @@ export function Footer({ settings }: FooterProps) {
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
                             {settings.logo_url ? (
-                                <Image src={settings.logo_url} alt="Roxy Lay" width={120} height={40} className="h-8 w-auto" />
+                                <Image src={settings.logo_url} alt="Roxy Store" width={120} height={40} className="h-8 w-auto" />
                             ) : (
                                 <>
                                     <Sparkles className="h-5 w-5 text-brand-primary" />
-                                    <span className="text-xl font-bold text-brand-primary">Roxy Lay</span>
+                                    <span className="text-xl font-bold text-brand-primary">Roxy Store</span>
                                 </>
                             )}
                         </div>
@@ -95,7 +95,7 @@ export function Footer({ settings }: FooterProps) {
             {/* Bottom Bar */}
             <div className="border-t border-brand-border dark:border-dark-border py-4">
                 <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-2 text-sm text-brand-muted dark:text-dark-muted">
-                    <p>© 2026 Roxy Lay. All rights reserved.</p>
+                    <p>© 2026 Roxy Store. All rights reserved.</p>
                     <p>Transaksi dilakukan di Shopee & Tokopedia</p>
                 </div>
             </div>

@@ -26,7 +26,7 @@ async function main() {
     const defaultSettings = [
         {
             key: 'site_name',
-            value: 'Roxy Lay',
+            value: 'Roxy Store',
         },
         {
             key: 'tagline',
@@ -63,12 +63,12 @@ async function main() {
         },
         {
             key: 'about_title',
-            value: 'Tentang Roxy Lay',
+            value: 'Tentang Roxy Store',
         },
         {
             key: 'about_text',
             value:
-                'Roxy Lay adalah website rekomendasi produk terlaris Shopee yang dikurasi secara cermat. Kami membantu kamu menemukan produk terbaik dari berbagai kategori — skincare, fashion, rumah tangga, teknologi, dan banyak lagi — tanpa perlu riset panjang. Semua produk yang kami rekomendasikan sudah diseleksi berdasarkan rating, ulasan pembeli, dan tren belanja terkini.',
+                'Roxy Store adalah website rekomendasi produk terlaris Shopee yang dikurasi secara cermat. Kami membantu kamu menemukan produk terbaik dari berbagai kategori — skincare, fashion, rumah tangga, teknologi, dan banyak lagi — tanpa perlu riset panjang. Semua produk yang kami rekomendasikan sudah diseleksi berdasarkan rating, ulasan pembeli, dan tren belanja terkini.',
         },
         {
             key: 'about_image',
@@ -107,7 +107,7 @@ async function main() {
         {
             key: 'meta_description',
             value:
-                'Roxy Lay — Rekomendasi produk terlaris dan terpercaya di Shopee. Temukan produk skincare, fashion, rumah tangga, gaming, dan lainnya dengan harga terbaik.',
+                'Roxy Store — Rekomendasi produk terlaris dan terpercaya di Shopee. Temukan produk skincare, fashion, rumah tangga, gaming, dan lainnya dengan harga terbaik.',
         },
         {
             key: 'meta_keywords',
@@ -117,7 +117,7 @@ async function main() {
         {
             key: 'footer_text',
             value:
-                '© 2026 Roxy Lay. Website Rekomendasi Produk Shopee Terpercaya 🛍️',
+                '© 2026 Roxy Store. Website Rekomendasi Produk Shopee Terpercaya 🛍️',
         },
         {
             key: 'products_per_page',
@@ -250,7 +250,7 @@ async function main() {
     // ───────────────────────────────────────────
     // DONE
     // ───────────────────────────────────────────
-    console.log('✅ Seed Roxy Lay Affiliate berhasil!')
+    console.log('✅ Seed Roxy Store Affiliate berhasil!')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
     console.log('📧 Email admin       : admin@roxylay.com')
     console.log('🔑 Password          : RoxyLay@2026')

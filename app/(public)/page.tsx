@@ -26,7 +26,7 @@ export const revalidate = 60
 
 export const metadata = generatePageMetadata({
     title: 'Beranda',
-    description: 'Selamat datang di Roxy Lay! Temukan koleksi aksesori wanita colorful: gantungan kunci lucu, beads bracelet, beads HP, kalung, dan anting. Tersedia di Shopee dan Tokopedia.',
+    description: 'Selamat datang di Roxy Store! Temukan koleksi aksesori wanita colorful: gantungan kunci lucu, beads bracelet, beads HP, kalung, dan anting. Tersedia di Shopee dan Tokopedia.',
     path: '/',
 })
 
@@ -209,11 +209,11 @@ export default async function HomePage() {
             {/* === SECTION 6: RECENTLY VIEWED === */}
             <RecentlyViewed />
 
-            {/* === SECTION 7: WHY Roxy LAY === */}
+            {/* === SECTION 7: WHY Roxy STORE === */}
             <section className="py-16 bg-brand-primary/5 dark:bg-dark-surface">
                 <div className="container mx-auto px-4 text-center">
                     <FadeIn>
-                        <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text mb-4">Kenapa Pilih Roxy Lay?</h2>
+                        <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text mb-4">Kenapa Pilih Roxy Store?</h2>
                     </FadeIn>
                     <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
                         {[
@@ -241,7 +241,7 @@ export default async function HomePage() {
                         <p className="opacity-90 mb-8 text-lg">
                             Kunjungi toko kami di Shopee dan Tokopedia untuk pembelian yang mudah dan aman
                         </p>
-                        <a href={`https://wa.me/${settings.wa_number}?text=${encodeURIComponent('Halo Roxy Lay!')}`} target="_blank" rel="noopener noreferrer">
+                        <a href={`https://wa.me/${settings.wa_number}?text=${encodeURIComponent('Halo Roxy Store!')}`} target="_blank" rel="noopener noreferrer">
                             <Button size="lg" className="bg-white text-brand-primary hover:bg-brand-surface font-semibold transition-none">
                                 💬 Chat via WhatsApp
                             </Button>

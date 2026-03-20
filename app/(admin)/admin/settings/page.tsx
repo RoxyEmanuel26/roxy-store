@@ -164,7 +164,7 @@ export default function AdminSettingsPage() {
                                     <Label htmlFor="tagline">Tagline Website</Label>
                                     <Input
                                         id="tagline"
-                                        placeholder="Roxy Lay Accessories"
+                                        placeholder="Roxy Store Accessories"
                                         {...register('tagline')}
                                     />
                                     {errors.tagline && (

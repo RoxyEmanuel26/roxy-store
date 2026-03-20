@@ -1,9 +1,9 @@
 import { Metadata } from 'next'
 
-const BASE_URL = process.env.NEXTAUTH_URL || 'https://Roxylay.com'
-const SITE_NAME = 'Roxy Lay'
+const BASE_URL = process.env.NEXTAUTH_URL || 'https://roxystore.com'
+const SITE_NAME = 'Roxy Store'
 const DEFAULT_DESCRIPTION =
-    'Toko aksesori wanita colorful: gantungan kunci, beads bracelet, beads HP, dan masih banyak lagi. Tersedia di Shopee dan Tokopedia.'
+    'Rekomendasi produk terlaris dan terpercaya di Shopee. Temukan produk skincare, fashion, rumah tangga, gaming, dan lainnya dengan harga terbaik.'
 const DEFAULT_IMAGE = `${BASE_URL}/og-default.jpg`
 
 export function generatePageMetadata({

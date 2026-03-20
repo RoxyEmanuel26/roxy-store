@@ -11,27 +11,27 @@ const config: Config = {
 		extend: {
 			colors: {
 				brand: {
-					primary: '#FF6B9D',
-					secondary: '#FFB3CC',
-					bg: '#FFFFFF',
-					surface: '#FFF0F5',
-					text: '#1A1A2E',
-					muted: '#6B6B8A',
-					border: '#FFD6E7',
-					accent: '#FF4D8D',
-					shopee: '#EE4D2D',
-					tokopedia: '#42B549',
-					whatsapp: '#25D366'
-				},
-				dark: {
-					bg: '#1C0D18',
-					surface: '#2A1020',
-					primary: '#FF6B9D',
-					secondary: '#FFB3CC',
-					text: '#F5E6EC',
-					muted: '#C9A0B4',
-					border: '#4A1E35'
-				},
+				primary: '#38BDF8',
+				secondary: '#BAE6FD',
+				bg: '#FFFFFF',
+				surface: '#F0F9FF',
+				text: '#0C1A2E',
+				muted: '#64748B',
+				border: '#BAE6FD',
+				accent: '#0EA5E9',
+				shopee: '#EE4D2D',
+				tokopedia: '#42B549',
+				whatsapp: '#25D366'
+			},
+			dark: {
+				bg: '#0C1A2E',
+				surface: '#0F2744',
+				primary: '#38BDF8',
+				secondary: '#7DD3FC',
+				text: '#E0F2FE',
+				muted: '#94A3B8',
+				border: '#1E3A5F'
+			},
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				card: {
