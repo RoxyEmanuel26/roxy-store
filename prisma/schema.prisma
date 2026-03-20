@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String   @default("Admin")
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  description     String   @db.Text
+  price           Float
+  image           String
+  images          String[]
+  shopeeUrl       String
+  tokopediaUrl    String
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  badge           String?
+  isActive        Boolean  @default(true)
+  viewCount       Int      @default(0)
+  shopeeClicks    Int      @default(0)
+  tokopediaClicks Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([categoryId])
+  @@index([isActive, categoryId])
+  @@index([createdAt(sort: Desc)])
+  @@index([viewCount(sort: Desc)])
+  @@index([badge])
+}
+
+model SiteSettings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+model Analytics {
+  id        String   @id @default(cuid())
+  productId String?
+  eventType String
+  userAgent String?
+  ipHash    String?
+  createdAt DateTime @default(now())
+
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([productId])
+  @@index([createdAt, eventType])
+}

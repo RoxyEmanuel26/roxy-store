@@ -1,0 +1,134 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 12%;
+    --primary: 340 100% 71%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 340 100% 85%;
+    --secondary-foreground: 240 10% 12%;
+    --muted: 340 100% 97%;
+    --muted-foreground: 245 10% 48%;
+    --accent: 340 100% 97%;
+    --accent-foreground: 240 10% 12%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 340 100% 92%;
+    --input: 340 100% 92%;
+    --ring: 340 100% 71%;
+    --chart-1: 340 100% 71%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 330 40% 8%;
+    --foreground: 340 50% 95%;
+    --card: 330 45% 11%;
+    --card-foreground: 340 50% 95%;
+    --popover: 330 45% 11%;
+    --popover-foreground: 340 50% 95%;
+    --primary: 340 100% 71%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 340 100% 85%;
+    --secondary-foreground: 340 50% 95%;
+    --muted: 330 45% 11%;
+    --muted-foreground: 340 30% 69%;
+    --accent: 330 45% 11%;
+    --accent-foreground: 340 50% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 330 40% 17%;
+    --input: 330 40% 17%;
+    --ring: 340 100% 71%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  * {
+    @apply border-brand-border dark:border-dark-border;
+    transition-property: background-color, border-color, color;
+    transition-duration: 200ms;
+    transition-timing-function: ease;
+  }
+
+  body {
+    @apply bg-brand-bg dark:bg-dark-bg text-brand-text dark:text-dark-text;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Exclude elements that have their own animations */
+  button,
+  a,
+  [data-motion],
+  .transition-none {
+    transition-property: none;
+  }
+
+  /* Re-enable bg/color transitions on buttons for dark mode */
+  button,
+  a {
+    transition-property: background-color, border-color, color, opacity;
+    transition-duration: 150ms;
+    transition-timing-function: ease;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-brand-surface dark:bg-dark-surface;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-brand-secondary dark:bg-dark-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand-primary;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .scrollbar-thumb-brand-secondary::-webkit-scrollbar-thumb {
+    @apply bg-brand-secondary rounded-full;
+  }
+}
+
+/* react-medium-image-zoom overrides */
+[data-rmiz-modal-overlay="visible"] {
+  background-color: rgba(28, 13, 24, 0.85) !important;
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
