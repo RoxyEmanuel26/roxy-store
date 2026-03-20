@@ -34,8 +34,8 @@ model Product {
   price           Float
   image           String
   images          String[]
-  shopeeUrl       String
-  tokopediaUrl    String
+  shopeeUrl       String   @default("")
+  tokopediaUrl    String   @default("")
   categoryId      String
   category        Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   badge           String?

@@ -344,7 +344,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                         </h3>
 
                         <div className="space-y-2">
-                            <Label htmlFor="shopeeUrl">Link Shopee *</Label>
+                            <Label htmlFor="shopeeUrl">Link Shopee</Label>
                             <div className="flex gap-2">
                                 <Input
                                     id="shopeeUrl"
@@ -363,10 +363,13 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                             {errors.shopeeUrl && (
                                 <p className="text-xs text-red-500">{errors.shopeeUrl.message}</p>
                             )}
+                            <p className="text-xs text-brand-muted dark:text-dark-muted">
+                                Kosongkan jika tidak ingin menampilkan tombol Shopee
+                            </p>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="tokopediaUrl">Link Tokopedia *</Label>
+                            <Label htmlFor="tokopediaUrl">Link Tokopedia</Label>
                             <div className="flex gap-2">
                                 <Input
                                     id="tokopediaUrl"
@@ -385,6 +388,9 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                             {errors.tokopediaUrl && (
                                 <p className="text-xs text-red-500">{errors.tokopediaUrl.message}</p>
                             )}
+                            <p className="text-xs text-brand-muted dark:text-dark-muted">
+                                Kosongkan jika tidak ingin menampilkan tombol Tokopedia
+                            </p>
                         </div>
                     </div>
 

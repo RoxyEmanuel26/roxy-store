@@ -28,13 +28,15 @@ export const ProductSchema = z.object({
         .refine(
             (url) => url.includes('shopee.co.id'),
             'Harus berupa link Shopee Indonesia'
-        ),
+        )
+        .or(z.literal('')),
     tokopediaUrl: z.string()
         .url('URL Tokopedia tidak valid')
         .refine(
             (url) => url.includes('tokopedia.com'),
             'Harus berupa link Tokopedia'
-        ),
+        )
+        .or(z.literal('')),
     categoryId: z.string().min(1, 'Kategori wajib dipilih'),
     badge: z.enum(['NEW', 'HOT', 'BEST SELLER']).nullable().optional(),
     isActive: z.boolean().default(true),

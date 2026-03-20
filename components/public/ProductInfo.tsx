@@ -97,25 +97,29 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             <Separator />
 
             {/* Buy Buttons */}
-            <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleShopeeClick}
-                className="w-full h-14 text-base font-bold bg-[#EE4D2D] hover:bg-[#D63E20] text-white rounded-xl shadow-lg shadow-[#EE4D2D]/30 flex items-center justify-center gap-2 transition-none"
-            >
-                <ShoppingCart className="h-5 w-5" />
-                🛒 Beli di Shopee
-            </motion.button>
+            {product.shopeeUrl && (
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleShopeeClick}
+                    className="w-full h-14 text-base font-bold bg-[#EE4D2D] hover:bg-[#D63E20] text-white rounded-xl shadow-lg shadow-[#EE4D2D]/30 flex items-center justify-center gap-2 transition-none"
+                >
+                    <ShoppingCart className="h-5 w-5" />
+                    🛒 Beli di Shopee
+                </motion.button>
+            )}
 
-            <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={handleTokopediaClick}
-                className="w-full h-14 text-base font-bold bg-[#42B549] hover:bg-[#389B3F] text-white rounded-xl shadow-lg shadow-[#42B549]/30 flex items-center justify-center gap-2 transition-none"
-            >
-                <Store className="h-5 w-5" />
-                🟢 Beli di Tokopedia
-            </motion.button>
+            {product.tokopediaUrl && (
+                <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleTokopediaClick}
+                    className="w-full h-14 text-base font-bold bg-[#42B549] hover:bg-[#389B3F] text-white rounded-xl shadow-lg shadow-[#42B549]/30 flex items-center justify-center gap-2 transition-none"
+                >
+                    <Store className="h-5 w-5" />
+                    🟢 Beli di Tokopedia
+                </motion.button>
+            )}
 
             {/* Share / Wishlist */}
             <div className="flex gap-3">
@@ -124,12 +128,18 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             </div>
 
             {/* Purchase Info */}
-            <div className="p-4 bg-brand-surface dark:bg-dark-surface rounded-xl">
-                <p className="text-sm text-brand-muted dark:text-dark-muted">
-                    💡 <strong>Info Pembelian:</strong> Klik tombol di atas untuk membeli melalui Shopee atau Tokopedia.
-                    Transaksi dilakukan di platform marketplace pilihan Anda.
-                </p>
-            </div>
+            {(product.shopeeUrl || product.tokopediaUrl) && (
+                <div className="p-4 bg-brand-surface dark:bg-dark-surface rounded-xl">
+                    <p className="text-sm text-brand-muted dark:text-dark-muted">
+                        💡 <strong>Info Pembelian:</strong> Klik tombol di atas untuk membeli melalui{' '}
+                        {[
+                            product.shopeeUrl && 'Shopee',
+                            product.tokopediaUrl && 'Tokopedia',
+                        ].filter(Boolean).join(' atau ')}.
+                        Transaksi dilakukan di platform marketplace pilihan Anda.
+                    </p>
+                </div>
+            )}
         </div>
     )
 }
