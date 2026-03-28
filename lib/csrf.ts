@@ -6,6 +6,9 @@ export function validateOrigin(request: Request): boolean {
         process.env.NEXTAUTH_URL,
         'http://localhost:3000',
         'http://localhost:3001',
+        'https://roxy-store-affi.vercel.app',
+        'https://www.roxystore.web.id',
+        'https://roxystore.web.id',
     ].filter(Boolean) as string[]
 
     if (origin) {
