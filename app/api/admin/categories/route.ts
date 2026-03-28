@@ -7,6 +7,8 @@ import { parseAndValidate } from '@/lib/api-helpers'
 import { sanitizeText } from '@/lib/sanitize'
 import slugify from 'slugify'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
     const session = await auth()
     if (!session) {

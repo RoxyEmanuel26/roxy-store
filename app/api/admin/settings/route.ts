@@ -7,6 +7,8 @@ import { parseAndValidate } from '@/lib/api-helpers'
 import { sanitizeText, sanitizeDescription, sanitizeUrl } from '@/lib/sanitize'
 import { revalidateTag } from 'next/cache'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
     const session = await auth()
     if (!session) {
