@@ -56,7 +56,10 @@ export default function AdminCategoriesPage() {
 
     const fetchCategories = useCallback(async () => {
         try {
-            const res = await fetch('/api/admin/categories')
+            const res = await fetch('/api/admin/categories', {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache' },
+            })
             if (res.ok) {
                 const data = await res.json()
                 setCategories(data)
