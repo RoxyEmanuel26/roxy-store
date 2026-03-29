@@ -180,11 +180,29 @@ export default function CsvImportDialog({
         setProgress(10)
 
         try {
-            // Normalize data keys to lowercase
+            // Map CSV headers to expected field names (case-insensitive)
+            const fieldMap: Record<string, string> = {
+                title: 'title',
+                description: 'description',
+                price: 'price',
+                image: 'image',
+                images: 'images',
+                shopeeurl: 'shopeeUrl',
+                tokopediaurl: 'tokopediaUrl',
+                category: 'category',
+                badge: 'badge',
+                isactive: 'isActive',
+                isActive: 'isActive',
+                shopeeUrl: 'shopeeUrl',
+                tokopediaUrl: 'tokopediaUrl',
+            }
+
             const normalizedProducts = parsedData.map((row) => {
                 const normalized: Record<string, string> = {}
                 for (const [key, value] of Object.entries(row)) {
-                    normalized[key.toLowerCase().trim()] = value
+                    const cleanKey = key.trim()
+                    const mappedKey = fieldMap[cleanKey] || fieldMap[cleanKey.toLowerCase()] || cleanKey
+                    normalized[mappedKey] = value
                 }
                 return normalized
             })
