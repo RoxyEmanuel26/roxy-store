@@ -22,7 +22,7 @@ export const ProductSchema = z.object({
         .positive('Harga harus lebih dari 0')
         .max(100000000, 'Harga terlalu besar'),
     image: z.string().url('URL foto utama tidak valid'),
-    images: z.array(z.string().url()).max(4).optional().default([]),
+    images: z.array(z.string().url()).max(20, 'Maksimal 20 foto tambahan').optional().default([]),
     shopeeUrl: z.string()
         .url('URL Shopee tidak valid')
         .refine(

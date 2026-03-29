@@ -8,7 +8,7 @@ import { ProductSchema } from '@/lib/validations'
 import { z } from 'zod'
 import slugify from 'slugify'
 import Link from 'next/link'
-import { ArrowLeft, RefreshCw, ExternalLink, Loader2 } from 'lucide-react'
+import { ArrowLeft, RefreshCw, ExternalLink, Loader2, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,7 +41,9 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
     const [categories, setCategories] = useState<Category[]>([])
     const [saving, setSaving] = useState(false)
     const [additionalImages, setAdditionalImages] = useState<string[]>(
-        initialData?.images || ['', '', '', '']
+        initialData?.images && initialData.images.length > 0
+            ? initialData.images
+            : ['']
     )
 
     const {
@@ -316,12 +318,26 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                         )}
 
                         <div>
-                            <p className="text-sm font-medium text-brand-text dark:text-dark-text mb-3">
-                                Foto Tambahan (maks 4)
-                            </p>
+                            <div className="flex items-center justify-between mb-3">
+                                <p className="text-sm font-medium text-brand-text dark:text-dark-text">
+                                    Foto Tambahan ({additionalImages.filter(Boolean).length}/20)
+                                </p>
+                                {additionalImages.length < 20 && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setAdditionalImages([...additionalImages, ''])}
+                                        className="h-7 text-xs gap-1"
+                                    >
+                                        <Plus className="h-3 w-3" />
+                                        Tambah Foto
+                                    </Button>
+                                )}
+                            </div>
                             <div className="grid grid-cols-2 gap-3">
                                 {additionalImages.map((img, i) => (
-                                    <div key={i} className="w-full">
+                                    <div key={i} className="relative w-full group">
                                         <ImageUpload
                                             value={img}
                                             onChange={(url) => {
@@ -331,6 +347,19 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                                             }}
                                             aspectRatio="1:1"
                                         />
+                                        {additionalImages.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newImages = additionalImages.filter((_, idx) => idx !== i)
+                                                    setAdditionalImages(newImages.length > 0 ? newImages : [''])
+                                                }}
+                                                className="absolute -top-2 -right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                                title="Hapus foto"
+                                            >
+                                                <X className="h-3.5 w-3.5" />
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
                             </div>
