@@ -60,16 +60,26 @@ export default function ProductListClient({
 
     if (products.length === 0) return null
 
+    // Split: initial products get stagger animation, loaded products render directly
+    const initialCount = initialProducts.length
+
     return (
         <>
             <StaggerContainer
                 key={searchKey}
                 className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6 min-h-[50vh]"
             >
-                {products.map((product) => (
+                {products.slice(0, initialCount).map((product) => (
                     <StaggerItem key={product.id}>
                         <ProductCard product={product} />
                     </StaggerItem>
+                ))}
+
+                {/* Dynamically loaded products — render directly without stagger animation */}
+                {products.slice(initialCount).map((product) => (
+                    <div key={product.id}>
+                        <ProductCard product={product} />
+                    </div>
                 ))}
             </StaggerContainer>
 
