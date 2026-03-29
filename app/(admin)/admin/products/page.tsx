@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, Search, X, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet } from 'lucide-react'
+import CsvImportDialog from '@/components/admin/CsvImportDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -59,6 +60,9 @@ export default function AdminProductsPage() {
     const [searchDebounced, setSearchDebounced] = useState('')
     const [categoryId, setCategoryId] = useState('')
     const [statusFilter, setStatusFilter] = useState('')
+
+    // CSV Import
+    const [csvDialogOpen, setCsvDialogOpen] = useState(false)
 
     // Delete
     const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
@@ -202,12 +206,22 @@ export default function AdminProductsPage() {
                         {total} Produk
                     </Badge>
                 </div>
-                <Link href="/admin/products/new">
-                    <Button className="bg-brand-primary hover:bg-brand-primary/90 text-white">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Tambah Produk Baru
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => setCsvDialogOpen(true)}
+                        className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10"
+                    >
+                        <FileSpreadsheet className="h-4 w-4 mr-2" />
+                        Import CSV
                     </Button>
-                </Link>
+                    <Link href="/admin/products/new">
+                        <Button className="bg-brand-primary hover:bg-brand-primary/90 text-white">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Tambah Produk Baru
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             {/* Toolbar Filter */}
@@ -425,6 +439,13 @@ export default function AdminProductsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* CSV Import Dialog */}
+            <CsvImportDialog
+                open={csvDialogOpen}
+                onOpenChange={setCsvDialogOpen}
+                onImportComplete={fetchProducts}
+            />
         </div>
     )
 }

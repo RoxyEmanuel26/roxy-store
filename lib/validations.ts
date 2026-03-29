@@ -93,6 +93,26 @@ export const PaginationSchema = z.object({
     sort: z.enum(['newest', 'price-asc', 'price-desc', 'popular']).default('newest'),
 })
 
+// CSV Import Produk (lebih longgar dari ProductSchema)
+export const CsvProductSchema = z.object({
+    title: z.string()
+        .min(3, 'Judul minimal 3 karakter')
+        .max(200, 'Judul maksimal 200 karakter')
+        .trim(),
+    description: z.string().default(''),
+    price: z.number().min(0).default(0),
+    image: z.string().url('URL gambar utama tidak valid').or(z.literal('')).default(''),
+    images: z.string().default(''), // pipe-separated URLs
+    shopeeUrl: z.string().url().or(z.literal('')).default(''),
+    tokopediaUrl: z.string().url().or(z.literal('')).default(''),
+    category: z.string().default('Other'),
+    badge: z.enum(['NEW', 'HOT', 'BEST SELLER', '']).default(''),
+    isActive: z.preprocess(
+        (val) => val === 'true' || val === true || val === '1',
+        z.boolean().default(true)
+    ),
+})
+
 // Type exports
 export type LoginInput = z.infer<typeof LoginSchema>
 export type ProductInput = z.infer<typeof ProductSchema>
@@ -100,3 +120,4 @@ export type CategoryInput = z.infer<typeof CategorySchema>
 export type SettingsInput = z.infer<typeof SettingsSchema>
 export type TrackEventInput = z.infer<typeof TrackEventSchema>
 export type PaginationInput = z.infer<typeof PaginationSchema>
+export type CsvProductInput = z.infer<typeof CsvProductSchema>
