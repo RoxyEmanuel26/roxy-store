@@ -108,7 +108,15 @@ export const CsvProductSchema = z.object({
     category: z.string().default('Other'),
     badge: z.enum(['NEW', 'HOT', 'BEST SELLER', '']).default(''),
     isActive: z.preprocess(
-        (val) => val === 'true' || val === true || val === '1',
+        (val) => {
+            if (val === true || val === 1) return true
+            if (val === false || val === 0) return false
+            if (typeof val === 'string') {
+                const v = val.trim().toLowerCase()
+                return v === 'true' || v === '1' || v === 'yes' || v === 'ya'
+            }
+            return true // default aktif
+        },
         z.boolean().default(true)
     ),
 })
