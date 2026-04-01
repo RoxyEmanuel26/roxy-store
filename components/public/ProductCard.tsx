@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { Star, TrendingUp } from 'lucide-react'
 import { formatRupiah } from '@/lib/utils'
 import { WishlistButton } from './WishlistButton'
 import { Button } from '@/components/ui/button'
@@ -16,10 +17,15 @@ interface ProductCardProps {
 const badgeColors: Record<string, string> = {
     NEW: 'bg-blue-500 text-white',
     HOT: 'bg-red-500 text-white',
-    'BEST SELLER': 'bg-yellow-500 text-white',
+    'BEST SELLER': 'bg-amber-500 text-white',
 }
 
 export default function ProductCard({ product, priority = false }: ProductCardProps) {
+    const hasDiscount = product.originalPrice && product.originalPrice > product.price
+    const discountPercent = hasDiscount
+        ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
+        : 0
+
     return (
         <Link href={`/products/${product.slug}`} className="group block h-full">
             <motion.div
@@ -49,6 +55,13 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                         </motion.span>
                     )}
 
+                    {/* Discount badge */}
+                    {hasDiscount && (
+                        <span className="absolute top-2 right-10 text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full">
+                            -{discountPercent}%
+                        </span>
+                    )}
+
                     {/* Wishlist Button */}
                     <WishlistButton product={product} variant="card" />
                 </div>
@@ -63,13 +76,38 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                         {product.title}
                     </h3>
 
-                    <p className="text-brand-primary dark:text-dark-primary font-bold text-base mt-2">
-                        {formatRupiah(product.price)}
-                    </p>
+                    {/* Price block */}
+                    <div className="mt-2">
+                        <p className="text-brand-primary dark:text-dark-primary font-bold text-base">
+                            {formatRupiah(product.price)}
+                        </p>
+                        {hasDiscount && (
+                            <p className="text-xs text-brand-muted dark:text-dark-muted line-through">
+                                {formatRupiah(product.originalPrice!)}
+                            </p>
+                        )}
+                    </div>
 
-                    <p className="text-xs text-brand-muted dark:text-dark-muted mt-1">
-                        👁 {product.viewCount} dilihat
-                    </p>
+                    {/* Rating + Sold row */}
+                    <div className="flex items-center gap-2 mt-1.5 text-xs text-brand-muted dark:text-dark-muted">
+                        {product.shopeeRating != null && product.shopeeRating > 0 && (
+                            <span className="flex items-center gap-0.5">
+                                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                {product.shopeeRating.toFixed(1)}
+                            </span>
+                        )}
+                        {product.shopeeSold != null && product.shopeeSold > 0 && (
+                            <span className="flex items-center gap-0.5">
+                                <TrendingUp className="h-3 w-3" />
+                                {product.shopeeSold >= 1000
+                                    ? `${(product.shopeeSold / 1000).toFixed(1)}rb`
+                                    : product.shopeeSold}
+                            </span>
+                        )}
+                        {(!product.shopeeRating || product.shopeeRating === 0) && (!product.shopeeSold || product.shopeeSold === 0) && (
+                            <span>👁 {product.viewCount} dilihat</span>
+                        )}
+                    </div>
 
                     {/* Spacer — pushes button to bottom */}
                     <div className="flex-1" />

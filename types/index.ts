@@ -6,10 +6,13 @@ export interface ProductType {
     slug: string
     description: string
     price: number
+    originalPrice?: number | null
     image: string
     images: string[]
     shopeeUrl: string
     tokopediaUrl: string
+    shopeeRating?: number | null
+    shopeeSold?: number | null
     categoryId: string
     category: CategoryType
     badge: BadgeType

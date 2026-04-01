@@ -34,10 +34,13 @@ model Product {
   slug            String   @unique
   description     String   @db.Text
   price           Float
+  originalPrice   Float?
   image           String
   images          String[]
   shopeeUrl       String   @default("")
   tokopediaUrl    String   @default("")
+  shopeeRating    Float?
+  shopeeSold      Int?
   categoryId      String
   category        Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   badge           String?

@@ -101,10 +101,13 @@ export const CsvProductSchema = z.object({
         .trim(),
     description: z.string().default(''),
     price: z.number().min(0).default(0),
+    originalPrice: z.number().min(0).optional(),
     image: z.string().url('URL gambar utama tidak valid').or(z.literal('')).default(''),
     images: z.string().default(''), // pipe-separated URLs
     shopeeUrl: z.string().url().or(z.literal('')).default(''),
     tokopediaUrl: z.string().url().or(z.literal('')).default(''),
+    shopeeRating: z.number().min(0).max(5).optional(),
+    shopeeSold: z.number().min(0).optional(),
     category: z.string().default('Other'),
     badge: z.enum(['NEW', 'HOT', 'BEST SELLER', '']).default(''),
     isActive: z.preprocess(

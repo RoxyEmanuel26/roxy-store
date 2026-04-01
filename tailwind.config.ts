@@ -110,12 +110,26 @@ const config: Config = {
 					'50%': {
 						transform: 'scale(1.05)'
 					}
+				},
+				'progress-indeterminate': {
+					'0%': {
+						transform: 'translateX(-100%)',
+						width: '40%'
+					},
+					'50%': {
+						width: '60%'
+					},
+					'100%': {
+						transform: 'translateX(250%)',
+						width: '40%'
+					}
 				}
 			},
 			animation: {
 				'fade-in': 'fade-in 0.3s ease-out',
 				'slide-up': 'slide-up 0.4s ease-out',
-				'pulse-soft': 'pulse-soft 2s ease-in-out infinite'
+				'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
+				'progress-indeterminate': 'progress-indeterminate 1.2s ease-in-out infinite'
 			}
 		}
 	},

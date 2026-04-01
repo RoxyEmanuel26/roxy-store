@@ -51,6 +51,7 @@ export const metadata: Metadata = {
 
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 import { MicrosoftClarity } from '@/components/analytics/MicrosoftClarity'
+import { FacebookPixel } from '@/components/analytics/FacebookPixel'
 
 export default function RootLayout({
   children,
@@ -65,10 +66,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://www.google-analytics.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://www.google-analytics.com" />
         <link rel="preconnect" href="https://www.clarity.ms" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://connect.facebook.net" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
       </head>
       <body className="font-sans bg-brand-bg dark:bg-dark-bg text-brand-text dark:text-dark-text antialiased">
         <GoogleAnalytics />
         <MicrosoftClarity />
+        <FacebookPixel />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"

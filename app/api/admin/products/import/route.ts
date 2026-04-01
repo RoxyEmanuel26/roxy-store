@@ -67,6 +67,15 @@ export async function POST(request: NextRequest) {
                     price: rawProduct.price === '' || rawProduct.price === undefined || rawProduct.price === null
                         ? 0
                         : Number(rawProduct.price),
+                    originalPrice: rawProduct.originalPrice === '' || rawProduct.originalPrice === undefined || rawProduct.originalPrice === null
+                        ? undefined
+                        : Number(rawProduct.originalPrice),
+                    shopeeRating: rawProduct.shopeeRating === '' || rawProduct.shopeeRating === undefined || rawProduct.shopeeRating === null
+                        ? undefined
+                        : Number(rawProduct.shopeeRating),
+                    shopeeSold: rawProduct.shopeeSold === '' || rawProduct.shopeeSold === undefined || rawProduct.shopeeSold === null
+                        ? undefined
+                        : Number(rawProduct.shopeeSold),
                     description: rawProduct.description || '',
                     image: rawProduct.image || '',
                     images: rawProduct.images || '',
@@ -124,10 +133,13 @@ export async function POST(request: NextRequest) {
                             title,
                             description: description || existing.description,
                             price: data.price || existing.price,
+                            originalPrice: data.originalPrice ?? existing.originalPrice,
                             image: data.image || existing.image,
                             images: imageUrls.length > 0 ? imageUrls : existing.images,
                             shopeeUrl: data.shopeeUrl || existing.shopeeUrl,
                             tokopediaUrl: data.tokopediaUrl || existing.tokopediaUrl,
+                            shopeeRating: data.shopeeRating ?? existing.shopeeRating,
+                            shopeeSold: data.shopeeSold ?? existing.shopeeSold,
                             categoryId,
                             badge: data.badge || existing.badge,
                             isActive: data.isActive,
@@ -150,10 +162,13 @@ export async function POST(request: NextRequest) {
                             slug: finalSlug,
                             description: description || 'Deskripsi belum tersedia',
                             price: data.price,
+                            originalPrice: data.originalPrice ?? null,
                             image: data.image || '',
                             images: imageUrls,
                             shopeeUrl: data.shopeeUrl || '',
                             tokopediaUrl: data.tokopediaUrl || '',
+                            shopeeRating: data.shopeeRating ?? null,
+                            shopeeSold: data.shopeeSold ?? null,
                             categoryId,
                             badge: data.badge || null,
                             isActive: data.isActive,

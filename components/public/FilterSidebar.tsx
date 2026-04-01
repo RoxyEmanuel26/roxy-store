@@ -1,17 +1,16 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Separator } from '@/components/ui/separator'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Loader2 } from 'lucide-react'
 
 interface FilterSidebarProps {
-    categories: { id: string; name: string; slug: string }[]
+    categories: { id: string; name: string; slug: string; _count?: { products: number } }[]
     currentCategory?: string
     currentBadge?: string
     priceRange: { min: number; max: number }
@@ -29,6 +28,7 @@ export default function FilterSidebar({
 }: FilterSidebarProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
+    const [isPending, startTransition] = useTransition()
 
     const updateParams = useCallback(
         (key: string, value: string | null) => {
@@ -39,13 +39,32 @@ export default function FilterSidebar({
                 params.delete(key)
             }
             params.delete('page') // reset pagination
-            router.push(`/products?${params.toString()}`)
+            startTransition(() => {
+                router.push(`/products?${params.toString()}`)
+            })
         },
         [router, searchParams]
     )
 
+    const handleCategoryChange = (slug: string, checked: boolean) => {
+        // Use SEO-friendly 'kategori' param
+        const params = new URLSearchParams(searchParams.toString())
+        // Remove both possible param names
+        params.delete('category')
+        params.delete('kategori')
+        if (checked) {
+            params.set('kategori', slug)
+        }
+        params.delete('page')
+        startTransition(() => {
+            router.push(`/products?${params.toString()}`)
+        })
+    }
+
     const handleReset = () => {
-        router.push('/products')
+        startTransition(() => {
+            router.push('/products')
+        })
     }
 
     const [localPrice, setLocalPrice] = useState([
@@ -78,35 +97,64 @@ export default function FilterSidebar({
         else params.delete('maxPrice')
 
         params.delete('page')
-        router.push(`/products?${params.toString()}`)
+        startTransition(() => {
+            router.push(`/products?${params.toString()}`)
+        })
     }, [priceRange.min, priceRange.max, router, searchParams])
 
+    const hasActiveFilters = currentCategory || currentBadge || currentMinPrice || currentMaxPrice
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-5">
             <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-brand-text dark:text-dark-text">Filter</h3>
-                <Button variant="ghost" size="sm" onClick={handleReset} className="text-xs text-brand-muted">
-                    <RotateCcw className="h-3 w-3 mr-1" />
-                    Reset
-                </Button>
+                <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-brand-text dark:text-dark-text">Filter</h3>
+                    {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-primary" />}
+                </div>
+                {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={handleReset} className="text-xs text-brand-muted hover:text-red-500">
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        Reset
+                    </Button>
+                )}
             </div>
 
             <Separator />
 
             {/* Categories */}
-            <div className="space-y-3">
+            <div className="space-y-2.5">
                 <h4 className="text-sm font-medium text-brand-text dark:text-dark-text">Kategori</h4>
-                {categories.map((cat) => (
-                    <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
-                        <Checkbox
-                            checked={currentCategory === cat.slug}
-                            onCheckedChange={(checked) =>
-                                updateParams('category', checked ? cat.slug : null)
-                            }
-                        />
-                        <span className="text-sm text-brand-muted dark:text-dark-muted">{cat.name}</span>
-                    </label>
-                ))}
+                <div className="space-y-2">
+                    {categories.map((cat) => (
+                        <label
+                            key={cat.id}
+                            className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2 py-1.5 -mx-2 transition-colors ${
+                                currentCategory === cat.slug
+                                    ? 'bg-brand-primary/5 dark:bg-brand-primary/10'
+                                    : 'hover:bg-brand-surface/50 dark:hover:bg-dark-surface/50'
+                            }`}
+                        >
+                            <Checkbox
+                                checked={currentCategory === cat.slug}
+                                onCheckedChange={(checked) =>
+                                    handleCategoryChange(cat.slug, checked === true)
+                                }
+                            />
+                            <span className={`text-sm flex-1 ${
+                                currentCategory === cat.slug
+                                    ? 'font-medium text-brand-primary dark:text-dark-primary'
+                                    : 'text-brand-muted dark:text-dark-muted group-hover:text-brand-text dark:group-hover:text-dark-text'
+                            }`}>
+                                {cat.name}
+                            </span>
+                            {cat._count && (
+                                <span className="text-xs text-brand-muted/60 dark:text-dark-muted/60 tabular-nums">
+                                    {cat._count.products}
+                                </span>
+                            )}
+                        </label>
+                    ))}
+                </div>
             </div>
 
             <Separator />
@@ -153,23 +201,39 @@ export default function FilterSidebar({
             <Separator />
 
             {/* Badge */}
-            <div className="space-y-3">
-                <h4 className="text-sm font-medium text-brand-text dark:text-dark-text">Badge</h4>
-                {[
-                    { value: 'NEW', label: 'Produk Baru (NEW)' },
-                    { value: 'HOT', label: 'Produk Populer (HOT)' },
-                    { value: 'BEST SELLER', label: 'Terlaris (BEST SELLER)' },
-                ].map((opt) => (
-                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                        <Checkbox
-                            checked={currentBadge === opt.value}
-                            onCheckedChange={(checked) =>
-                                updateParams('badge', checked ? opt.value : null)
-                            }
-                        />
-                        <span className="text-sm text-brand-muted dark:text-dark-muted">{opt.label}</span>
-                    </label>
-                ))}
+            <div className="space-y-2.5">
+                <h4 className="text-sm font-medium text-brand-text dark:text-dark-text">Label Produk</h4>
+                <div className="space-y-2">
+                    {[
+                        { value: 'NEW', label: 'Produk Baru', color: 'bg-blue-500' },
+                        { value: 'HOT', label: 'Produk Populer', color: 'bg-red-500' },
+                        { value: 'BEST SELLER', label: 'Terlaris', color: 'bg-amber-500' },
+                    ].map((opt) => (
+                        <label
+                            key={opt.value}
+                            className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2 py-1.5 -mx-2 transition-colors ${
+                                currentBadge === opt.value
+                                    ? 'bg-brand-primary/5 dark:bg-brand-primary/10'
+                                    : 'hover:bg-brand-surface/50 dark:hover:bg-dark-surface/50'
+                            }`}
+                        >
+                            <Checkbox
+                                checked={currentBadge === opt.value}
+                                onCheckedChange={(checked) =>
+                                    updateParams('badge', checked ? opt.value : null)
+                                }
+                            />
+                            <span className={`w-2 h-2 rounded-full ${opt.color}`} />
+                            <span className={`text-sm ${
+                                currentBadge === opt.value
+                                    ? 'font-medium text-brand-primary dark:text-dark-primary'
+                                    : 'text-brand-muted dark:text-dark-muted'
+                            }`}>
+                                {opt.label}
+                            </span>
+                        </label>
+                    ))}
+                </div>
             </div>
         </div>
     )

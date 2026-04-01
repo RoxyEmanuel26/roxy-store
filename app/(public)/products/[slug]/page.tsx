@@ -14,7 +14,7 @@ import {
     BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 
-export const revalidate = 120
+export const revalidate = 60
 
 interface PageProps {
     params: Promise<{ slug: string }>
@@ -23,6 +23,7 @@ interface PageProps {
 import { generatePageMetadata } from '@/lib/metadata'
 import { getProductSchema, getBreadcrumbSchema } from '@/lib/structured-data'
 import { JsonLd } from '@/components/public/JsonLd'
+import { MetaViewContent } from '@/components/analytics/MetaViewContent'
 
 export async function generateMetadata({ params }: PageProps) {
     const { slug } = await params
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }: PageProps) {
         description: product.description.slice(0, 155),
         image: product.image,
         path: `/products/${slug}`,
-        type: 'website', // using 'website' to prevent type issues
+        type: 'website',
     })
 }
 
@@ -53,10 +54,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
             slug: true,
             description: true,
             price: true,
+            originalPrice: true,
             image: true,
             images: true,
             shopeeUrl: true,
             tokopediaUrl: true,
+            shopeeRating: true,
+            shopeeSold: true,
             badge: true,
             viewCount: true,
             shopeeClicks: true,
@@ -79,8 +83,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
             title: true,
             slug: true,
             price: true,
+            originalPrice: true,
             image: true,
             badge: true,
+            shopeeRating: true,
+            shopeeSold: true,
             category: { select: { name: true, slug: true } }
         },
         take: 4,
@@ -88,8 +95,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
     })
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <JsonLd data={getProductSchema(product as any)} />
+        <div className="container mx-auto px-4 py-4 md:py-8">
+            {/* JSON-LD Structured Data */}
+            <JsonLd data={getProductSchema(product as Parameters<typeof getProductSchema>[0])} />
             <JsonLd data={getBreadcrumbSchema([
                 { name: 'Beranda', url: '/' },
                 { name: 'Produk', url: '/products' },
@@ -97,8 +105,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 { name: product.title, url: `/products/${product.slug}` }
             ])} />
 
-            {/* Breadcrumb */}
-            <Breadcrumb className="mb-6">
+            {/* Meta Pixel: ViewContent event */}
+            <MetaViewContent
+                productId={product.id}
+                productName={product.title}
+                price={product.price}
+                category={product.category.name}
+            />
+
+            {/* Breadcrumb — compact on mobile */}
+            <Breadcrumb className="mb-4 md:mb-6 text-xs md:text-sm">
                 <BreadcrumbList>
                     <BreadcrumbItem>
                         <BreadcrumbLink href="/">Beranda</BreadcrumbLink>
@@ -115,33 +131,35 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     </BreadcrumbItem>
                     <BreadcrumbSeparator />
                     <BreadcrumbItem>
-                        <BreadcrumbPage>{product.title}</BreadcrumbPage>
+                        <BreadcrumbPage className="line-clamp-1 max-w-[150px] md:max-w-none">
+                            {product.title}
+                        </BreadcrumbPage>
                     </BreadcrumbItem>
                 </BreadcrumbList>
             </Breadcrumb>
 
-            {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Main Content — gap disesuaikan mobile/desktop */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
                 <FadeIn direction="left">
                     <ProductGallery images={[product.image, ...(product.images || [])]} />
                 </FadeIn>
                 <FadeIn direction="right">
-                    <ProductInfo product={product as any} />
+                    <ProductInfo product={product as unknown as import('@/types').ProductType} />
                 </FadeIn>
             </div>
 
-            {/* Related Products */}
+            {/* Produk Serupa */}
             {relatedProducts.length > 0 && (
-                <section className="mt-16">
+                <section className="mt-12 md:mt-16">
                     <FadeIn>
-                        <h2 className="text-2xl font-bold text-brand-text dark:text-dark-text mb-6">
-                            Produk Lainnya di {product.category.name}
+                        <h2 className="text-xl md:text-2xl font-bold text-brand-text dark:text-dark-text mb-4 md:mb-6">
+                            ✨ Produk Serupa di {product.category.name}
                         </h2>
                     </FadeIn>
-                    <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {relatedProducts.map((p: any) => (
+                    <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        {relatedProducts.map((p) => (
                             <StaggerItem key={p.id}>
-                                <ProductCard product={p} />
+                                <ProductCard product={p as unknown as import('@/types').ProductType} />
                             </StaggerItem>
                         ))}
                     </StaggerContainer>
