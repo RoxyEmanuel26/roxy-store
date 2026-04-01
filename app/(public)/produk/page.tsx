@@ -39,7 +39,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     return generatePageMetadata({
         title: parts.join(' - '),
         description: `Jelajahi ${category ? `produk ${category}` : 'semua produk'} di Roxy Store. Temukan produk terbaik dengan harga terjangkau.`,
-        path: '/products',
+        path: '/produk',
     })
 }
 
@@ -206,7 +206,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                                 <p className="text-sm text-brand-muted dark:text-dark-muted mt-1 max-w-sm">
                                     Coba ubah filter atau kata kunci pencarian untuk menemukan produk yang Anda cari
                                 </p>
-                                <Link href="/products">
+                                <Link href="/produk">
                                     <Button variant="outline" className="mt-4 border-brand-primary text-brand-primary transition-none">
                                         Lihat Semua Produk
                                     </Button>

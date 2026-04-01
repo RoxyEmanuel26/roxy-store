@@ -15,7 +15,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
     const icon = category.icon || '🛍️'
 
     return (
-        <Link href={`/category/${category.slug}`}>
+        <Link href={`/kategori/${category.slug}`}>
             <div className="group flex flex-col items-center p-6 bg-brand-surface dark:bg-dark-surface rounded-2xl hover:bg-brand-primary hover:shadow-lg hover:shadow-brand-primary/20 transition-all duration-300 cursor-pointer">
                 <span className="text-4xl group-hover:scale-110 transition-transform">
                     {icon}

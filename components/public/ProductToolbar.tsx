@@ -62,7 +62,7 @@ export default function ProductToolbar({
             else params.delete(key)
             params.delete('page')
             startTransition(() => {
-                router.push(`/products?${params.toString()}`)
+                router.push(`/produk?${params.toString()}`)
             })
         },
         [router, searchParams]
@@ -177,7 +177,7 @@ export default function ProductToolbar({
                             params.delete('kategori')
                             params.delete('category')
                             startTransition(() => {
-                                router.push(`/products?${params.toString()}`)
+                                router.push(`/produk?${params.toString()}`)
                             })
                         }}
                     >

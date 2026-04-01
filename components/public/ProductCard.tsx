@@ -27,7 +27,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
         : 0
 
     return (
-        <Link href={`/products/${product.slug}`} className="group block h-full">
+        <Link href={`/produk/${product.slug}`} className="group block h-full">
             <motion.div
                 whileHover={{ y: -4, boxShadow: '0 20px 40px rgba(255,107,157,0.15)' }}
                 transition={{ duration: 0.2 }}

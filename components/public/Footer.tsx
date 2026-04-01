@@ -15,9 +15,12 @@ interface FooterProps {
 }
 
 export function Footer({ settings }: FooterProps) {
-    const waUrl = `https://wa.me/${settings.wa_number}?text=${encodeURIComponent('Halo Roxy Store, saya ingin bertanya tentang produk 😊')}`
+    // Cast settings any if necessary to get telegram_channel_url and affiliate_disclaimer
+    const s = settings as any
+    const telegramUrl = s.telegram_channel_url || '#'
 
     return (
+
         <footer className="bg-brand-surface dark:bg-dark-surface border-t border-brand-border dark:border-dark-border mt-auto">
             {/* Main Footer */}
             <div className="container mx-auto px-4 py-12">
@@ -47,9 +50,11 @@ export function Footer({ settings }: FooterProps) {
                             <a href={`https://instagram.com/`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-brand-primary/10 flex items-center justify-center hover:bg-brand-primary/20 transition-colors">
                                 <Instagram className="h-4 w-4 text-brand-primary" />
                             </a>
-                            <a href={waUrl} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-green-500/10 flex items-center justify-center hover:bg-green-500/20 transition-colors">
-                                <svg className="h-4 w-4 text-green-600" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.638-1.467A11.932 11.932 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-2.168 0-4.19-.592-5.929-1.622l-.42-.248-2.747.869.882-2.681-.276-.437A9.77 9.77 0 012.182 12 9.818 9.818 0 0112 2.182 9.818 9.818 0 0121.818 12 9.818 9.818 0 0112 21.818z" /></svg>
-                            </a>
+                            {telegramUrl !== '#' && (
+                                <a href={telegramUrl} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center hover:bg-blue-500/20 transition-colors">
+                                    <svg className="h-4 w-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.892-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                                </a>
+                            )}
                         </div>
                     </div>
 
@@ -59,9 +64,8 @@ export function Footer({ settings }: FooterProps) {
                         <ul className="space-y-3">
                             {[
                                 { label: 'Beranda', href: '/' },
-                                { label: 'Semua Produk', href: '/products' },
-                                { label: 'Tentang Kami', href: '/about' },
-                                { label: 'Kontak & WA', href: '/contact' },
+                                { label: 'Semua Produk', href: '/produk' },
+                                { label: 'Tentang Kami', href: '/tentang' },
                             ].map((link) => (
                                 <li key={link.href}>
                                     <Link href={link.href} className="text-sm text-brand-muted dark:text-dark-muted hover:text-brand-primary transition-colors">
@@ -74,29 +78,31 @@ export function Footer({ settings }: FooterProps) {
 
                     {/* Column 3: Contact */}
                     <div>
-                        <h4 className="font-semibold text-brand-text dark:text-dark-text mb-4">Hubungi Kami</h4>
+                        <h4 className="font-semibold text-brand-text dark:text-dark-text mb-4">Promo & Info</h4>
                         <p className="text-sm text-brand-muted dark:text-dark-muted mb-4">
-                            Ada pertanyaan tentang produk?
+                            Dapatkan update diskon dan flash sale setiap hari di channel Telegram kami!
                         </p>
-                        <a href={waUrl} target="_blank" rel="noopener noreferrer">
-                            <Button className="bg-[#25D366] hover:bg-[#1fba57] text-white w-full sm:w-auto">
-                                💬 Chat via WhatsApp
+                        <a href={telegramUrl} target="_blank" rel="noopener noreferrer">
+                            <Button className="bg-[#0088cc] hover:bg-[#0077b3] text-white w-full sm:w-auto">
+                                📣 Gabung Channel Telegram
                             </Button>
                         </a>
-                        {settings.wa_number && (
-                            <p className="text-xs text-brand-muted dark:text-dark-muted mt-3">
-                                {formatWaNumber(settings.wa_number)}
-                            </p>
-                        )}
                     </div>
                 </div>
             </div>
 
             {/* Bottom Bar */}
-            <div className="border-t border-brand-border dark:border-dark-border py-4">
-                <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-2 text-sm text-brand-muted dark:text-dark-muted">
-                    <p>© 2026 Roxy Store. All rights reserved.</p>
-                    <p>Transaksi dilakukan di Shopee & Tokopedia</p>
+            <div className="border-t border-brand-border dark:border-dark-border py-6 bg-brand-bg dark:bg-dark-bg">
+                <div className="container mx-auto px-4">
+                    {s.affiliate_disclaimer && (
+                        <p className="text-xs text-brand-muted dark:text-dark-muted text-center mb-6 max-w-4xl mx-auto italic">
+                            💡 {s.affiliate_disclaimer}
+                        </p>
+                    )}
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-sm text-brand-muted dark:text-dark-muted">
+                        <p>© 2026 Roxy Store. All rights reserved.</p>
+                        <p>Website Rekomendasi Produk Terlaris Shopee</p>
+                    </div>
                 </div>
             </div>
         </footer>

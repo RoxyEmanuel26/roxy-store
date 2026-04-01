@@ -47,7 +47,7 @@ export default async function AboutPage() {
                         {[
                             { icon: '✨', title: 'Produk Terpercaya', desc: 'Setiap produk diolah oleh perusahaan terpercaya' },
                             { icon: '💝', title: 'Kualitas Premium', desc: 'Material terbaik dipilih untuk kenyamanan dan ketahanan maksimal' },
-                            { icon: '🚀', title: 'Pengiriman Cepat', desc: 'Tersedia di Shopee dan Tokopedia untuk kemudahan berbelanja' },
+                            { icon: '🚀', title: 'Pengiriman Cepat', desc: 'Tersedia di Shopee untuk kemudahan berbelanja' },
                         ].map((item) => (
                             <div key={item.title} className="flex flex-col items-center p-6 bg-white dark:bg-dark-bg rounded-2xl shadow-sm">
                                 <span className="text-5xl mb-4">{item.icon}</span>
@@ -64,16 +64,11 @@ export default async function AboutPage() {
                 <div className="container mx-auto px-4 text-center">
                     <h2 className="text-2xl font-bold text-brand-text dark:text-dark-text mb-6">Mulai Belanja Sekarang</h2>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link href="/products">
+                        <Link href="/produk">
                             <Button size="lg" className="bg-brand-primary hover:bg-brand-accent text-white px-8">
                                 Lihat Koleksi Produk Kami
                             </Button>
                         </Link>
-                        <a href={`https://wa.me/${settings.wa_number}`} target="_blank" rel="noopener noreferrer">
-                            <Button size="lg" variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white px-8">
-                                💬 Hubungi Kami via WhatsApp
-                            </Button>
-                        </a>
                     </div>
                 </div>
             </section>

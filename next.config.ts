@@ -129,6 +129,26 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  async redirects() {
+    return [
+      {
+        source: '/products',
+        destination: '/produk',
+        permanent: true,
+      },
+      {
+        source: '/products/:slug',
+        destination: '/produk/:slug',
+        permanent: true,
+      },
+      {
+        source: '/category/:slug',
+        destination: '/kategori/:slug',
+        permanent: true,
+      },
+    ]
+  },
+
   async headers() {
     return [
       {

@@ -15,7 +15,7 @@ import {
     trackShopeeClick,
     trackTokopediaClick
 } from '@/lib/analytics-events'
-import { trackLead } from '@/lib/facebook-pixel'
+import { trackLead, trackViewContent } from '@/lib/facebook-pixel'
 
 const badgeColors: Record<string, string> = {
     NEW: 'bg-blue-500 text-white',
@@ -84,6 +84,29 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             product.price
         )
 
+        // Meta Pixel: ViewContent
+        const viewContentData = {
+            content_name: product.title,
+            content_ids: [product.id],
+            content_type: 'product',
+            value: product.price,
+            currency: 'IDR',
+        }
+        trackViewContent(viewContentData)
+
+        // Server-side CAPI for ViewContent
+        const viewEventId = `view_${product.id}_${Date.now()}`
+        fetch('/api/meta-events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                eventName: 'ViewContent',
+                eventId: viewEventId,
+                sourceUrl: window.location.href,
+                customData: viewContentData,
+            }),
+        }).catch(() => {})
+
         // Increment database viewCount
         fetch(`/api/products/${product.id}/view`, { method: 'POST' }).catch(console.error)
     }, [product.id]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -115,11 +138,6 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         }).catch(() => {})
     }
 
-    const handleTokopediaClick = () => {
-        window.open(product.tokopediaUrl, '_blank')
-        trackTokopediaClick(product.id, product.title, product.price)
-    }
-
     const hasDiscount = product.originalPrice && product.originalPrice > product.price
     const discountPercent = hasDiscount
         ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
@@ -136,7 +154,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                 )}
 
                 {/* Category */}
-                <Link href={`/category/${product.category?.slug}`}>
+                <Link href={`/kategori/${product.category?.slug}`}>
                     <span className="text-sm text-brand-primary hover:underline font-medium">
                         {product.category?.name}
                     </span>
@@ -197,7 +215,6 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
                 <Separator />
 
-                {/* Buy Buttons — visible on desktop, hidden on mobile (sticky CTA di bawah) */}
                 <div className="hidden lg:block space-y-3">
                     {product.shopeeUrl && (
                         <motion.button
@@ -210,18 +227,6 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                             🛒 Beli di Shopee
                         </motion.button>
                     )}
-
-                    {product.tokopediaUrl && (
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={handleTokopediaClick}
-                            className="w-full h-14 text-base font-bold bg-[#42B549] hover:bg-[#389B3F] text-white rounded-xl shadow-lg shadow-[#42B549]/30 flex items-center justify-center gap-2 transition-none"
-                        >
-                            <Store className="h-5 w-5" />
-                            🟢 Beli di Tokopedia
-                        </motion.button>
-                    )}
                 </div>
 
                 {/* Share / Wishlist */}
@@ -231,15 +236,10 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                 </div>
 
                 {/* Purchase Info */}
-                {(product.shopeeUrl || product.tokopediaUrl) && (
+                {product.shopeeUrl && (
                     <div className="p-4 bg-brand-surface dark:bg-dark-surface rounded-xl">
                         <p className="text-sm text-brand-muted dark:text-dark-muted">
-                            💡 <strong>Info Pembelian:</strong> Klik tombol di atas untuk membeli melalui{' '}
-                            {[
-                                product.shopeeUrl && 'Shopee',
-                                product.tokopediaUrl && 'Tokopedia',
-                            ].filter(Boolean).join(' atau ')}.
-                            Transaksi dilakukan di platform marketplace pilihan Anda.
+                            💡 <strong>Info Pembelian:</strong> Klik tombol di atas untuk membeli melalui Shopee. Transaksi dilakukan di platform marketplace tersebut.
                         </p>
                     </div>
                 )}
@@ -269,15 +269,6 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                             >
                                 <ShoppingCart className="h-4 w-4" />
                                 Beli Shopee
-                            </button>
-                        )}
-                        {product.tokopediaUrl && (
-                            <button
-                                onClick={handleTokopediaClick}
-                                className="flex-1 h-12 text-sm font-bold bg-[#42B549] active:bg-[#389B3F] text-white rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-[#42B549]/20"
-                            >
-                                <Store className="h-4 w-4" />
-                                Tokopedia
                             </button>
                         )}
                     </div>

@@ -9,9 +9,8 @@ module.exports = {
     additionalPaths: async () => {
         return [
             { loc: '/', changefreq: 'daily', priority: 1.0 },
-            { loc: '/products', changefreq: 'daily', priority: 0.9 },
-            { loc: '/about', changefreq: 'monthly', priority: 0.5 },
-            { loc: '/contact', changefreq: 'monthly', priority: 0.5 },
+            { loc: '/produk', changefreq: 'daily', priority: 0.9 },
+            { loc: '/tentang', changefreq: 'monthly', priority: 0.5 },
         ]
     },
     robotsTxtOptions: {
@@ -24,7 +23,7 @@ module.exports = {
         ],
     },
     transform: async (config, path) => {
-        if (path.startsWith('/products/')) {
+        if (path.startsWith('/produk/')) {
             return {
                 loc: path,
                 changefreq: 'weekly',
@@ -32,7 +31,7 @@ module.exports = {
                 lastmod: new Date().toISOString(),
             }
         }
-        if (path.startsWith('/category/')) {
+        if (path.startsWith('/kategori/')) {
             return { loc: path, changefreq: 'weekly', priority: 0.7 }
         }
         return {

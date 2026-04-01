@@ -40,7 +40,7 @@ export default function FilterSidebar({
             }
             params.delete('page') // reset pagination
             startTransition(() => {
-                router.push(`/products?${params.toString()}`)
+                router.push(`/produk?${params.toString()}`)
             })
         },
         [router, searchParams]
@@ -57,13 +57,13 @@ export default function FilterSidebar({
         }
         params.delete('page')
         startTransition(() => {
-            router.push(`/products?${params.toString()}`)
+            router.push(`/produk?${params.toString()}`)
         })
     }
 
     const handleReset = () => {
         startTransition(() => {
-            router.push('/products')
+            router.push('/produk')
         })
     }
 
@@ -98,7 +98,7 @@ export default function FilterSidebar({
 
         params.delete('page')
         startTransition(() => {
-            router.push(`/products?${params.toString()}`)
+            router.push(`/produk?${params.toString()}`)
         })
     }, [priceRange.min, priceRange.max, router, searchParams])
 

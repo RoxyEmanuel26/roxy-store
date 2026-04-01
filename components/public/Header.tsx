@@ -15,9 +15,8 @@ import type { SiteSettingsType } from '@/types'
 
 const navLinks = [
     { label: 'Beranda', href: '/' },
-    { label: 'Produk', href: '/products' },
-    { label: 'Tentang Kami', href: '/about' },
-    { label: 'Kontak', href: '/contact' },
+    { label: 'Produk', href: '/produk' },
+    { label: 'Tentang Kami', href: '/tentang' },
 ]
 
 interface HeaderProps {

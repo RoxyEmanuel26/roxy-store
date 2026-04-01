@@ -17,7 +17,7 @@ export function ShareButton({ product, className }: ShareButtonProps) {
 
     const getUrl = () =>
         typeof window !== 'undefined'
-            ? `${window.location.origin}/products/${product.slug}`
+            ? `${window.location.origin}/produk/${product.slug}`
             : ''
 
     const handleNativeShare = async () => {

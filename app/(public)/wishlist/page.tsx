@@ -92,7 +92,7 @@ export default function WishlistPage() {
                         <p className="text-sm text-brand-muted dark:text-dark-muted mt-2">
                             Tekan ikon ❤️ pada produk untuk menyimpan
                         </p>
-                        <Link href="/products">
+                        <Link href="/produk">
                             <Button className="mt-6 bg-brand-primary hover:bg-brand-accent text-white transition-none">Jelajahi Produk</Button>
                         </Link>
                     </div>

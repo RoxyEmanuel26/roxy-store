@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: PageProps) {
         title: product.title,
         description: product.description.slice(0, 155),
         image: product.image,
-        path: `/products/${slug}`,
+        path: `/produk/${slug}`,
         type: 'website',
     })
 }
@@ -58,13 +58,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
             image: true,
             images: true,
             shopeeUrl: true,
-            tokopediaUrl: true,
             shopeeRating: true,
             shopeeSold: true,
             badge: true,
             viewCount: true,
             shopeeClicks: true,
-            tokopediaClicks: true,
             categoryId: true,
             category: { select: { id: true, name: true, slug: true } }
         }
@@ -100,9 +98,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <JsonLd data={getProductSchema(product as Parameters<typeof getProductSchema>[0])} />
             <JsonLd data={getBreadcrumbSchema([
                 { name: 'Beranda', url: '/' },
-                { name: 'Produk', url: '/products' },
-                { name: product.category.name, url: `/category/${product.category.slug}` },
-                { name: product.title, url: `/products/${product.slug}` }
+                { name: 'Produk', url: '/produk' },
+                { name: product.category.name, url: `/kategori/${product.category.slug}` },
+                { name: product.title, url: `/produk/${product.slug}` }
             ])} />
 
             {/* Meta Pixel: ViewContent event */}
@@ -121,11 +119,11 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     </BreadcrumbItem>
                     <BreadcrumbSeparator />
                     <BreadcrumbItem>
-                        <BreadcrumbLink href="/products">Produk</BreadcrumbLink>
+                        <BreadcrumbLink href="/produk">Produk</BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator />
                     <BreadcrumbItem>
-                        <BreadcrumbLink href={`/category/${product.category.slug}`}>
+                        <BreadcrumbLink href={`/kategori/${product.category.slug}`}>
                             {product.category.name}
                         </BreadcrumbLink>
                     </BreadcrumbItem>

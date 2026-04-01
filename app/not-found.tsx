@@ -23,7 +23,7 @@ export default function NotFound() {
                             Kembali ke Beranda
                         </Button>
                     </Link>
-                    <Link href="/products">
+                    <Link href="/produk">
                         <Button variant="outline" className="border-brand-primary text-brand-primary gap-2">
                             <ShoppingBag className="h-4 w-4" />
                             Lihat Produk

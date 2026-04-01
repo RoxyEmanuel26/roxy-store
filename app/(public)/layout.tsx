@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import { Header } from '@/components/public/Header'
 import { Footer } from '@/components/public/Footer'
-import { FloatingWhatsApp } from '@/components/public/FloatingWhatsApp'
 import { PageTransition } from '@/components/animations/PageTransition'
 import { InstallPWA } from '@/components/public/InstallPWA'
 import { getSiteSettings } from '@/lib/site-settings'
@@ -24,7 +23,6 @@ export default async function PublicLayout({
                 <PageTransition>{children}</PageTransition>
             </main>
             <Footer settings={settings} />
-            <FloatingWhatsApp waNumber={settings.wa_number} />
             <InstallPWA />
         </div>
     )

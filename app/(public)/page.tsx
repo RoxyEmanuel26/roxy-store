@@ -26,7 +26,7 @@ export const revalidate = 60
 
 export const metadata = generatePageMetadata({
     title: 'Beranda',
-    description: 'Selamat datang di Roxy Store! Temukan koleksi aksesori wanita colorful: gantungan kunci lucu, beads bracelet, beads HP, kalung, dan anting. Tersedia di Shopee dan Tokopedia.',
+    description: 'Selamat datang di Roxy Store! Temukan koleksi aksesori wanita colorful: gantungan kunci lucu, beads bracelet, beads HP, kalung, dan anting. Tersedia di Shopee.',
     path: '/',
 })
 
@@ -72,7 +72,7 @@ export default async function HomePage() {
                         </FadeIn>
 
                         <FadeIn delay={0.3}>
-                            <HeroCTA waNumber={settings.wa_number} />
+                            <HeroCTA telegramUrl={(settings as any).telegram_channel_url || ''} />
                         </FadeIn>
                     </div>
                 </div>
@@ -129,9 +129,9 @@ export default async function HomePage() {
                             </div>
                         </FadeIn>
                         <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                            {categories.map((category: any) => (
+                            {categories.map((category) => (
                                 <StaggerItem key={category.id}>
-                                    <CategoryCard category={category} />
+                                    <CategoryCard category={category as any} />
                                 </StaggerItem>
                             ))}
                         </StaggerContainer>
@@ -148,7 +148,7 @@ export default async function HomePage() {
                                 <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text">Produk Pilihan</h2>
                                 <p className="text-brand-muted dark:text-dark-muted mt-1">🔥 Produk Pilihan Terlaris Shopee</p>
                             </div>
-                            <Link href="/products">
+                            <Link href="/produk">
                                 <Button variant="outline" className="border-brand-primary text-brand-primary hidden sm:flex transition-none">
                                     Lihat Semua <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
@@ -157,9 +157,9 @@ export default async function HomePage() {
                     </FadeIn>
                     {featuredProducts.length > 0 ? (
                         <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {featuredProducts.map((product: any, index: number) => (
+                            {featuredProducts.map((product, index) => (
                                 <StaggerItem key={product.id}>
-                                    <ProductCard product={product} priority={index < 4} />
+                                    <ProductCard product={product as any} priority={index < 4} />
                                 </StaggerItem>
                             ))}
                         </StaggerContainer>
@@ -167,7 +167,7 @@ export default async function HomePage() {
                         <p className="text-center text-brand-muted py-8">Belum ada produk unggulan</p>
                     )}
                     <div className="text-center mt-6 sm:hidden">
-                        <Link href="/products">
+                        <Link href="/produk">
                             <Button variant="outline" className="border-brand-primary text-brand-primary transition-none">
                                 Lihat Semua Produk <ArrowRight className="ml-2 h-4 w-4" />
                             </Button>
@@ -185,7 +185,7 @@ export default async function HomePage() {
                                 <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text">Baru Masuk 🆕</h2>
                                 <p className="text-brand-muted dark:text-dark-muted mt-1">🆕 Baru Ditambahkan & dikurasi</p>
                             </div>
-                            <Link href="/products?sort=newest">
+                            <Link href="/produk?sort=newest">
                                 <Button variant="outline" className="border-brand-primary text-brand-primary hidden sm:flex transition-none">
                                     Lihat Semua <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
@@ -194,9 +194,9 @@ export default async function HomePage() {
                     </FadeIn>
                     {newProducts.length > 0 ? (
                         <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {newProducts.map((product: any) => (
+                            {newProducts.map((product) => (
                                 <StaggerItem key={product.id}>
-                                    <ProductCard product={product} />
+                                    <ProductCard product={product as any} />
                                 </StaggerItem>
                             ))}
                         </StaggerContainer>
@@ -217,9 +217,9 @@ export default async function HomePage() {
                     </FadeIn>
                     <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
                         {[
-                            { icon: '✨', title: 'Produk Terpercaya', desc: 'Setiap produk yang diolah sudah diseleksi' },
-                            { icon: '💝', title: 'Kualitas Premium', desc: 'Material terbaik dipilih untuk kenyamanan dan ketahanan maksimal' },
-                            { icon: '🚀', title: 'Pengiriman Cepat', desc: 'Tersedia di Shopee dan Tokopedia untuk kemudahan berbelanja' },
+                            { icon: '⭐', title: 'Sudah Diseleksi', desc: 'Rating tinggi dan ulasan positif dari pembeli nyata' },
+                            { icon: '💰', title: 'Harga Terbaik', desc: 'Dapatkan harga kompetitif dengan promo menarik' },
+                            { icon: '🔄', title: 'Update Setiap Hari', desc: 'Temukan produk tren terbaru dan flash sale rutin' },
                         ].map((item) => (
                             <StaggerItem key={item.title}>
                                 <div className="flex flex-col items-center p-6 bg-white dark:bg-dark-bg rounded-2xl shadow-sm">
@@ -237,13 +237,13 @@ export default async function HomePage() {
             <section className="py-16 bg-brand-primary dark:bg-dark-primary">
                 <div className="container mx-auto px-4 text-center text-white">
                     <FadeIn>
-                        <h2 className="text-3xl font-bold mb-4">Tertarik dengan Produk Kami?</h2>
+                        <h2 className="text-3xl font-bold mb-4">Mau Update Promo & Flash Sale Shopee Setiap Hari?</h2>
                         <p className="opacity-90 mb-8 text-lg">
-                            Kunjungi toko kami di Shopee dan Tokopedia untuk pembelian yang mudah dan aman
+                            Bergabung dengan ribuan orang lainnya di channel Telegram kami untuk update diskon terbaru!
                         </p>
-                        <a href={`https://wa.me/${settings.wa_number}?text=${encodeURIComponent('Halo Roxy Store!')}`} target="_blank" rel="noopener noreferrer">
+                        <a href={(settings as any).telegram_channel_url || '#'} target="_blank" rel="noopener noreferrer">
                             <Button size="lg" className="bg-white text-brand-primary hover:bg-brand-surface font-semibold transition-none">
-                                💬 Chat via WhatsApp
+                                📣 Gabung Channel Telegram
                             </Button>
                         </a>
                     </FadeIn>

@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: PageProps) {
     return generatePageMetadata({
         title: category.name,
         description: category.description || `Koleksi produk kategori ${category.name} dari Roxy Store. Temukan produk favoritmu sekarang!`,
-        path: `/category/${slug}`,
+        path: `/kategori/${slug}`,
     })
 }
 
@@ -86,7 +86,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                 <BreadcrumbList>
                     <BreadcrumbItem><BreadcrumbLink href="/">Beranda</BreadcrumbLink></BreadcrumbItem>
                     <BreadcrumbSeparator />
-                    <BreadcrumbItem><BreadcrumbLink href="/products">Produk</BreadcrumbLink></BreadcrumbItem>
+                    <BreadcrumbItem><BreadcrumbLink href="/produk">Produk</BreadcrumbLink></BreadcrumbItem>
                     <BreadcrumbSeparator />
                     <BreadcrumbItem><BreadcrumbPage>{category.name}</BreadcrumbPage></BreadcrumbItem>
                 </BreadcrumbList>
@@ -124,7 +124,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                     <SearchIcon className="h-16 w-16 text-brand-muted/40 mb-4" />
                     <h3 className="text-lg font-semibold text-brand-text dark:text-dark-text">Produk tidak ditemukan</h3>
                     <p className="text-sm text-brand-muted mt-1">Belum ada produk di kategori ini</p>
-                    <Link href="/products">
+                    <Link href="/produk">
                         <Button variant="outline" className="mt-4 border-brand-primary text-brand-primary">Lihat Semua Produk</Button>
                     </Link>
                 </div>
@@ -133,7 +133,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-8">
                     {page > 1 && (
-                        <Link href={`/category/${slug}?${new URLSearchParams({ ...sp, page: String(page - 1) } as any).toString()}`}>
+                        <Link href={`/kategori/${slug}?${new URLSearchParams({ ...sp, page: String(page - 1) } as any).toString()}`}>
                             <Button variant="outline" size="sm">Sebelumnya</Button>
                         </Link>
                     )}
@@ -142,7 +142,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                         .map((p, idx, arr) => (
                             <span key={p}>
                                 {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-brand-muted">…</span>}
-                                <Link href={`/category/${slug}?${new URLSearchParams({ ...sp, page: String(p) } as any).toString()}`}>
+                                <Link href={`/kategori/${slug}?${new URLSearchParams({ ...sp, page: String(p) } as any).toString()}`}>
                                     <Button variant={p === page ? 'default' : 'outline'} size="sm" className={p === page ? 'bg-brand-primary text-white' : ''}>
                                         {p}
                                     </Button>
@@ -150,7 +150,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                             </span>
                         ))}
                     {page < totalPages && (
-                        <Link href={`/category/${slug}?${new URLSearchParams({ ...sp, page: String(page + 1) } as any).toString()}`}>
+                        <Link href={`/kategori/${slug}?${new URLSearchParams({ ...sp, page: String(page + 1) } as any).toString()}`}>
                             <Button variant="outline" size="sm">Berikutnya</Button>
                         </Link>
                     )}

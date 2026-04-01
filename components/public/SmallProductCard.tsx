@@ -20,7 +20,7 @@ const badgeColors: Record<string, string> = {
 
 export default function SmallProductCard({ product }: SmallProductCardProps) {
     return (
-        <Link href={`/products/${product.slug}`} className="group block h-full">
+        <Link href={`/produk/${product.slug}`} className="group block h-full">
             <motion.div
                 whileHover={{ y: -3, boxShadow: '0 12px 28px rgba(255,107,157,0.18)' }}
                 transition={{ duration: 0.18 }}

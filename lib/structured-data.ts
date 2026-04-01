@@ -27,7 +27,6 @@ export function getProductSchema(product: {
     images?: string[]
     slug: string
     shopeeUrl: string
-    tokopediaUrl: string
     shopeeRating?: number | null
     shopeeSold?: number | null
 }) {
@@ -41,17 +40,6 @@ export function getProductSchema(product: {
             availability: 'https://schema.org/InStock',
             url: product.shopeeUrl,
             seller: { '@type': 'Organization', name: 'Shopee' },
-        })
-    }
-
-    if (product.tokopediaUrl) {
-        offers.push({
-            '@type': 'Offer',
-            price: product.price,
-            priceCurrency: 'IDR',
-            availability: 'https://schema.org/InStock',
-            url: product.tokopediaUrl,
-            seller: { '@type': 'Organization', name: 'Tokopedia' },
         })
     }
 
