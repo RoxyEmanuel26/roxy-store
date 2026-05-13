@@ -5,6 +5,7 @@ import {
     uploadRateLimit,
     apiRateLimit,
 } from '@/lib/rate-limit'
+import { auth } from '@/lib/auth'
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
@@ -46,7 +47,6 @@ export async function middleware(request: NextRequest) {
     // Protect admin routes (except login page)
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
         try {
-            const { auth } = await import('@/lib/auth')
             const session = await auth()
 
             if (!session) {
@@ -68,7 +68,6 @@ export async function middleware(request: NextRequest) {
     // Redirect logged-in users away from login page
     if (pathname === '/admin/login') {
         try {
-            const { auth } = await import('@/lib/auth')
             const session = await auth()
             if (session) {
                 return NextResponse.redirect(new URL('/admin/dashboard', request.url))
@@ -79,7 +78,6 @@ export async function middleware(request: NextRequest) {
     // Protect /api/admin/* endpoints
     if (pathname.startsWith('/api/admin')) {
         try {
-            const { auth } = await import('@/lib/auth')
             const session = await auth()
             if (!session) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -93,5 +91,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+    matcher: [
+        // Public routes + admin
+        '/((?!_next/static|_next/image|favicon.ico|icons|fonts|manifest.json).*)',
+    ],
 }

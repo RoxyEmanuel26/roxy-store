@@ -108,11 +108,19 @@ const nextConfig: NextConfig = {
   turbopack: {},
 
   // Production optimizations
+  reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
 
   images: {
     remotePatterns: [
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+      { protocol: 'https', hostname: '**.cloudinary.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: 'cf.shopee.co.id' },
+      { protocol: 'https', hostname: 'down-**.img.susercontent.com' },
+      // Fallback untuk domain lain — lebih aman dari hostname: '**'
       { protocol: 'https', hostname: '**' },
     ],
     formats: ['image/avif', 'image/webp'],
@@ -126,6 +134,12 @@ const nextConfig: NextConfig = {
       'lucide-react',
       'framer-motion',
       'recharts',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-tabs',
+      'date-fns',
     ],
   },
 

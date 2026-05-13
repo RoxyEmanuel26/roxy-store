@@ -1,6 +1,39 @@
 import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 
+/**
+ * Cache product by slug — dipakai di generateMetadata & ProductDetailPage
+ * Eliminasi double DB query untuk setiap page visit.
+ */
+export const getCachedProductBySlug = (slug: string) =>
+    unstable_cache(
+        async () => {
+            return prisma.product.findUnique({
+                where: { slug, isActive: true },
+                select: {
+                    id: true,
+                    title: true,
+                    slug: true,
+                    description: true,
+                    price: true,
+                    originalPrice: true,
+                    image: true,
+                    images: true,
+                    shopeeUrl: true,
+                    shopeeRating: true,
+                    shopeeSold: true,
+                    badge: true,
+                    viewCount: true,
+                    shopeeClicks: true,
+                    categoryId: true,
+                    category: { select: { id: true, name: true, slug: true } },
+                },
+            })
+        },
+        [`product-slug-${slug}`],
+        { revalidate: 60, tags: ['products', `product-${slug}`] }
+    )()
+
 export const getCachedCategories = unstable_cache(
     async () => {
         return prisma.category.findMany({

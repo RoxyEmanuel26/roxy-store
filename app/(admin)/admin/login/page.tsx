@@ -96,7 +96,7 @@ export default function AdminLoginPage() {
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="admin@roxystore.com"
+                                    placeholder="admin@roxystore.web.id"
                                     autoFocus
                                     className="pl-10"
                                     disabled={isLoading}

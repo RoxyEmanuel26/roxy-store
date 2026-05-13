@@ -48,15 +48,22 @@ export default function ProductListClient({
 
         try {
             const res = await fetch(`/api/products/list?${params}`)
+            if (!res.ok) return
             const data = await res.json()
 
-            setProducts((prev) => [...prev, ...data.products])
+            setProducts((prev) => {
+                const updated = [...prev, ...data.products]
+                // Fix: pakai updated.length bukan stale products.length dari closure
+                setHasMore(updated.length < data.total)
+                return updated
+            })
             setPage(nextPage)
-            setHasMore(products.length + data.products.length < data.total)
+        } catch {
+            // Silent fail — infinite scroll tidak crash halaman
         } finally {
             setIsLoading(false)
         }
-    }, [page, isLoading, hasMore, searchParams, products.length, limit])
+    }, [page, isLoading, hasMore, searchParams, limit])
 
     if (products.length === 0) return null
 

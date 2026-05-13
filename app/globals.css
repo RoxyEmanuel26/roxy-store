@@ -67,8 +67,9 @@
     --chart-5: 199 75% 55%;
   }
 
-  * {
-    @apply border-brand-border dark:border-dark-border;
+  /* Hanya elemen yang benar-benar membutuhkan transition dark-mode */
+  :root, html, body,
+  .theme-transition {
     transition-property: background-color, border-color, color;
     transition-duration: 200ms;
     transition-timing-function: ease;
@@ -80,8 +81,6 @@
   }
 
   /* Exclude elements that have their own animations */
-  button,
-  a,
   [data-motion],
   .transition-none {
     transition-property: none;
@@ -125,6 +124,12 @@
 
   .scrollbar-thumb-brand-secondary::-webkit-scrollbar-thumb {
     @apply bg-brand-secondary rounded-full;
+  }
+
+  /* Performance: defer rendering of off-screen sections */
+  .content-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
   }
 }
 

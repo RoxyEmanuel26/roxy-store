@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-    siteUrl: process.env.NEXTAUTH_URL || 'https://Roxylay.com',
+    siteUrl: process.env.NEXTAUTH_URL || 'https://www.roxystore.web.id',
     generateRobotsTxt: true,
     changefreq: 'weekly',
     priority: 0.7,
@@ -11,6 +11,8 @@ module.exports = {
             { loc: '/', changefreq: 'daily', priority: 1.0 },
             { loc: '/produk', changefreq: 'daily', priority: 0.9 },
             { loc: '/tentang', changefreq: 'monthly', priority: 0.5 },
+            { loc: '/kontak', changefreq: 'monthly', priority: 0.4 },
+            { loc: '/wishlist', changefreq: 'weekly', priority: 0.3 },
         ]
     },
     robotsTxtOptions: {
@@ -32,7 +34,12 @@ module.exports = {
             }
         }
         if (path.startsWith('/kategori/')) {
-            return { loc: path, changefreq: 'weekly', priority: 0.7 }
+            return {
+                loc: path,
+                changefreq: 'weekly',
+                priority: 0.7,
+                lastmod: new Date().toISOString(),
+            }
         }
         return {
             loc: path,

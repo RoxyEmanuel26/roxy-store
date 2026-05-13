@@ -57,6 +57,7 @@ model Product {
   @@index([createdAt(sort: Desc)])
   @@index([viewCount(sort: Desc)])
   @@index([badge])
+  @@index([slug])
 }
 
 model SiteSettings {

@@ -24,13 +24,12 @@ import { generatePageMetadata } from '@/lib/metadata'
 import { getProductSchema, getBreadcrumbSchema } from '@/lib/structured-data'
 import { JsonLd } from '@/components/public/JsonLd'
 import { MetaViewContent } from '@/components/analytics/MetaViewContent'
+import { getCachedProductBySlug } from '@/lib/cached-queries'
 
 export async function generateMetadata({ params }: PageProps) {
     const { slug } = await params
-    const product = await prisma.product.findUnique({
-        where: { slug },
-        select: { title: true, description: true, image: true },
-    })
+    // Pakai cached query — tidak double query ke DB
+    const product = await getCachedProductBySlug(slug)
 
     if (!product) return { title: 'Produk Tidak Ditemukan - Roxy Store' }
 
@@ -39,34 +38,15 @@ export async function generateMetadata({ params }: PageProps) {
         description: product.description.slice(0, 155),
         image: product.image,
         path: `/produk/${slug}`,
-        type: 'website',
+        type: 'article',
     })
 }
 
 export default async function ProductDetailPage({ params }: PageProps) {
     const { slug } = await params
 
-    const product = await prisma.product.findUnique({
-        where: { slug, isActive: true },
-        select: {
-            id: true,
-            title: true,
-            slug: true,
-            description: true,
-            price: true,
-            originalPrice: true,
-            image: true,
-            images: true,
-            shopeeUrl: true,
-            shopeeRating: true,
-            shopeeSold: true,
-            badge: true,
-            viewCount: true,
-            shopeeClicks: true,
-            categoryId: true,
-            category: { select: { id: true, name: true, slug: true } }
-        }
-    })
+    // Pakai cached query — sama dengan generateMetadata, tidak double hit DB
+    const product = await getCachedProductBySlug(slug)
 
     if (!product) notFound()
 

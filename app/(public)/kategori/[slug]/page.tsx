@@ -10,6 +10,8 @@ import ProductCard from '@/components/public/ProductCard'
 import ProductToolbar from '@/components/public/ProductToolbar'
 import { Button } from '@/components/ui/button'
 import { Search as SearchIcon } from 'lucide-react'
+import { JsonLd } from '@/components/public/JsonLd'
+import { getBreadcrumbSchema } from '@/lib/structured-data'
 
 export const revalidate = 30
 const ITEMS_PER_PAGE = 12
@@ -65,7 +67,19 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     const [products, total, priceAgg] = await Promise.all([
         prisma.product.findMany({
             where,
-            include: { category: true },
+            select: {
+                id: true,
+                title: true,
+                slug: true,
+                price: true,
+                originalPrice: true,
+                image: true,
+                badge: true,
+                viewCount: true,
+                shopeeRating: true,
+                shopeeSold: true,
+                category: { select: { name: true, slug: true } },
+            },
             orderBy: orderByMap[sort] || orderByMap.newest,
             skip: (page - 1) * ITEMS_PER_PAGE,
             take: ITEMS_PER_PAGE,
@@ -82,6 +96,12 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
     return (
         <div className="container mx-auto px-4 py-8">
+            <JsonLd data={getBreadcrumbSchema([
+                { name: 'Beranda', url: '/' },
+                { name: 'Produk', url: '/produk' },
+                { name: category.name, url: `/kategori/${category.slug}` },
+            ])} />
+
             <Breadcrumb className="mb-6">
                 <BreadcrumbList>
                     <BreadcrumbItem><BreadcrumbLink href="/">Beranda</BreadcrumbLink></BreadcrumbItem>

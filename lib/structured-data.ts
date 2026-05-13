@@ -1,20 +1,28 @@
-const BASE_URL = process.env.NEXTAUTH_URL || 'https://roxystore.com'
+const BASE_URL = process.env.NEXTAUTH_URL || 'https://www.roxystore.web.id'
 
 export function getOrganizationSchema(settings: {
     tagline: string
     wa_number: string
+    telegram_channel_url?: string
+    instagram_url?: string
 }) {
+    const sameAs: string[] = []
+    if (settings.telegram_channel_url) sameAs.push(settings.telegram_channel_url)
+    if (settings.instagram_url) sameAs.push(settings.instagram_url)
+
     return {
         '@context': 'https://schema.org',
         '@type': 'Store',
         name: 'Roxy Store',
         description: settings.tagline,
         url: BASE_URL,
-        telephone: `+${settings.wa_number}`,
+        logo: `${BASE_URL}/icons/icon-512x512.png`,
+        telephone: settings.wa_number ? `+${settings.wa_number}` : undefined,
         address: { '@type': 'PostalAddress', addressCountry: 'ID' },
         priceRange: '$$',
         currenciesAccepted: 'IDR',
         paymentAccepted: 'Shopee Pay, GoPay, OVO, Transfer Bank',
+        ...(sameAs.length > 0 && { sameAs }),
     }
 }
 
@@ -51,7 +59,7 @@ export function getProductSchema(product: {
         name: product.title,
         description: product.description?.slice(0, 500),
         image: allImages,
-        url: `${BASE_URL}/products/${product.slug}`,
+        url: `${BASE_URL}/produk/${product.slug}`,
         brand: { '@type': 'Brand', name: 'Roxy Store' },
         offers: offers.length === 1
             ? offers[0]
@@ -95,7 +103,7 @@ export function getWebsiteSchema() {
             '@type': 'SearchAction',
             target: {
                 '@type': 'EntryPoint',
-                urlTemplate: `${BASE_URL}/products?q={search_term_string}`,
+                urlTemplate: `${BASE_URL}/produk?q={search_term_string}`,
             },
             'query-input': 'required name=search_term_string',
         },
