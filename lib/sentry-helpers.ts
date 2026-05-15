@@ -21,10 +21,3 @@ export function captureError(
     })
 }
 
-// Capture pesan tanpa error
-export function captureMessage(
-    message: string,
-    level: 'info' | 'warning' | 'error' = 'info'
-) {
-    Sentry.captureMessage(message, level)
-}

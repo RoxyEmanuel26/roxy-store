@@ -56,4 +56,4 @@ export function generatePageMetadata({
     }
 }
 
-export { BASE_URL, SITE_NAME, DEFAULT_DESCRIPTION, DEFAULT_IMAGE }
+export { BASE_URL, DEFAULT_DESCRIPTION }

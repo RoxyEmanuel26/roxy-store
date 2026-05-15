@@ -5,7 +5,7 @@ declare global {
 }
 
 // Helper utama untuk kirim event ke GA4
-export function trackEvent(
+function trackEvent(
     eventName: string,
     parameters?: Record<string, unknown>
 ) {
@@ -50,37 +50,6 @@ export function trackShopeeClick(
     })
 }
 
-// Track klik ke Tokopedia
-export function trackTokopediaClick(
-    productId: string,
-    productName: string,
-    price: number
-) {
-    trackEvent('tokopedia_click', {
-        product_id: productId,
-        product_name: productName,
-        price,
-        currency: 'IDR',
-    })
-
-    trackEvent('select_content', {
-        content_type: 'product',
-        content_id: productId,
-        destination: 'tokopedia',
-    })
-}
-
-// Track klik WhatsApp
-export function trackWhatsAppClick(source: string) {
-    trackEvent('wa_click', {
-        source,  // 'floating', 'contact', 'footer', 'hero'
-    })
-
-    trackEvent('contact', {
-        method: 'whatsapp',
-        source,
-    })
-}
 
 // Track view produk (detail page)
 export function trackProductView(
@@ -127,16 +96,6 @@ export function trackSearch(query: string, resultsCount: number) {
     })
 }
 
-// Track filter produk
-export function trackFilterApplied(
-    filterType: 'category' | 'price' | 'badge' | 'sort',
-    filterValue: string
-) {
-    trackEvent('filter_applied', {
-        filter_type: filterType,
-        filter_value: filterValue,
-    })
-}
 
 // Track install PWA
 export function trackPWAInstall() {

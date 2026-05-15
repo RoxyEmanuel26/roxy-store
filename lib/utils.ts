@@ -15,14 +15,7 @@ export function formatRupiah(price: number): string {
   }).format(price)
 }
 
-export function generateSlug(text: string): string {
-  return slugifyLib(text, { lower: true, locale: 'id', strict: true })
-}
 
-export function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text
-  return text.slice(0, maxLength) + '...'
-}
 
 export function getInitials(name: string): string {
   return name

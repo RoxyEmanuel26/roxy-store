@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { ProductSchema } from '@/lib/validations'
 import { validateOrigin } from '@/lib/csrf'
 import { parseAndValidate } from '@/lib/api-helpers'
 import { sanitizeText, sanitizeDescription, sanitizeUrl } from '@/lib/sanitize'
+import { productRepository } from '@/repositories/product.repository'
+import { revalidateTag } from 'next/cache'
 import slugify from 'slugify'
 
 export async function GET(
@@ -18,10 +19,7 @@ export async function GET(
 
     const { id } = await params
 
-    const product = await prisma.product.findUnique({
-        where: { id },
-        include: { category: true },
-    })
+    const product = await productRepository.findById(id)
 
     if (!product) {
         return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 })
@@ -29,8 +27,6 @@ export async function GET(
 
     return NextResponse.json(product)
 }
-
-import { revalidateTag } from 'next/cache'
 
 export async function PUT(
     request: NextRequest,
@@ -49,10 +45,7 @@ export async function PUT(
     const body = await request.json()
 
     if (Object.keys(body).length === 1 && 'isActive' in body) {
-        const product = await prisma.product.update({
-            where: { id },
-            data: { isActive: body.isActive },
-        })
+        const product = await productRepository.update(id, { isActive: body.isActive })
         revalidateTag('products', { expire: 0 })
         revalidateTag('categories', { expire: 0 })
         return NextResponse.json(product)
@@ -69,29 +62,23 @@ export async function PUT(
     const title = sanitizeText(data.title)
     let slug = slugify(title, { lower: true, locale: 'id', strict: true })
 
-    const existingSlug = await prisma.product.findFirst({
-        where: { slug, NOT: { id } },
-    })
+    const existingSlug = await productRepository.findBySlug(slug, id)
     if (existingSlug) {
         slug = `${slug}-${Date.now()}`
     }
 
-    const product = await prisma.product.update({
-        where: { id },
-        data: {
-            title,
-            slug,
-            description: sanitizeDescription(data.description),
-            price: data.price,
-            image: sanitizeUrl(data.image) || data.image,
-            images: data.images?.map(img => sanitizeUrl(img) || img) || [],
-            shopeeUrl: data.shopeeUrl ? (sanitizeUrl(data.shopeeUrl) || data.shopeeUrl) : '',
-            tokopediaUrl: data.tokopediaUrl ? (sanitizeUrl(data.tokopediaUrl) || data.tokopediaUrl) : '',
-            categoryId: data.categoryId,
-            badge: data.badge || null,
-            isActive: data.isActive ?? true,
-        },
-        include: { category: true },
+    const product = await productRepository.update(id, {
+        title,
+        slug,
+        description: sanitizeDescription(data.description),
+        price: data.price,
+        image: sanitizeUrl(data.image) || data.image,
+        images: data.images?.map((img: string) => sanitizeUrl(img) || img) || [],
+        shopeeUrl: data.shopeeUrl ? (sanitizeUrl(data.shopeeUrl) || data.shopeeUrl) : '',
+        tokopediaUrl: data.tokopediaUrl ? (sanitizeUrl(data.tokopediaUrl) || data.tokopediaUrl) : '',
+        categoryId: data.categoryId,
+        badge: data.badge || null,
+        isActive: data.isActive ?? true,
     })
 
     revalidateTag('products', { expire: 0 })
@@ -115,7 +102,7 @@ export async function DELETE(
 
     const { id } = await params
 
-    await prisma.product.delete({ where: { id } })
+    await productRepository.delete(id)
 
     revalidateTag('products', { expire: 0 })
     revalidateTag('categories', { expire: 0 })

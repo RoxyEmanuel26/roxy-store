@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { productService } from '@/services/product.service'
 import { captureError } from '@/lib/sentry-helpers'
 
 export async function POST(
@@ -8,10 +8,7 @@ export async function POST(
 ) {
     try {
         const { id } = await params
-        await prisma.product.update({
-            where: { id },
-            data: { viewCount: { increment: 1 } },
-        })
+        await productService.trackProductView(id)
         return NextResponse.json({ success: true })
     } catch (error) {
         captureError(error, { endpoint: '/api/products/[id]/view' })

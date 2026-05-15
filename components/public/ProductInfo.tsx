@@ -13,7 +13,6 @@ import type { ProductType } from '@/types'
 import {
     trackProductView,
     trackShopeeClick,
-    trackTokopediaClick
 } from '@/lib/analytics-events'
 import { trackLead, trackViewContent } from '@/lib/facebook-pixel'
 

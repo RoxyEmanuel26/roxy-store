@@ -6,7 +6,7 @@ const isUpstashConfigured =
     !!process.env.UPSTASH_REDIS_REST_TOKEN
 
 // --- Dev fallback rate limiter using in-memory Map ---
-export const createDevRateLimit = () => {
+const createDevRateLimit = () => {
     const attempts = new Map<string, { count: number; resetAt: number }>()
 
     return {

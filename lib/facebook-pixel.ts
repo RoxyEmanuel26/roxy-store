@@ -15,15 +15,6 @@ declare global {
     }
 }
 
-/**
- * Inisialisasi Facebook Pixel.
- * Dipanggil sekali saat script pixel selesai dimuat.
- */
-export function initPixel(): void {
-    if (!FB_PIXEL_ID || typeof window === 'undefined') return
-    window.fbq('init', FB_PIXEL_ID)
-    window.fbq('track', 'PageView')
-}
 
 /**
  * Track PageView — dipanggil setiap navigasi halaman (client-side).
@@ -61,10 +52,3 @@ export function trackLead(params: {
     window.fbq('track', 'Lead', params)
 }
 
-/**
- * Track custom event — untuk event yang tidak ada di standard events.
- */
-export function trackCustomEvent(eventName: string, params?: Record<string, unknown>): void {
-    if (!FB_PIXEL_ID || typeof window === 'undefined') return
-    window.fbq('trackCustom', eventName, params)
-}

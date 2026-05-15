@@ -1,27 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-
+import { productService } from '@/services/product.service'
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const q = searchParams.get('q') || ''
 
-    const where: any = { isActive: true }
-    if (q) where.title = { contains: q, mode: 'insensitive' }
-
-    const products = await prisma.product.findMany({
-        where,
-        select: {
-            id: true,
-            title: true,
-            slug: true,
-            price: true,
-            image: true,
-            badge: true,
-            category: { select: { name: true, slug: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 50,
-    })
+    const products = await productService.getSearchProducts(q, 50)
 
     return NextResponse.json(products, {
         headers: {

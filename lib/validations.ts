@@ -67,31 +67,6 @@ export const SettingsSchema = z.object({
         .or(z.literal('')),
 })
 
-// Analytics tracking
-export const TrackEventSchema = z.object({
-    eventType: z.enum(['view', 'shopee_click', 'tokopedia_click', 'wa_click']),
-    productId: z.string().optional(),
-})
-
-// Upload
-export const UploadQuerySchema = z.object({
-    folder: z.string()
-        .regex(/^[a-z0-9/-]+$/)
-        .optional()
-        .default('Roxy-lay/products'),
-})
-
-// Pagination
-export const PaginationSchema = z.object({
-    page: z.coerce.number().int().positive().default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(12),
-    search: z.string().max(100).optional(),
-    categoryId: z.string().optional(),
-    badge: z.string().optional(),
-    minPrice: z.coerce.number().optional(),
-    maxPrice: z.coerce.number().optional(),
-    sort: z.enum(['newest', 'price-asc', 'price-desc', 'popular']).default('newest'),
-})
 
 // CSV Import Produk (lebih longgar dari ProductSchema)
 export const CsvProductSchema = z.object({
@@ -124,11 +99,3 @@ export const CsvProductSchema = z.object({
     ),
 })
 
-// Type exports
-export type LoginInput = z.infer<typeof LoginSchema>
-export type ProductInput = z.infer<typeof ProductSchema>
-export type CategoryInput = z.infer<typeof CategorySchema>
-export type SettingsInput = z.infer<typeof SettingsSchema>
-export type TrackEventInput = z.infer<typeof TrackEventSchema>
-export type PaginationInput = z.infer<typeof PaginationSchema>
-export type CsvProductInput = z.infer<typeof CsvProductSchema>

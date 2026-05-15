@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { ProductSchema } from '@/lib/validations'
 import { validateOrigin } from '@/lib/csrf'
 import { parseAndValidate } from '@/lib/api-helpers'
 import { sanitizeText, sanitizeDescription, sanitizeUrl } from '@/lib/sanitize'
+import { productRepository } from '@/repositories/product.repository'
+import { revalidateTag } from 'next/cache'
 import slugify from 'slugify'
 
 export async function GET(request: NextRequest) {
@@ -20,38 +21,16 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get('categoryId') || ''
     const isActive = searchParams.get('isActive')
 
-    const where: Record<string, unknown> = {}
-
-    if (search) {
-        where.title = { contains: search, mode: 'insensitive' }
-    }
-    if (categoryId) {
-        where.categoryId = categoryId
-    }
-    if (isActive !== null && isActive !== '') {
-        where.isActive = isActive === 'true'
-    }
-
-    const [products, total] = await Promise.all([
-        prisma.product.findMany({
-            where,
-            include: { category: true },
-            orderBy: { createdAt: 'desc' },
-            skip: (page - 1) * limit,
-            take: limit,
-        }),
-        prisma.product.count({ where }),
-    ])
-
-    return NextResponse.json({
-        products,
-        total,
+    const result = await productRepository.findAdminPaginated({
+        search: search || undefined,
+        categoryId: categoryId || undefined,
+        isActive: isActive !== null && isActive !== '' ? isActive === 'true' : null,
         page,
-        totalPages: Math.ceil(total / limit),
+        limit,
     })
-}
 
-import { revalidateTag } from 'next/cache'
+    return NextResponse.json(result)
+}
 
 export async function POST(request: NextRequest) {
     if (!validateOrigin(request)) {
@@ -75,28 +54,23 @@ export async function POST(request: NextRequest) {
     const title = sanitizeText(data.title)
     let slug = slugify(title, { lower: true, locale: 'id', strict: true })
 
-    const existingSlug = await prisma.product.findUnique({
-        where: { slug },
-    })
+    const existingSlug = await productRepository.findBySlug(slug)
     if (existingSlug) {
         slug = `${slug}-${Date.now()}`
     }
 
-    const product = await prisma.product.create({
-        data: {
-            title,
-            slug,
-            description: sanitizeDescription(data.description),
-            price: data.price,
-            image: sanitizeUrl(data.image) || data.image,
-            images: data.images?.map(img => sanitizeUrl(img) || img) || [],
-            shopeeUrl: data.shopeeUrl ? (sanitizeUrl(data.shopeeUrl) || data.shopeeUrl) : '',
-            tokopediaUrl: data.tokopediaUrl ? (sanitizeUrl(data.tokopediaUrl) || data.tokopediaUrl) : '',
-            categoryId: data.categoryId,
-            badge: data.badge || null,
-            isActive: data.isActive ?? true,
-        },
-        include: { category: true },
+    const product = await productRepository.create({
+        title,
+        slug,
+        description: sanitizeDescription(data.description),
+        price: data.price,
+        image: sanitizeUrl(data.image) || data.image,
+        images: data.images?.map((img: string) => sanitizeUrl(img) || img) || [],
+        shopeeUrl: data.shopeeUrl ? (sanitizeUrl(data.shopeeUrl) || data.shopeeUrl) : '',
+        tokopediaUrl: data.tokopediaUrl ? (sanitizeUrl(data.tokopediaUrl) || data.tokopediaUrl) : '',
+        categoryId: data.categoryId,
+        badge: data.badge || null,
+        isActive: data.isActive ?? true,
     })
 
     revalidateTag('products', { expire: 0 })

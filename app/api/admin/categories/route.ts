@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
 import { CategorySchema } from '@/lib/validations'
 import { validateOrigin } from '@/lib/csrf'
 import { parseAndValidate } from '@/lib/api-helpers'
 import { sanitizeText } from '@/lib/sanitize'
+import { categoryRepository } from '@/repositories/category.repository'
+import { revalidateTag } from 'next/cache'
 import slugify from 'slugify'
 
 export const dynamic = 'force-dynamic'
@@ -15,17 +16,9 @@ export async function GET() {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const categories = await prisma.category.findMany({
-        orderBy: { createdAt: 'desc' },
-        include: {
-            _count: { select: { products: true } },
-        },
-    })
-
+    const categories = await categoryRepository.findAllWithCount()
     return NextResponse.json(categories)
 }
-
-import { revalidateTag } from 'next/cache'
 
 export async function POST(request: NextRequest) {
     if (!validateOrigin(request)) {
@@ -47,9 +40,7 @@ export async function POST(request: NextRequest) {
     const name = sanitizeText(validation.data.name)
     const slug = slugify(name, { lower: true, locale: 'id', strict: true })
 
-    const existing = await prisma.category.findFirst({
-        where: { OR: [{ name }, { slug }] },
-    })
+    const existing = await categoryRepository.findByNameOrSlug(name, slug)
 
     if (existing) {
         return NextResponse.json(
@@ -58,13 +49,11 @@ export async function POST(request: NextRequest) {
         )
     }
 
-    const category = await prisma.category.create({
-        data: {
-            name,
-            slug,
-            description: validation.data.description || null,
-            icon: validation.data.icon || null,
-        },
+    const category = await categoryRepository.create({
+        name,
+        slug,
+        description: validation.data.description || null,
+        icon: validation.data.icon || null,
     })
 
     revalidateTag('categories', { expire: 0 })
