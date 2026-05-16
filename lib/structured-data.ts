@@ -1,4 +1,5 @@
-const BASE_URL = process.env.NEXTAUTH_URL || 'https://www.roxystore.web.id'
+const envUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'https://www.roxystore.web.id'
+const BASE_URL = envUrl.startsWith('http') ? envUrl : `https://${envUrl}`
 
 export function getOrganizationSchema(settings: {
     tagline: string

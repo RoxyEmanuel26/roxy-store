@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 
-const BASE_URL = process.env.NEXTAUTH_URL || 'https://www.roxystore.web.id'
+const envUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'https://www.roxystore.web.id'
+const BASE_URL = envUrl.startsWith('http') ? envUrl : `https://${envUrl}`
 const SITE_NAME = 'Roxy Store'
 const DEFAULT_DESCRIPTION =
     'Rekomendasi produk terlaris dan terpercaya di Shopee. Temukan produk skincare, fashion, rumah tangga, gaming, dan lainnya dengan harga terbaik.'

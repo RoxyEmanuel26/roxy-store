@@ -1,6 +1,8 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-    siteUrl: process.env.NEXTAUTH_URL || 'https://www.roxystore.web.id',
+    siteUrl: (process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'https://www.roxystore.web.id').startsWith('http') 
+        ? (process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'https://www.roxystore.web.id') 
+        : `https://${process.env.NEXTAUTH_URL || process.env.VERCEL_URL}`,
     generateRobotsTxt: true,
     changefreq: 'weekly',
     priority: 0.7,
