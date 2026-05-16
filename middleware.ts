@@ -14,6 +14,14 @@ export async function middleware(request: NextRequest) {
         request.headers.get('x-real-ip') ||
         '127.0.0.1'
 
+    // Let NextAuth internal routes pass through WITHOUT middleware intervention
+    // Only apply rate limiting to signin/callback, not to /api/auth/error, /api/auth/providers, etc.
+    if (pathname.startsWith('/api/auth/') 
+        && pathname !== '/api/auth/signin' 
+        && pathname !== '/api/auth/callback/credentials') {
+        return NextResponse.next()
+    }
+
     // Rate limit: login (5 req/min)
     if (pathname === '/api/auth/signin' || pathname === '/api/auth/callback/credentials') {
         const { success } = await loginRateLimit.limit(ip)

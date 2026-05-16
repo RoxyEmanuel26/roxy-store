@@ -95,11 +95,11 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' https: data: blob:",
-      "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://www.clarity.ms https://vitals.vercel-insights.com https://www.facebook.com https://connect.facebook.net",
+      "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://www.clarity.ms https://vitals.vercel-insights.com https://www.facebook.com https://connect.facebook.net https://*.upstash.io https://*.ingest.us.sentry.io",
       "frame-src 'none'",
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self'",
+      "form-action 'self' https://www.roxystore.web.id",
     ].join('; '),
   },
 ]
