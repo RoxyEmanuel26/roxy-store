@@ -62,13 +62,5 @@ export const { handlers, auth } = NextAuth({
         strategy: 'jwt',
         maxAge: 24 * 60 * 60, // 24 jam
     },
-    cookies: {
-        sessionToken: {
-            options: {
-                httpOnly: true,
-                sameSite: 'strict',
-                secure: process.env.NODE_ENV === 'production',
-            },
-        },
-    },
+    trustHost: true,
 })
