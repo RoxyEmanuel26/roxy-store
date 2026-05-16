@@ -53,7 +53,22 @@ const _apiRateLimit = createUpstashLimiter('api', 60, '1 m')
 
 const devLimiter = createDevRateLimit()
 
-// Export with dev fallback
-export const loginRateLimit = _loginRateLimit || devLimiter
-export const uploadRateLimit = _uploadRateLimit || devLimiter
-export const apiRateLimit = _apiRateLimit || devLimiter
+// Wrapper agar jika Upstash error (misal token expired), gunakan devLimiter
+const wrapLimiter = (upstashLimiter: Ratelimit | null) => {
+    return {
+        async limit(identifier: string) {
+            if (!upstashLimiter) return devLimiter.limit(identifier)
+            try {
+                return await upstashLimiter.limit(identifier)
+            } catch (error) {
+                console.error('Upstash RateLimit error:', error)
+                return devLimiter.limit(identifier)
+            }
+        }
+    }
+}
+
+// Export dengan fallback yang aman
+export const loginRateLimit = wrapLimiter(_loginRateLimit)
+export const uploadRateLimit = wrapLimiter(_uploadRateLimit)
+export const apiRateLimit = wrapLimiter(_apiRateLimit)
