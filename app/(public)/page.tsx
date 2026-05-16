@@ -209,46 +209,6 @@ export default async function HomePage() {
             {/* === SECTION 6: RECENTLY VIEWED === */}
             <RecentlyViewed />
 
-            {/* === SECTION 7: WHY Roxy STORE === */}
-            <section className="py-16 bg-brand-primary/5 dark:bg-dark-surface">
-                <div className="container mx-auto px-4 text-center">
-                    <FadeIn>
-                        <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text mb-4">Kenapa Pilih Roxy Store?</h2>
-                    </FadeIn>
-                    <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-                        {[
-                            { icon: '⭐', title: 'Sudah Diseleksi', desc: 'Rating tinggi dan ulasan positif dari pembeli nyata' },
-                            { icon: '💰', title: 'Harga Terbaik', desc: 'Dapatkan harga kompetitif dengan promo menarik' },
-                            { icon: '🔄', title: 'Update Setiap Hari', desc: 'Temukan produk tren terbaru dan flash sale rutin' },
-                        ].map((item) => (
-                            <StaggerItem key={item.title}>
-                                <div className="flex flex-col items-center p-6 bg-white dark:bg-dark-bg rounded-2xl shadow-sm">
-                                    <span className="text-5xl mb-4">{item.icon}</span>
-                                    <h3 className="font-bold text-lg mb-2 text-brand-text dark:text-dark-text">{item.title}</h3>
-                                    <p className="text-brand-muted dark:text-dark-muted text-sm leading-relaxed">{item.desc}</p>
-                                </div>
-                            </StaggerItem>
-                        ))}
-                    </StaggerContainer>
-                </div>
-            </section>
-
-            {/* === SECTION 8: CTA BANNER === */}
-            <section className="py-16 bg-brand-primary dark:bg-dark-primary">
-                <div className="container mx-auto px-4 text-center text-white">
-                    <FadeIn>
-                        <h2 className="text-3xl font-bold mb-4">Mau Update Promo & Flash Sale Shopee Setiap Hari?</h2>
-                        <p className="opacity-90 mb-8 text-lg">
-                            Bergabung dengan ribuan orang lainnya di channel Telegram kami untuk update diskon terbaru!
-                        </p>
-                        <a href={(settings as any).telegram_channel_url || '#'} target="_blank" rel="noopener noreferrer">
-                            <Button size="lg" className="bg-white text-brand-primary hover:bg-brand-surface font-semibold transition-none">
-                                📣 Gabung Channel Telegram
-                            </Button>
-                        </a>
-                    </FadeIn>
-                </div>
-            </section>
         </>
     )
 }
