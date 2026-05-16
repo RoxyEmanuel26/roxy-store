@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { LoginSchema } from '@/lib/validations'
 
 export const { handlers, auth } = NextAuth({
+    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
     providers: [
         CredentialsProvider({
             name: 'credentials',
@@ -13,27 +14,41 @@ export const { handlers, auth } = NextAuth({
                 password: { label: 'Password', type: 'password' },
             },
             async authorize(credentials) {
-                const validated = LoginSchema.safeParse(credentials)
-                if (!validated.success) return null
+                try {
+                    const validated = LoginSchema.safeParse(credentials)
+                    if (!validated.success) {
+                        console.error("Auth validation failed", validated.error)
+                        return null
+                    }
 
-                const { email, password } = validated.data
+                    const { email, password } = validated.data
 
-                const admin = await prisma.admin.findUnique({
-                    where: { email },
-                })
-                if (!admin) return null
+                    const admin = await prisma.admin.findUnique({
+                        where: { email },
+                    })
+                    if (!admin) {
+                        console.error("Admin not found:", email)
+                        return null
+                    }
 
-                const passwordMatch = await bcrypt.compare(
-                    password,
-                    admin.passwordHash
-                )
-                if (!passwordMatch) return null
+                    const passwordMatch = await bcrypt.compare(
+                        password,
+                        admin.passwordHash
+                    )
+                    if (!passwordMatch) {
+                        console.error("Password mismatch for:", email)
+                        return null
+                    }
 
-                return {
-                    id: admin.id,
-                    email: admin.email,
-                    name: admin.name,
-                    role: admin.role,
+                    return {
+                        id: admin.id,
+                        email: admin.email,
+                        name: admin.name,
+                        role: admin.role,
+                    }
+                } catch (error) {
+                    console.error("Database/Auth Error during login:", error)
+                    return null
                 }
             },
         }),
