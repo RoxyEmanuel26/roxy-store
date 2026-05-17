@@ -3,9 +3,14 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { LoginSchema } from '@/lib/validations'
+import { authConfig } from '@/lib/auth.config'
 
-export const { handlers, auth } = NextAuth({
-    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+/**
+ * Full auth configuration with database access.
+ * Used by API routes and Server Components (NOT middleware/edge).
+ */
+export const { handlers, auth, signIn, signOut } = NextAuth({
+    ...authConfig,
     providers: [
         CredentialsProvider({
             name: 'credentials',
@@ -53,29 +58,4 @@ export const { handlers, auth } = NextAuth({
             },
         }),
     ],
-    callbacks: {
-        async jwt({ token, user }) {
-            if (user) {
-                token.id = user.id
-                token.role = (user as { role?: string }).role
-            }
-            return token
-        },
-        async session({ session, token }) {
-            if (token) {
-                session.user.id = token.id as string
-                session.user.role = token.role as string
-            }
-            return session
-        },
-    },
-    pages: {
-        signIn: '/admin/login',
-        error: '/admin/login',
-    },
-    session: {
-        strategy: 'jwt',
-        maxAge: 24 * 60 * 60, // 24 jam
-    },
-    trustHost: true,
 })

@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import NextAuth from 'next-auth'
+import { authConfig } from '@/lib/auth.config'
 import {
     loginRateLimit,
     uploadRateLimit,
     apiRateLimit,
 } from '@/lib/rate-limit'
-import { auth } from '@/lib/auth'
+
+// Edge-compatible auth instance (no Prisma/bcrypt)
+const { auth } = NextAuth(authConfig)
 
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl
@@ -15,22 +19,18 @@ export async function middleware(request: NextRequest) {
         '127.0.0.1'
 
     // Let NextAuth internal routes pass through WITHOUT middleware intervention
-    // Only apply rate limiting to signin/callback, not to /api/auth/error, /api/auth/providers, etc.
-    if (pathname.startsWith('/api/auth/') 
-        && pathname !== '/api/auth/signin' 
-        && pathname !== '/api/auth/callback/credentials') {
-        return NextResponse.next()
-    }
-
-    // Rate limit: login (5 req/min)
-    if (pathname === '/api/auth/signin' || pathname === '/api/auth/callback/credentials') {
-        const { success } = await loginRateLimit.limit(ip)
-        if (!success) {
-            return NextResponse.json(
-                { error: 'Terlalu banyak percobaan. Tunggu 1 menit.', code: 'RATE_LIMITED' },
-                { status: 429 }
-            )
+    if (pathname.startsWith('/api/auth/')) {
+        // Only rate limit signin/callback
+        if (pathname === '/api/auth/signin' || pathname === '/api/auth/callback/credentials') {
+            const { success } = await loginRateLimit.limit(ip)
+            if (!success) {
+                return NextResponse.json(
+                    { error: 'Terlalu banyak percobaan. Tunggu 1 menit.', code: 'RATE_LIMITED' },
+                    { status: 429 }
+                )
+            }
         }
+        return NextResponse.next()
     }
 
     // Rate limit: upload (10 req/min)
