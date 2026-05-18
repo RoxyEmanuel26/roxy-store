@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
         isActive: data.isActive ?? true,
     })
 
-    revalidateTag('products', { expire: 0 })
-    revalidateTag('categories', { expire: 0 })
+    revalidateTag('products')
+    revalidateTag('categories')
 
     return NextResponse.json(product, { status: 201 })
 }

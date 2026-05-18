@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         icon: validation.data.icon || null,
     })
 
-    revalidateTag('categories', { expire: 0 })
+    revalidateTag('categories')
 
     return NextResponse.json(category, { status: 201 })
 }
