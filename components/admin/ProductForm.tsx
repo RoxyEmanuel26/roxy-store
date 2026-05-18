@@ -150,7 +150,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             } else {
                 toast.error('Mohon lengkapi semua field yang wajib diisi')
             }
-        })} className="space-y-8 pb-24">
+        })} className="space-y-6 pb-32">
             {/* Header */}
             <div className="flex items-center justify-between mb-2">
                 <Link href="/admin/products">
@@ -165,7 +165,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                 {/* LEFT COLUMN - 60% */}
                 <div className="lg:col-span-3 space-y-6">
                     {/* Card: Informasi Produk */}
-                    <div className="rounded-2xl border border-brand-border dark:border-dark-border bg-white dark:bg-dark-surface shadow-sm hover:shadow-md transition-shadow p-8 space-y-6">
+                    <div className="rounded-xl border border-brand-border/50 dark:border-dark-border/50 bg-white/50 dark:bg-dark-surface/50 backdrop-blur-sm p-6 lg:p-8 space-y-6 shadow-sm">
                         <h3 className="text-xl font-bold text-brand-text dark:text-dark-text border-b border-brand-border/50 dark:border-dark-border/50 pb-3">
                             Informasi Produk
                         </h3>
@@ -317,7 +317,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                 {/* RIGHT COLUMN - 40% */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Card: Foto Produk */}
-                    <div className="rounded-2xl border border-brand-border dark:border-dark-border bg-white dark:bg-dark-surface shadow-sm hover:shadow-md transition-shadow p-8 space-y-6">
+                    <div className="rounded-xl border border-brand-border/50 dark:border-dark-border/50 bg-white/50 dark:bg-dark-surface/50 backdrop-blur-sm p-6 lg:p-8 space-y-6 shadow-sm">
                         <h3 className="text-xl font-bold text-brand-text dark:text-dark-text border-b border-brand-border/50 dark:border-dark-border/50 pb-3">
                             Foto Produk
                         </h3>
@@ -387,7 +387,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                     </div>
 
                     {/* Card: Link Marketplace */}
-                    <div className="rounded-2xl border border-brand-border dark:border-dark-border bg-white dark:bg-dark-surface shadow-sm hover:shadow-md transition-shadow p-8 space-y-6">
+                    <div className="rounded-xl border border-brand-border/50 dark:border-dark-border/50 bg-white/50 dark:bg-dark-surface/50 backdrop-blur-sm p-6 lg:p-8 space-y-6 shadow-sm">
                         <h3 className="text-xl font-bold text-brand-text dark:text-dark-text border-b border-brand-border/50 dark:border-dark-border/50 pb-3">
                             Link Marketplace
                         </h3>
@@ -452,7 +452,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                     </div>
 
                     {/* Card: Pengaturan Produk */}
-                    <div className="rounded-2xl border border-brand-border dark:border-dark-border bg-white dark:bg-dark-surface shadow-sm hover:shadow-md transition-shadow p-8 space-y-6">
+                    <div className="rounded-xl border border-brand-border/50 dark:border-dark-border/50 bg-white/50 dark:bg-dark-surface/50 backdrop-blur-sm p-6 lg:p-8 space-y-6 shadow-sm">
                         <h3 className="text-xl font-bold text-brand-text dark:text-dark-text border-b border-brand-border/50 dark:border-dark-border/50 pb-3">
                             Pengaturan Produk
                         </h3>
@@ -500,21 +500,24 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                 </div>
             </div>
 
-            {/* Submit Buttons */}
-            <div className="sticky bottom-0 -mb-4 md:-mb-6 -mx-4 md:-mx-6 px-6 md:px-8 py-5 mt-8 bg-white/95 dark:bg-dark-surface/95 backdrop-blur-md border-t border-brand-border dark:border-dark-border shadow-[0_-4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)] flex items-center justify-between gap-4 z-20">
-                <p className="text-sm text-brand-muted dark:text-dark-muted hidden md:block">
-                    <span className="font-medium text-brand-text dark:text-dark-text">*</span> Wajib diisi
-                </p>
-                <div className="flex items-center gap-3 ml-auto">
+            {/* Floating Action Bar */}
+            <div className="fixed bottom-0 right-0 z-40 w-full md:w-[calc(100%-260px)] px-6 py-4 bg-white/90 dark:bg-dark-bg/90 backdrop-blur-xl border-t border-brand-border dark:border-dark-border shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.1)] flex items-center justify-between transition-all">
+                <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-brand-primary animate-pulse"></div>
+                    <p className="text-xs font-medium text-brand-muted dark:text-dark-muted hidden sm:block">
+                        Pastikan data bertanda <span className="text-red-500">*</span> sudah terisi
+                    </p>
+                </div>
+                <div className="flex items-center gap-3">
                     <Link href="/admin/products">
-                        <Button type="button" variant="outline" className="h-11 px-6 hover:bg-brand-surface/50 dark:hover:bg-dark-surface/50">
+                        <Button type="button" variant="ghost" className="h-10 px-6 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors">
                             Batal
                         </Button>
                     </Link>
                     <Button
                         type="submit"
                         disabled={saving}
-                        className="bg-brand-primary hover:bg-brand-primary/90 text-white h-11 px-8 min-w-[180px] font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
+                        className="bg-brand-primary hover:bg-brand-primary/90 text-white h-10 px-8 font-medium shadow-md hover:shadow-lg transition-all disabled:opacity-50"
                     >
                         {saving ? (
                             <>
@@ -524,7 +527,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                         ) : isEdit ? (
                             'Simpan Perubahan'
                         ) : (
-                            'Simpan Produk'
+                            'Simpan Produk Baru'
                         )}
                     </Button>
                 </div>
