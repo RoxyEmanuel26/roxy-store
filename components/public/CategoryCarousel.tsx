@@ -50,34 +50,34 @@ export default function CategoryCarousel({ categories }: CategoryCarouselProps) 
                 <div 
                     ref={scrollContainerRef}
                     onScroll={checkScroll}
-                    className="overflow-x-auto scrollbar-hide scroll-smooth relative z-0"
+                    className="overflow-x-auto scrollbar-hide scroll-smooth relative z-0 snap-x snap-mandatory touch-pan-x"
                 >
                     <StaggerContainer className="grid grid-rows-2 grid-flow-col auto-cols-max min-w-full bg-gray-50 dark:bg-dark-bg">
                         {categories.map((category) => (
-                            <StaggerItem key={category.id}>
+                            <StaggerItem key={category.id} className="snap-start">
                                 <CategoryCard category={category} />
                             </StaggerItem>
                         ))}
                     </StaggerContainer>
                 </div>
 
-                {/* Left Arrow - Hanya muncul saat di-hover pada desktop dan jika bisa di-scroll ke kiri */}
+                {/* Left Arrow - Selalu muncul jika bisa di-scroll ke kiri, termasuk di HP */}
                 {showLeftArrow && (
                     <button 
                         onClick={() => scroll('left')}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white dark:bg-dark-surface shadow-[0_0_10px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-brand-primary hover:scale-110 transition-all z-10 opacity-0 group-hover:opacity-100 hidden md:flex"
+                        className="absolute left-1 md:left-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-white dark:bg-dark-surface shadow-[0_0_10px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-brand-primary hover:scale-110 transition-all z-10 opacity-100"
                     >
-                        <ChevronLeft className="w-6 h-6 -ml-0.5" />
+                        <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 -ml-0.5" />
                     </button>
                 )}
 
-                {/* Right Arrow - Hanya muncul saat di-hover pada desktop dan jika bisa di-scroll ke kanan */}
+                {/* Right Arrow - Selalu muncul jika bisa di-scroll ke kanan, termasuk di HP */}
                 {showRightArrow && (
                     <button 
                         onClick={() => scroll('right')}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white dark:bg-dark-surface shadow-[0_0_10px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-brand-primary hover:scale-110 transition-all z-10 opacity-0 group-hover:opacity-100 hidden md:flex"
+                        className="absolute right-1 md:right-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-white dark:bg-dark-surface shadow-[0_0_10px_rgba(0,0,0,0.15)] rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-brand-primary hover:scale-110 transition-all z-10 opacity-100"
                     >
-                        <ChevronRight className="w-6 h-6 -mr-0.5" />
+                        <ChevronRight className="w-5 h-5 md:w-6 md:h-6 -mr-0.5" />
                     </button>
                 )}
             </div>
