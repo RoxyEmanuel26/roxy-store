@@ -152,83 +152,31 @@ async function main() {
     // KATEGORI PRODUK AFFILIATE
     // ───────────────────────────────────────────
     const categories = [
-        {
-            name: 'Skincare & Kecantikan',
-            slug: 'skincare-kecantikan',
-            description:
-                'Produk skincare, makeup, dan perawatan diri terlaris di Shopee dengan harga terjangkau.',
-            icon: '💄',
-        },
-        {
-            name: 'Fashion Wanita',
-            slug: 'fashion-wanita',
-            description:
-                'Pakaian, hijab, dan aksesori fashion wanita tren terkini yang laris di Shopee.',
-            icon: '👗',
-        },
-        {
-            name: 'Fashion Pria',
-            slug: 'fashion-pria',
-            description:
-                'Pakaian, sepatu, dan aksesori fashion pria terlaris dan terpopuler di Shopee.',
-            icon: '👕',
-        },
-        {
-            name: 'Rumah Tangga',
-            slug: 'rumah-tangga',
-            description:
-                'Perlengkapan dapur, peralatan rumah, dan produk kebersihan terlaris di Shopee.',
-            icon: '🏠',
-        },
-        {
-            name: 'Gadget & Elektronik',
-            slug: 'gadget-elektronik',
-            description:
-                'Aksesoris HP, gadget, earphone, dan produk elektronik murah terlaris di Shopee.',
-            icon: '📱',
-        },
-        {
-            name: 'Gaming',
-            slug: 'gaming',
-            description:
-                'Aksesoris gaming, mouse, keyboard, headset, dan perlengkapan gamer terlaris di Shopee.',
-            icon: '🎮',
-        },
-        {
-            name: 'Kesehatan & Suplemen',
-            slug: 'kesehatan-suplemen',
-            description:
-                'Suplemen, vitamin, produk kesehatan, dan alat kesehatan terlaris di Shopee.',
-            icon: '💊',
-        },
-        {
-            name: 'Makanan & Minuman',
-            slug: 'makanan-minuman',
-            description:
-                'Snack, minuman, bumbu masak, dan produk makanan terlaris yang bisa dikirim via Shopee.',
-            icon: '🍜',
-        },
-        {
-            name: 'Olahraga',
-            slug: 'olahraga',
-            description:
-                'Perlengkapan olahraga, fitness, dan outdoor terlaris dan terpercaya di Shopee.',
-            icon: '🏋️',
-        },
-        {
-            name: 'Tas & Dompet',
-            slug: 'tas-dompet',
-            description:
-                'Tas wanita, tas pria, dompet, dan aksesoris travel terlaris di Shopee.',
-            icon: '👜',
-        },
-        {
-            name: 'Promo & Flash Sale',
-            slug: 'promo-flash-sale',
-            description:
-                'Kumpulan produk Shopee yang sedang promo besar, flash sale, dan diskon spesial.',
-            icon: '🔥',
-        },
+        { name: 'Elektronik', slug: 'elektronik', description: 'Kumpulan produk Elektronik pilihan terbaik.', icon: '💻' },
+        { name: 'Makanan & Minuman', slug: 'makanan-minuman', description: 'Kumpulan produk Makanan & Minuman pilihan terbaik.', icon: '🍔' },
+        { name: 'Komputer & Aksesoris', slug: 'komputer-aksesoris', description: 'Kumpulan produk Komputer & Aksesoris pilihan terbaik.', icon: '💻' },
+        { name: 'Perawatan & Kecantikan', slug: 'perawatan-kecantikan', description: 'Kumpulan produk Perawatan & Kecantikan pilihan terbaik.', icon: '💊' },
+        { name: 'Handphone & Aksesoris', slug: 'handphone-aksesoris', description: 'Kumpulan produk Handphone & Aksesoris pilihan terbaik.', icon: '📱' },
+        { name: 'Perlengkapan Rumah', slug: 'perlengkapan-rumah', description: 'Kumpulan produk Perlengkapan Rumah pilihan terbaik.', icon: '🏠' },
+        { name: 'Pakaian Pria', slug: 'pakaian-pria', description: 'Kumpulan produk Pakaian Pria pilihan terbaik.', icon: '👕' },
+        { name: 'Pakaian Wanita', slug: 'pakaian-wanita', description: 'Kumpulan produk Pakaian Wanita pilihan terbaik.', icon: '👗' },
+        { name: 'Sepatu Pria', slug: 'sepatu-pria', description: 'Kumpulan produk Sepatu Pria pilihan terbaik.', icon: '👟' },
+        { name: 'Fashion Muslim', slug: 'fashion-muslim', description: 'Kumpulan produk Fashion Muslim pilihan terbaik.', icon: '🧕' },
+        { name: 'Tas Pria', slug: 'tas-pria', description: 'Kumpulan produk Tas Pria pilihan terbaik.', icon: '🎒' },
+        { name: 'Fashion Bayi & Anak', slug: 'fashion-bayi-anak', description: 'Kumpulan produk Fashion Bayi & Anak pilihan terbaik.', icon: '👶' },
+        { name: 'Aksesoris Fashion', slug: 'aksesoris-fashion', description: 'Kumpulan produk Aksesoris Fashion pilihan terbaik.', icon: '💍' },
+        { name: 'Ibu & Bayi', slug: 'ibu-bayi', description: 'Kumpulan produk Ibu & Bayi pilihan terbaik.', icon: '🍼' },
+        { name: 'Jam Tangan', slug: 'jam-tangan', description: 'Kumpulan produk Jam Tangan pilihan terbaik.', icon: '⌚' },
+        { name: 'Sepatu Wanita', slug: 'sepatu-wanita', description: 'Kumpulan produk Sepatu Wanita pilihan terbaik.', icon: '👠' },
+        { name: 'Kesehatan', slug: 'kesehatan', description: 'Kumpulan produk Kesehatan pilihan terbaik.', icon: '🩺' },
+        { name: 'Tas Wanita', slug: 'tas-wanita', description: 'Kumpulan produk Tas Wanita pilihan terbaik.', icon: '👜' },
+        { name: 'Hobi & Koleksi', slug: 'hobi-koleksi', description: 'Kumpulan produk Hobi & Koleksi pilihan terbaik.', icon: '🎨' },
+        { name: 'Otomotif', slug: 'otomotif', description: 'Kumpulan produk Otomotif pilihan terbaik.', icon: '🚗' },
+        { name: 'Olahraga & Outdoor', slug: 'olahraga-outdoor', description: 'Kumpulan produk Olahraga & Outdoor pilihan terbaik.', icon: '⚽' },
+        { name: 'Buku & Alat Tulis', slug: 'buku-alat-tulis', description: 'Kumpulan produk Buku & Alat Tulis pilihan terbaik.', icon: '📚' },
+        { name: 'Souvenir & Perlengkapan Pesta', slug: 'souvenir-perlengkapan-pesta', description: 'Kumpulan produk Souvenir & Perlengkapan Pesta pilihan terbaik.', icon: '🎁' },
+        { name: 'Fotografi', slug: 'fotografi', description: 'Kumpulan produk Fotografi pilihan terbaik.', icon: '📷' },
+        { name: 'Voucher', slug: 'voucher', description: 'Kumpulan produk Voucher pilihan terbaik.', icon: '🎟️' }
     ]
 
     for (const category of categories) {
