@@ -50,7 +50,7 @@ export const CategorySchema = z.object({
         .trim(),
     slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
     description: z.string().max(500, 'Deskripsi maksimal 500 karakter').optional().or(z.literal('')),
-    icon: z.string().max(10, 'Icon terlalu panjang').optional().or(z.literal('')),
+    icon: z.string().max(500, 'Icon URL terlalu panjang').optional().or(z.literal('')),
 })
 
 // Settings

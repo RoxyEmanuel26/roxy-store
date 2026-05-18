@@ -13,14 +13,19 @@ interface CategoryCardProps {
 
 export default function CategoryCard({ category }: CategoryCardProps) {
     const icon = category.icon || '🛍️'
+    const isImage = icon.startsWith('http')
 
     return (
         <Link href={`/kategori/${category.slug}`}>
             <div className="group flex flex-col items-center p-6 bg-brand-surface dark:bg-dark-surface rounded-2xl hover:bg-brand-primary hover:shadow-lg hover:shadow-brand-primary/20 transition-all duration-300 cursor-pointer">
-                <span className="text-4xl group-hover:scale-110 transition-transform">
-                    {icon}
-                </span>
-                <span className="mt-3 text-sm font-semibold text-center text-brand-text dark:text-dark-text group-hover:text-white transition-colors">
+                <div className="w-12 h-12 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    {isImage ? (
+                        <img src={icon} alt={category.name} className="w-full h-full object-contain drop-shadow-sm" />
+                    ) : (
+                        <span className="text-4xl">{icon}</span>
+                    )}
+                </div>
+                <span className="mt-4 text-sm font-semibold text-center text-brand-text dark:text-dark-text group-hover:text-white transition-colors">
                     {category.name}
                 </span>
                 <span className="text-xs text-brand-muted group-hover:text-white/80 mt-1 transition-colors">

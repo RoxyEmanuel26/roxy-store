@@ -36,9 +36,9 @@ export default function ImageUpload({
 
     const handleFile = useCallback(
         async (file: File) => {
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
             if (!allowedTypes.includes(file.type)) {
-                toast.error('Format file harus JPG, PNG, atau WebP')
+                toast.error('Format file harus JPG, PNG, WebP, atau GIF')
                 return
             }
 
@@ -159,7 +159,7 @@ export default function ImageUpload({
                 <input
                     ref={inputRef}
                     type="file"
-                    accept="image/jpeg,image/png,image/webp"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
                     onChange={handleInputChange}
                     className="hidden"
                 />
@@ -184,7 +184,7 @@ export default function ImageUpload({
                             Seret foto ke sini atau klik untuk pilih
                         </p>
                         <p className="text-xs text-brand-muted dark:text-dark-muted">
-                            JPG, PNG, WebP • Maksimal {maxSizeMB}MB
+                            JPG, PNG, WebP, GIF • Maksimal {maxSizeMB}MB
                         </p>
                     </div>
                 )}

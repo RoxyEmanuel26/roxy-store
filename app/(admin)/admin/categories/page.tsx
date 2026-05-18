@@ -23,6 +23,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import DataTable, { type ColumnDef } from '@/components/admin/DataTable'
+import ImageUpload from '@/components/admin/ImageUpload'
 import { toast } from 'sonner'
 import slugify from 'slugify'
 import { format } from 'date-fns'
@@ -179,8 +180,14 @@ export default function AdminCategoriesPage() {
         {
             header: 'Nama Kategori',
             cell: (item) => (
-                <div className="flex items-center gap-2">
-                    {item.icon && <span className="text-xl">{item.icon}</span>}
+                <div className="flex items-center gap-3">
+                    {item.icon && (
+                        item.icon.startsWith('http') ? (
+                            <img src={item.icon} alt="" className="w-10 h-10 object-contain rounded-md bg-brand-surface/50 dark:bg-dark-surface/50 p-1" />
+                        ) : (
+                            <span className="text-2xl">{item.icon}</span>
+                        )
+                    )}
                     <div>
                         <span className="font-medium text-brand-text dark:text-dark-text">
                             {item.name}
@@ -289,17 +296,27 @@ export default function AdminCategoriesPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="icon">Icon (Emoji)</Label>
-                            <Input
-                                id="icon"
-                                value={categoryIcon}
-                                onChange={(e) => setCategoryIcon(e.target.value)}
-                                placeholder="Contoh: 💄 👗 🏠 📱"
-                                className="text-xl"
-                            />
-                            <p className="text-xs text-brand-muted dark:text-dark-muted">
-                                Masukkan emoji sebagai icon kategori (opsional)
-                            </p>
+                            <Label>Icon Kategori</Label>
+                            <div className="space-y-4">
+                                <ImageUpload
+                                    value={categoryIcon.startsWith('http') ? categoryIcon : ''}
+                                    onChange={(url) => setCategoryIcon(url)}
+                                    folder="Roxy-lay/categories"
+                                    aspectRatio="1:1"
+                                    maxSizeMB={2}
+                                />
+                                <div className="flex items-center gap-4">
+                                    <div className="h-px flex-1 bg-brand-border dark:bg-dark-border" />
+                                    <span className="text-xs text-brand-muted dark:text-dark-muted font-medium">ATAU GUNAKAN EMOJI</span>
+                                    <div className="h-px flex-1 bg-brand-border dark:bg-dark-border" />
+                                </div>
+                                <Input
+                                    value={!categoryIcon.startsWith('http') ? categoryIcon : ''}
+                                    onChange={(e) => setCategoryIcon(e.target.value)}
+                                    placeholder="Contoh: 💄 👗"
+                                    className="text-xl text-center"
+                                />
+                            </div>
                         </div>
 
                         <div className="space-y-2">
