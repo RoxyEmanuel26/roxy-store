@@ -41,6 +41,7 @@ export const getCachedCategories = unstable_cache(
                 id: true,
                 name: true,
                 slug: true,
+                icon: true,
                 _count: { select: { products: true } },
             },
             orderBy: { name: 'asc' },
