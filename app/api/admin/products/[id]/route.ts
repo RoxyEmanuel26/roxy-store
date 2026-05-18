@@ -46,8 +46,8 @@ export async function PUT(
 
     if (Object.keys(body).length === 1 && 'isActive' in body) {
         const product = await productRepository.update(id, { isActive: body.isActive })
-        revalidateTag('products')
-        revalidateTag('categories')
+        revalidateTag('products', { expire: 0 })
+        revalidateTag('categories', { expire: 0 })
         return NextResponse.json(product)
     }
 
@@ -81,8 +81,8 @@ export async function PUT(
         isActive: data.isActive ?? true,
     })
 
-    revalidateTag('products')
-    revalidateTag('categories')
+    revalidateTag('products', { expire: 0 })
+    revalidateTag('categories', { expire: 0 })
 
     return NextResponse.json(product)
 }
@@ -104,8 +104,8 @@ export async function DELETE(
 
     await productRepository.delete(id)
 
-    revalidateTag('products')
-    revalidateTag('categories')
+    revalidateTag('products', { expire: 0 })
+    revalidateTag('categories', { expire: 0 })
 
     return NextResponse.json({ message: 'Produk berhasil dihapus' })
 }

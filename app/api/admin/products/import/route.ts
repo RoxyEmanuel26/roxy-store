@@ -189,8 +189,8 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        revalidateTag('products')
-        revalidateTag('categories')
+        revalidateTag('products', { expire: 0 })
+        revalidateTag('categories', { expire: 0 })
 
         return NextResponse.json({
             message: 'Import selesai',
