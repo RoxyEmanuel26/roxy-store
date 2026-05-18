@@ -18,11 +18,11 @@ export default function CategoryCard({ category }: CategoryCardProps) {
     return (
         <Link href={`/kategori/${category.slug}`}>
             <div className="group flex flex-col items-center p-6 bg-brand-surface dark:bg-dark-surface rounded-2xl hover:bg-brand-primary hover:shadow-lg hover:shadow-brand-primary/20 transition-all duration-300 cursor-pointer">
-                <div className="w-12 h-12 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-24 h-24 md:w-36 md:h-36 flex items-center justify-center group-hover:scale-110 transition-transform">
                     {isImage ? (
                         <img src={icon} alt={category.name} className="w-full h-full object-contain drop-shadow-sm" />
                     ) : (
-                        <span className="text-4xl">{icon}</span>
+                        <span className="text-[70px] md:text-[100px] leading-none">{icon}</span>
                     )}
                 </div>
                 <span className="mt-4 text-sm font-semibold text-center text-brand-text dark:text-dark-text group-hover:text-white transition-colors">
