@@ -118,23 +118,26 @@ export default async function HomePage() {
 
             {/* === SECTION 3: CATEGORIES === */}
             {categories.length > 0 && (
-                <section className="py-16 bg-white dark:bg-dark-bg">
+                <section className="py-8 bg-brand-surface dark:bg-dark-bg">
                     <div className="container mx-auto px-4">
                         <FadeIn>
-                            <div className="text-center mb-10">
-                                <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text">
-                                    Belanja Berdasarkan Kategori
-                                </h2>
-                                <p className="text-brand-muted dark:text-dark-muted mt-2">Dikurasi dari Shopee</p>
+                            <div className="bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-sm shadow-sm overflow-hidden">
+                                <div className="p-4 border-b border-gray-200 dark:border-dark-border bg-white dark:bg-dark-surface">
+                                    <h2 className="text-base font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                        Kategori
+                                    </h2>
+                                </div>
+                                <div className="overflow-x-auto scrollbar-hide">
+                                    <StaggerContainer className="grid grid-rows-2 grid-flow-col auto-cols-max min-w-full bg-gray-50 dark:bg-dark-bg">
+                                        {categories.map((category) => (
+                                            <StaggerItem key={category.id}>
+                                                <CategoryCard category={category as any} />
+                                            </StaggerItem>
+                                        ))}
+                                    </StaggerContainer>
+                                </div>
                             </div>
                         </FadeIn>
-                        <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                            {categories.map((category) => (
-                                <StaggerItem key={category.id}>
-                                    <CategoryCard category={category as any} />
-                                </StaggerItem>
-                            ))}
-                        </StaggerContainer>
                     </div>
                 </section>
             )}
