@@ -7,7 +7,6 @@ import { usePathname } from 'next/navigation'
 import { Search, Heart, Menu, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { DarkModeToggle } from '@/components/public/DarkModeToggle'
 import dynamic from 'next/dynamic'
 const SearchOverlay = dynamic(() => import('@/components/public/SearchOverlay').then(mod => mod.SearchOverlay), { ssr: false })
 import { useWishlist } from '@/hooks/useWishlist'
@@ -83,8 +82,6 @@ export function Header({ settings }: HeaderProps) {
                                 )}
                             </Button>
                         </Link>
-
-                        <DarkModeToggle />
 
                         {/* Mobile hamburger */}
                         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>

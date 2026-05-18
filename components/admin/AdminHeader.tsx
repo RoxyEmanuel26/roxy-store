@@ -13,7 +13,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { DarkModeToggle } from '@/components/public/DarkModeToggle'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import { LogOut } from 'lucide-react'
 import { signOut } from 'next-auth/react'
@@ -75,9 +74,8 @@ export default function AdminHeader({
                 </h2>
             </div>
 
-            {/* RIGHT: Dark mode + Avatar + Dropdown */}
+            {/* RIGHT: Avatar + Dropdown */}
             <div className="flex items-center gap-2">
-                <DarkModeToggle />
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

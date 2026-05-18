@@ -7,6 +7,7 @@ import { getSiteSettings } from '@/lib/site-settings'
 import ProductCard from '@/components/public/ProductCard'
 import CategoryCard from '@/components/public/CategoryCard'
 import { RecentlyViewed } from '@/components/public/RecentlyViewed'
+import CategoryCarousel from '@/components/public/CategoryCarousel'
 import { FadeIn } from '@/components/animations/FadeIn'
 import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerContainer'
 import HeroCTA from './HeroCTA'
@@ -121,22 +122,7 @@ export default async function HomePage() {
                 <section className="py-8 bg-brand-surface dark:bg-dark-bg">
                     <div className="container mx-auto px-4">
                         <FadeIn>
-                            <div className="bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-sm shadow-sm overflow-hidden">
-                                <div className="p-4 border-b border-gray-200 dark:border-dark-border bg-white dark:bg-dark-surface">
-                                    <h2 className="text-base font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                        Kategori
-                                    </h2>
-                                </div>
-                                <div className="overflow-x-auto scrollbar-hide">
-                                    <StaggerContainer className="grid grid-rows-2 grid-flow-col auto-cols-max min-w-full bg-gray-50 dark:bg-dark-bg">
-                                        {categories.map((category) => (
-                                            <StaggerItem key={category.id}>
-                                                <CategoryCard category={category as any} />
-                                            </StaggerItem>
-                                        ))}
-                                    </StaggerContainer>
-                                </div>
-                            </div>
+                            <CategoryCarousel categories={categories as any} />
                         </FadeIn>
                     </div>
                 </section>
