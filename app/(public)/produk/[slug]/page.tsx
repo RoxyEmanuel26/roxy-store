@@ -68,7 +68,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             shopeeSold: true,
             category: { select: { name: true, slug: true } }
         },
-        take: 4,
+        take: 5,
         orderBy: { viewCount: 'desc' },
     })
 
@@ -134,7 +134,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                             ✨ Produk Serupa di {product.category.name}
                         </h2>
                     </FadeIn>
-                    <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                    <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 md:gap-4">
                         {relatedProducts.map((p) => (
                             <StaggerItem key={p.id}>
                                 <ProductCard product={p as unknown as import('@/types').ProductType} />

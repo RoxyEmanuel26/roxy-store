@@ -63,7 +63,7 @@ export default async function HomePage() {
                         </div>
                     </FadeIn>
                     {newProducts.length > 0 ? (
-                        <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 md:gap-4">
                             {newProducts.map((product) => (
                                 <StaggerItem key={product.id}>
                                     <ProductCard product={product as any} />
@@ -105,7 +105,7 @@ export default async function HomePage() {
                         </div>
                     </FadeIn>
                     {featuredProducts.length > 0 ? (
-                        <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 md:gap-4">
                             {featuredProducts.map((product, index) => (
                                 <StaggerItem key={product.id}>
                                     <ProductCard product={product as any} priority={index < 4} />

@@ -15,7 +15,7 @@ import { JsonLd } from '@/components/public/JsonLd'
 import { getBreadcrumbSchema } from '@/lib/structured-data'
 
 export const revalidate = 30
-const ITEMS_PER_PAGE = 12
+const ITEMS_PER_PAGE = 15
 
 interface PageProps {
     params: Promise<{ slug: string }>
@@ -167,7 +167,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             </Suspense>
 
             {productsMapped.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 md:gap-4 mt-6">
                     {productsMapped.map((product: any) => (
                         <ProductCard key={product.id} product={product} />
                     ))}

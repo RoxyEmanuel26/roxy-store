@@ -86,7 +86,7 @@ export const getCachedFeaturedProducts = unstable_cache(
                 category: { select: { name: true, slug: true } },
             },
             orderBy: { viewCount: 'desc' },
-            take: 8,
+            take: 10,
         })
         return products.map(product => ({
             ...product,
@@ -120,7 +120,7 @@ export const getCachedNewProducts = unstable_cache(
                 category: { select: { name: true, slug: true } },
             },
             orderBy: { createdAt: 'desc' },
-            take: 8,
+            take: 10,
         })
         return products.map(product => ({
             ...product,

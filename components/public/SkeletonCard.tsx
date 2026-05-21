@@ -12,8 +12,8 @@ export default function SkeletonCard() {
             <div className="flex flex-col flex-1 px-3 pt-2.5 pb-3 gap-0">
                 {/* Category */}
                 <Skeleton className="h-3 w-16 rounded" />
-                {/* Title — matches 2.625rem fixed height */}
-                <div className="mt-1.5 overflow-hidden" style={{ height: '2.625rem' }}>
+                {/* Title — matches 3.85rem min height */}
+                <div className="mt-1.5 overflow-hidden" style={{ height: '3.85rem' }}>
                     <Skeleton className="h-[13px] w-full rounded mb-1.5" />
                     <Skeleton className="h-[13px] w-3/4 rounded" />
                 </div>

@@ -72,7 +72,7 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                         {product.category?.name}
                     </span>
 
-                    <h3 className="font-semibold text-sm mt-1 text-brand-text dark:text-dark-text line-clamp-2 leading-tight min-h-[2.5rem]">
+                    <h3 className="font-semibold text-sm mt-1 text-brand-text dark:text-dark-text line-clamp-3 leading-snug min-h-[3.85rem] pb-1">
                         {product.title}
                     </h3>
 
@@ -89,22 +89,22 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                     </div>
 
                     {/* Sold + View count row */}
-                    <div className="flex items-center gap-2 mt-1.5 text-xs text-brand-muted dark:text-dark-muted">
+                    <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0.5 mt-1.5 text-[11px] leading-tight text-brand-muted dark:text-dark-muted">
                         {(product.shopeeSoldStr || (product.shopeeSold != null && product.shopeeSold > 0)) ? (
                             <>
-                                <span className="flex items-center gap-1 font-medium text-brand-primary dark:text-dark-primary">
-                                    <TrendingUp className="h-3 w-3" />
+                                <span className="flex items-center gap-0.5 font-medium text-brand-primary dark:text-dark-primary whitespace-nowrap">
+                                    <TrendingUp className="h-3 w-3 flex-shrink-0" />
                                     {product.shopeeSoldStr || (product.shopeeSold != null && product.shopeeSold >= 1000
                                         ? `${(product.shopeeSold / 1000).toFixed(1)}rb`
                                         : product.shopeeSold)} terjual
                                 </span>
-                                <span className="w-1 h-1 rounded-full bg-brand-muted/30 dark:bg-dark-muted/30" />
-                                <span>
+                                <span className="w-1 h-1 rounded-full bg-brand-muted/30 dark:bg-dark-muted/30 flex-shrink-0" />
+                                <span className="whitespace-nowrap">
                                     {product.viewCount} dilihat
                                 </span>
                             </>
                         ) : (
-                            <span>
+                            <span className="whitespace-nowrap">
                                 {product.viewCount} dilihat
                             </span>
                         )}

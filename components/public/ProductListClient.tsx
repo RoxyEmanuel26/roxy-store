@@ -74,7 +74,7 @@ export default function ProductListClient({
         <>
             <StaggerContainer
                 key={searchKey}
-                className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6 min-h-[50vh]"
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 md:gap-4 mt-6 min-h-[50vh]"
             >
                 {products.slice(0, initialCount).map((product) => (
                     <StaggerItem key={product.id}>

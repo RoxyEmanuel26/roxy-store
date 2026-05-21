@@ -14,7 +14,7 @@ export const revalidate = 30
 import { generatePageMetadata } from '@/lib/metadata'
 import type { Metadata } from 'next'
 
-const ITEMS_PER_PAGE = 12
+const ITEMS_PER_PAGE = 15
 
 interface PageProps {
     searchParams: Promise<Record<string, string | undefined>>

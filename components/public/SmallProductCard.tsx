@@ -52,8 +52,8 @@ export default function SmallProductCard({ product }: SmallProductCardProps) {
                     </span>
 
                     {/* Judul — 2 baris max */}
-                    <div className="mt-1 overflow-hidden" style={{ height: '2.4rem' }}>
-                        <h3 className="font-semibold text-[12px] leading-5 text-brand-text dark:text-dark-text line-clamp-2">
+                    <div className="mt-1">
+                        <h3 className="font-semibold text-[12px] leading-snug text-brand-text dark:text-dark-text line-clamp-2 min-h-[2.15rem] pb-0.5">
                             {product.title}
                         </h3>
                     </div>

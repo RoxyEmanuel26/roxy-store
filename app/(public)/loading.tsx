@@ -23,8 +23,8 @@ export default function HomeLoading() {
             <div className="container mx-auto px-4 py-16">
                 <Skeleton className="h-8 w-48 mb-2" />
                 <Skeleton className="h-4 w-64 mb-8" />
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {Array.from({ length: 8 }).map((_, i) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 md:gap-4">
+                    {Array.from({ length: 10 }).map((_, i) => (
                         <SkeletonCard key={i} />
                     ))}
                 </div>

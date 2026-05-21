@@ -50,7 +50,7 @@ export default function WishlistPage() {
                     <div className="h-8 w-48 bg-brand-surface dark:bg-dark-surface rounded animate-pulse mb-2" />
                     <div className="h-4 w-32 bg-brand-surface dark:bg-dark-surface rounded animate-pulse" />
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 md:gap-4">
                     {Array.from({ length: 4 }).map((_, i) => (
                         <SkeletonCard key={i} />
                     ))}
@@ -77,7 +77,7 @@ export default function WishlistPage() {
             </FadeIn>
 
             {products.length > 0 ? (
-                <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <StaggerContainer className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 md:gap-4">
                     {products.map((product) => (
                         <StaggerItem key={product.id}>
                             <ProductCard product={product} />
