@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed'
 import SmallProductCard from './SmallProductCard'
-import SkeletonCard from './SkeletonCard'
+import SkeletonSmallCard from './SkeletonSmallCard'
 import type { ProductType } from '@/types'
 
 export function RecentlyViewed() {
@@ -47,7 +47,7 @@ export function RecentlyViewed() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
                     {loading
                         ? Array.from({ length: 6 }).map((_, i) => (
-                            <SkeletonCard key={i} />
+                            <SkeletonSmallCard key={i} />
                         ))
                         : products.map((product) => (
                             <SmallProductCard key={product.id} product={product} />

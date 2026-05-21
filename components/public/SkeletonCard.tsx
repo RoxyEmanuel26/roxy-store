@@ -3,9 +3,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function SkeletonCard() {
     return (
         <div className="bg-white dark:bg-dark-surface rounded-2xl overflow-hidden shadow-sm border border-brand-border/50 dark:border-dark-border flex flex-col h-full animate-pulse">
-            {/* Fixed height image skeleton — matches ProductCard */}
-            <div className="w-full flex-shrink-0" style={{ height: '180px' }}>
-                <Skeleton className="w-full h-full" />
+            {/* Aspect-square image skeleton — matches ProductCard */}
+            <div className="relative aspect-square w-full overflow-hidden flex-shrink-0">
+                <Skeleton className="w-full h-full absolute inset-0" />
             </div>
 
             {/* Content skeleton */}
