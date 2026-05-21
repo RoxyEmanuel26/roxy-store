@@ -68,6 +68,17 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // [SECURITY FIX] Rate limit: product view count increment (10 req/menit/IP)
+    if (pathname.startsWith('/api/products/') && pathname.endsWith('/view')) {
+        const { success } = await uploadRateLimit.limit(`view:${ip}`)
+        if (!success) {
+            return NextResponse.json(
+                { error: 'Terlalu banyak request. Tunggu sebentar.' },
+                { status: 429 }
+            )
+        }
+    }
+
     // Protect admin routes (except login page)
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
         try {

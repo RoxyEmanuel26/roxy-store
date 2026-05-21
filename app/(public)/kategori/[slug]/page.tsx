@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button'
 import { Search as SearchIcon } from 'lucide-react'
 import { JsonLd } from '@/components/public/JsonLd'
 import { getBreadcrumbSchema } from '@/lib/structured-data'
+import { getCachedCategoryBySlug, getCachedCategoryPriceRange } from '@/lib/cached-queries'
+
 
 export const revalidate = 30
 const ITEMS_PER_PAGE = 15
@@ -26,7 +28,7 @@ import { generatePageMetadata } from '@/lib/metadata'
 
 export async function generateMetadata({ params }: PageProps) {
     const { slug } = await params
-    const category = await prisma.category.findUnique({ where: { slug } })
+    const category = await getCachedCategoryBySlug(slug)
     if (!category) return { title: 'Kategori Tidak Ditemukan - Roxy Store' }
     return generatePageMetadata({
         title: category.name,
@@ -39,7 +41,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     const { slug } = await params
     const sp = await searchParams
 
-    const category = await prisma.category.findUnique({ where: { slug } })
+    const category = await getCachedCategoryBySlug(slug)
     if (!category) notFound()
 
     const sort = sp.sort || 'newest'
@@ -113,11 +115,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             take: ITEMS_PER_PAGE,
         }),
         prisma.product.count({ where }),
-        prisma.product.aggregate({
-            _min: { price: true },
-            _max: { price: true },
-            where: { isActive: true, categoryId: category.id },
-        }),
+        getCachedCategoryPriceRange(category.id),
     ])
 
     const productsMapped = products.map((product: any) => ({

@@ -4,6 +4,7 @@ import { Search as SearchIcon, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { prisma } from '@/lib/prisma'
 import { determineProductBadge } from '@/lib/badge'
+import { getCachedCategories, getCachedPriceRange } from '@/lib/cached-queries'
 import FilterSidebar from '@/components/public/FilterSidebar'
 import ProductToolbar from '@/components/public/ProductToolbar'
 import ProductListClient from '@/components/public/ProductListClient'
@@ -124,20 +125,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
             take: ITEMS_PER_PAGE,
         }),
         prisma.product.count({ where }),
-        prisma.category.findMany({
-            orderBy: { name: 'asc' },
-            select: {
-                id: true,
-                name: true,
-                slug: true,
-                _count: { select: { products: { where: { isActive: true } } } }
-            }
-        }),
-        prisma.product.aggregate({
-            _min: { price: true },
-            _max: { price: true },
-            where: { isActive: true },
-        }),
+        getCachedCategories(),
+        getCachedPriceRange(),
     ])
 
     const priceRange = {

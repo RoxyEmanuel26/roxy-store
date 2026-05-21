@@ -24,7 +24,7 @@ import { generatePageMetadata } from '@/lib/metadata'
 import { getProductSchema, getBreadcrumbSchema } from '@/lib/structured-data'
 import { JsonLd } from '@/components/public/JsonLd'
 import { MetaViewContent } from '@/components/analytics/MetaViewContent'
-import { getCachedProductBySlug } from '@/lib/cached-queries'
+import { getCachedProductBySlug, getCachedRelatedProducts } from '@/lib/cached-queries'
 
 export async function generateMetadata({ params }: PageProps) {
     const { slug } = await params
@@ -50,27 +50,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
     if (!product) notFound()
 
-    const relatedProducts = await prisma.product.findMany({
-        where: {
-            categoryId: product.categoryId,
-            isActive: true,
-            NOT: { id: product.id },
-        },
-        select: {
-            id: true,
-            title: true,
-            slug: true,
-            price: true,
-            originalPrice: true,
-            image: true,
-            badge: true,
-            shopeeRating: true,
-            shopeeSold: true,
-            category: { select: { name: true, slug: true } }
-        },
-        take: 5,
-        orderBy: { viewCount: 'desc' },
-    })
+    const relatedProducts = await getCachedRelatedProducts(product.categoryId, product.id)
 
     return (
         <div className="container mx-auto px-4 py-4 md:py-8">
