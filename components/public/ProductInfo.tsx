@@ -192,11 +192,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                     )}
                 </div>
 
-                {/* Share / Wishlist */}
-                <div className="flex gap-3">
-                    <WishlistButton product={product} variant="detail" className="flex-1" />
-                    <ShareButton product={product} className="flex-1" />
-                </div>
+
 
                 {/* Purchase Info */}
                 {product.shopeeUrl && (

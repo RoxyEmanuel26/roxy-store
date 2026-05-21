@@ -119,7 +119,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             {/* Main Content — gap disesuaikan mobile/desktop */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
                 <FadeIn direction="left">
-                    <ProductGallery images={[product.image, ...(product.images || [])]} />
+                    <ProductGallery product={product as unknown as import('@/types').ProductType} />
                 </FadeIn>
                 <FadeIn direction="right">
                     <ProductInfo product={product as unknown as import('@/types').ProductType} />
