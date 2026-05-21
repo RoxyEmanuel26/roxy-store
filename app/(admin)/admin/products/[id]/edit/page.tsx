@@ -72,8 +72,12 @@ export default function AdminEditProductPage({
                     image: product.image as string,
                     images: (product.images as string[]) || [],
                     shopeeUrl: product.shopeeUrl as string,
+                    shopeeRating: product.shopeeRating ? (product.shopeeRating as number) : undefined,
+                    shopeeSold: product.shopeeSold ? (product.shopeeSold as number) : undefined,
+                    shopeeRatingCountStr: (product.shopeeRatingCountStr as string) || '',
+                    shopeeSoldStr: (product.shopeeSoldStr as string) || '',
                     categoryId: product.categoryId as string,
-                    badge: (product.badge as "NEW" | "HOT" | "BEST SELLER" | null | undefined),
+                    badge: product.badge as any,
                     isActive: product.isActive as boolean,
                 }}
             />
