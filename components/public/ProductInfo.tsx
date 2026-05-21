@@ -103,19 +103,24 @@ export default function ProductInfo({ product }: ProductInfoProps) {
     return (
         <>
             <div className="space-y-4 pb-24 lg:pb-0">
-                {/* Badge */}
-                {product.badge && (
-                    <span className={`inline-block text-xs font-bold px-3 py-1 rounded-full ${badgeColors[product.badge] || 'bg-gray-500 text-white'}`}>
-                        {product.badge}
-                    </span>
-                )}
+                {/* Badge & Category */}
+                {(product.badge || product.category) && (
+                    <div className="flex flex-wrap items-center gap-2.5">
+                        {product.badge && (
+                            <span className={`inline-block text-xs font-bold px-3 py-1 rounded-full ${badgeColors[product.badge] || 'bg-gray-500 text-white'}`}>
+                                {product.badge}
+                            </span>
+                        )}
 
-                {/* Category */}
-                <Link href={`/kategori/${product.category?.slug}`}>
-                    <span className="text-sm text-brand-primary hover:underline font-medium">
-                        {product.category?.name}
-                    </span>
-                </Link>
+                        {product.category && (
+                            <Link href={`/kategori/${product.category.slug}`}>
+                                <span className="text-sm text-brand-primary hover:underline font-medium">
+                                    {product.category.name}
+                                </span>
+                            </Link>
+                        )}
+                    </div>
+                )}
 
                 {/* Title */}
                 <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-brand-text dark:text-dark-text leading-tight">
@@ -125,11 +130,15 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                 {/* ★ Premium Stats Bar */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-amber-50/80 via-white to-orange-50/60 dark:from-amber-950/20 dark:via-dark-surface/60 dark:to-orange-950/15 border border-amber-200/50 dark:border-amber-800/30">
                     {/* Sold Count */}
-                    {(product.shopeeSoldStr || (product.shopeeSold && product.shopeeSold > 0)) && (
+                    {(product.shopeeSoldStr || (product.shopeeSold != null && product.shopeeSold > 0)) && (
                         <>
                             <div className="flex items-center gap-1.5 text-xs text-brand-muted dark:text-dark-muted">
                                 <TrendingUp className="h-4 w-4 text-brand-primary dark:text-dark-primary" />
-                                <span className="font-semibold text-brand-text dark:text-dark-text">{product.shopeeSoldStr || product.shopeeSold} Terjual</span>
+                                <span className="font-semibold text-brand-text dark:text-dark-text">
+                                    {product.shopeeSoldStr || (product.shopeeSold != null && product.shopeeSold >= 1000
+                                        ? `${(product.shopeeSold / 1000).toFixed(1).replace('.0', '')}rb`
+                                        : product.shopeeSold)} Terjual
+                                </span>
                             </div>
                             <span className="hidden sm:block w-1 h-1 rounded-full bg-brand-muted/40 dark:bg-dark-muted/40" />
                         </>
