@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useId } from 'react'
 import Link from 'next/link'
-import { Eye, ShoppingCart, Star, Store, TrendingUp } from 'lucide-react'
+import { Eye, ShoppingCart, MessageSquare, TrendingUp } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Separator } from '@/components/ui/separator'
 import { formatRupiah } from '@/lib/utils'
@@ -26,32 +26,54 @@ interface ProductInfoProps {
     product: ProductType
 }
 
-function PremiumStar({ fillPercent }: { fillPercent: number }) {
-    const id = `star-grad-${Math.random().toString(36).substr(2, 9)}`;
+/**
+ * Premium SVG star with precise fractional fill using linearGradient.
+ * e.g. fillPercent=0.7 → 70% amber, 30% gray.
+ */
+function PremiumStar({ fillPercent, index }: { fillPercent: number; index: number }) {
+    const baseId = useId()
+    const gradId = `${baseId}-star-${index}`
+    const gradIdDark = `${gradId}-dark`
     return (
-        <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg className="h-[18px] w-[18px] flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <linearGradient id={id}>
+                <linearGradient id={gradId}>
                     <stop offset={`${fillPercent * 100}%`} stopColor="#F59E0B" />
                     <stop offset={`${fillPercent * 100}%`} stopColor="#E5E7EB" />
                 </linearGradient>
-                <linearGradient id={`${id}-dark`}>
-                    <stop offset={`${fillPercent * 100}%`} stopColor="#F59E0B" />
-                    <stop offset={`${fillPercent * 100}%`} stopColor="#4B5563" />
+                <linearGradient id={gradIdDark}>
+                    <stop offset={`${fillPercent * 100}%`} stopColor="#FBBF24" />
+                    <stop offset={`${fillPercent * 100}%`} stopColor="#374151" />
                 </linearGradient>
             </defs>
-            <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" className="block dark:hidden" fill={`url(#${id})`} stroke="#D1D5DB" strokeWidth="0.5" />
-            <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" className="hidden dark:block" fill={`url(#${id}-dark)`} stroke="#374151" strokeWidth="0.5" />
+            <path
+                d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"
+                className="block dark:hidden"
+                fill={`url(#${gradId})`}
+                stroke="#D1D5DB"
+                strokeWidth="0.5"
+            />
+            <path
+                d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"
+                className="hidden dark:block"
+                fill={`url(#${gradIdDark})`}
+                stroke="#4B5563"
+                strokeWidth="0.5"
+            />
         </svg>
-    );
+    )
 }
 
+/**
+ * 5-star rating bar. Each star fills proportionally.
+ * e.g. rating=4.7 → stars 1-4 full, star 5 at 70%.
+ */
 function PremiumStarRating({ rating }: { rating: number }) {
     return (
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-[2px]">
             {Array.from({ length: 5 }).map((_, i) => {
                 const fillPercent = Math.max(0, Math.min(1, rating - i))
-                return <PremiumStar key={i} fillPercent={fillPercent} />
+                return <PremiumStar key={i} index={i} fillPercent={fillPercent} />
             })}
         </div>
     )
@@ -131,6 +153,8 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         ? Math.round(((product.originalPrice! - product.price) / product.originalPrice!) * 100)
         : 0
 
+    const shopeeRating = product.shopeeRating ?? 0
+
     return (
         <>
             <div className="space-y-4 pb-24 lg:pb-0">
@@ -153,12 +177,42 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                     {product.title}
                 </h1>
 
-                {/* Rating + Sold Count row */}
-                <div className="flex flex-wrap items-center gap-2 text-sm text-brand-muted dark:text-dark-muted">
-                    <PremiumStarRating rating={product.shopeeRating ?? 0} />
-                    <span>
-                        ({product.shopeeRating != null ? product.shopeeRating.toFixed(1) : '0.0'} bintang 5, {product.shopeeRatingCountStr || '0'} penilaian, {product.shopeeSoldStr || '0'} Terjual, {product.viewCount} dilihat)
-                    </span>
+                {/* ★ Premium Stats Bar */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-amber-50/80 via-white to-orange-50/60 dark:from-amber-950/20 dark:via-dark-surface/60 dark:to-orange-950/15 border border-amber-200/50 dark:border-amber-800/30">
+                    {/* Rating Stars + Number */}
+                    <div className="flex items-center gap-1.5">
+                        <PremiumStarRating rating={shopeeRating} />
+                        <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+                            {shopeeRating.toFixed(1)}
+                        </span>
+                    </div>
+
+                    {/* Separator dot */}
+                    <span className="hidden sm:block w-1 h-1 rounded-full bg-brand-muted/40 dark:bg-dark-muted/40" />
+
+                    {/* Rating Count */}
+                    <div className="flex items-center gap-1 text-xs text-brand-muted dark:text-dark-muted">
+                        <MessageSquare className="h-3.5 w-3.5 text-brand-muted/70 dark:text-dark-muted/70" />
+                        <span className="font-medium">{product.shopeeRatingCountStr || '0'} penilaian</span>
+                    </div>
+
+                    {/* Separator dot */}
+                    <span className="hidden sm:block w-1 h-1 rounded-full bg-brand-muted/40 dark:bg-dark-muted/40" />
+
+                    {/* Sold Count */}
+                    <div className="flex items-center gap-1 text-xs text-brand-muted dark:text-dark-muted">
+                        <TrendingUp className="h-3.5 w-3.5 text-brand-muted/70 dark:text-dark-muted/70" />
+                        <span className="font-medium">{product.shopeeSoldStr || '0'} Terjual</span>
+                    </div>
+
+                    {/* Separator dot */}
+                    <span className="hidden sm:block w-1 h-1 rounded-full bg-brand-muted/40 dark:bg-dark-muted/40" />
+
+                    {/* View Count */}
+                    <div className="flex items-center gap-1 text-xs text-brand-muted dark:text-dark-muted">
+                        <Eye className="h-3.5 w-3.5 text-brand-muted/70 dark:text-dark-muted/70" />
+                        <span className="font-medium">{product.viewCount} dilihat</span>
+                    </div>
                 </div>
 
                 {/* Price block */}
