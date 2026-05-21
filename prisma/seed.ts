@@ -77,11 +77,7 @@ async function main() {
             key: 'about_image',
             value: '',
         },
-        {
-            key: 'affiliate_disclaimer',
-            value:
-                'Website ini mengandung link afiliasi. Kami mendapatkan komisi kecil dari setiap pembelian tanpa biaya tambahan bagimu.',
-        },
+
         {
             key: 'shopee_affiliate_id',
             // ⚠️ Isi dengan Affiliate ID Shopee kamu setelah daftar
