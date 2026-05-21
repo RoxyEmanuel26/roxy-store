@@ -1,6 +1,9 @@
 const fs = require('fs');
-const html = fs.readFileSync('scratch/zyha-desktop.html', 'utf8');
-const imgRegex = /https:\/\/down-id\.img\.susercontent\.com\/file\/[a-zA-Z0-9_-]+/g;
-const imgMatches = html.match(imgRegex) || [];
-const uniqueImgs = [...new Set(imgMatches)];
-console.log('Unique images:', uniqueImgs);
+const html = fs.readFileSync('scratch/desktop-shopee.html', 'utf8');
+
+const regex = /https:\/\/(?:[a-zA-Z0-9-.]+\.img\.susercontent\.com|cf\.shopee\.[a-z.]+)\/file\/[a-zA-Z0-9_-]+/gi;
+const matches = html.match(regex) || [];
+console.log('Total matches found:', matches.length);
+const unique = Array.from(new Set(matches));
+console.log('Unique image URLs found:', unique.length);
+console.log(unique);
