@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet } from 'lucide-react'
+import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet, Sparkles } from 'lucide-react'
 import CsvImportDialog from '@/components/admin/CsvImportDialog'
+import LinkImportDialog from '@/components/admin/LinkImportDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -61,8 +62,9 @@ export default function AdminProductsPage() {
     const [categoryId, setCategoryId] = useState('')
     const [statusFilter, setStatusFilter] = useState('')
 
-    // CSV Import
+    // CSV & Link Import
     const [csvDialogOpen, setCsvDialogOpen] = useState(false)
+    const [linkDialogOpen, setLinkDialogOpen] = useState(false)
 
     // Delete
     const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
@@ -206,17 +208,25 @@ export default function AdminProductsPage() {
                         {total} Produk
                     </Badge>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <Button
                         variant="outline"
                         onClick={() => setCsvDialogOpen(true)}
-                        className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10"
+                        className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 h-10"
                     >
                         <FileSpreadsheet className="h-4 w-4 mr-2" />
                         Import CSV
                     </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setLinkDialogOpen(true)}
+                        className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 h-10"
+                    >
+                        <Sparkles className="h-4 w-4 mr-2 text-brand-primary animate-pulse" />
+                        Tambah Produk Baru Menggunakan Link
+                    </Button>
                     <Link href="/admin/products/new">
-                        <Button className="bg-brand-primary hover:bg-brand-primary/90 text-white">
+                        <Button className="bg-brand-primary hover:bg-brand-primary/90 text-white h-10">
                             <Plus className="h-4 w-4 mr-2" />
                             Tambah Produk Baru
                         </Button>
@@ -445,6 +455,12 @@ export default function AdminProductsPage() {
                 open={csvDialogOpen}
                 onOpenChange={setCsvDialogOpen}
                 onImportComplete={fetchProducts}
+            />
+
+            {/* Link Import Dialog */}
+            <LinkImportDialog
+                open={linkDialogOpen}
+                onOpenChange={setLinkDialogOpen}
             />
         </div>
     )

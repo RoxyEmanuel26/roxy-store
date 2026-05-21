@@ -45,47 +45,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             ? initialData.images
             : ['']
     )
-    const [smartUrl, setSmartUrl] = useState('')
-    const [scraping, setScraping] = useState(false)
-
-    const handleSmartScrape = async () => {
-        if (!smartUrl) {
-            toast.error('Silakan masukkan tautan Shopee terlebih dahulu')
-            return
-        }
-        if (!smartUrl.includes('shopee.co.id')) {
-            toast.error('Harus berupa tautan Shopee Indonesia (shopee.co.id)')
-            return
-        }
-
-        setScraping(true)
-        try {
-            const res = await fetch('/api/admin/products/scrape-shopee', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: smartUrl }),
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                toast.error(data.error || 'Gagal mengambil data dari Shopee')
-                return
-            }
-
-            if (data.title) setValue('title', data.title)
-            if (data.description) setValue('description', data.description)
-            if (data.imageUrl) setValue('image', data.imageUrl)
-            setValue('shopeeUrl', smartUrl)
-
-            toast.success('Data Shopee berhasil diambil!')
-        } catch (err) {
-            toast.error('Terjadi kesalahan saat mengambil data')
-        } finally {
-            setScraping(false)
-        }
-    }
-
     const {
         register,
         handleSubmit,
@@ -107,6 +66,28 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             isActive: initialData?.isActive ?? true,
         } as ProductValues,
     })
+
+    // Prefill form from sessionStorage if redirected from LinkImportDialog
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const stored = sessionStorage.getItem('prefilledProduct')
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored)
+                    if (data.title) setValue('title', data.title)
+                    if (data.description) setValue('description', data.description)
+                    if (data.image) setValue('image', data.image)
+                    if (data.shopeeUrl) setValue('shopeeUrl', data.shopeeUrl)
+                    
+                    toast.success('Data Shopee berhasil dimuat ke dalam form!')
+                } catch (err) {
+                    console.error('Failed to parse prefilledProduct', err)
+                } finally {
+                    sessionStorage.removeItem('prefilledProduct')
+                }
+            }
+        }
+    }, [setValue])
 
     const title = watch('title')
     const image = watch('image')
@@ -201,42 +182,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             </div>
 
             {/* Smart Add Shopee */}
-            {!isEdit && (
-                <div className="rounded-xl border border-brand-border/50 dark:border-dark-border/50 bg-brand-primary/5 dark:bg-brand-primary/10 p-6 shadow-sm space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div>
-                            <h4 className="text-base font-bold text-brand-primary">Smart Add dari Shopee 🛍️</h4>
-                            <p className="text-xs text-brand-muted dark:text-dark-muted">
-                                Tempel tautan Shopee di bawah untuk mengisi judul, deskripsi, gambar utama, dan link Shopee secara otomatis.
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex gap-2">
-                        <Input
-                            type="text"
-                            placeholder="Contoh: https://s.shopee.co.id/5q5BHF9n24 atau https://shopee.co.id/..."
-                            value={smartUrl}
-                            onChange={(e) => setSmartUrl(e.target.value)}
-                            className="flex-1 h-11 border-brand-primary/30 focus-visible:ring-brand-primary bg-white"
-                        />
-                        <Button
-                            type="button"
-                            onClick={handleSmartScrape}
-                            disabled={scraping}
-                            className="bg-brand-primary hover:bg-brand-primary/90 text-white shrink-0 h-11 px-6 gap-2"
-                        >
-                            {scraping ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Mengambil...
-                                </>
-                            ) : (
-                                'Ambil Data Shopee'
-                            )}
-                        </Button>
-                    </div>
-                </div>
-            )}
+
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                 {/* LEFT COLUMN - 60% */}
@@ -406,6 +352,18 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                                 label="Foto Utama *"
                                 aspectRatio="1:1"
                             />
+                            <div className="space-y-1.5">
+                                <Label htmlFor="imageUrlInput" className="text-xs font-semibold text-brand-muted dark:text-dark-muted">
+                                    Atau masukkan URL gambar secara langsung:
+                                </Label>
+                                <Input
+                                    id="imageUrlInput"
+                                    placeholder="https://example.com/gambar.jpg"
+                                    value={image || ''}
+                                    onChange={(e) => setValue('image', e.target.value)}
+                                    className="h-10 text-xs bg-white"
+                                />
+                            </div>
                             {errors.image && (
                                 <p className="text-xs text-red-500 flex items-center gap-1">
                                     <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
@@ -432,31 +390,43 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                                     </Button>
                                 )}
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {additionalImages.map((img, i) => (
-                                    <div key={i} className="relative w-full group">
-                                        <ImageUpload
+                                    <div key={i} className="relative w-full group space-y-1.5 p-3 rounded-lg border border-brand-border/40 dark:border-dark-border/40 bg-brand-surface/10 dark:bg-dark-surface/10">
+                                        <div className="relative">
+                                            <ImageUpload
+                                                value={img}
+                                                onChange={(url) => {
+                                                    const newImages = [...additionalImages]
+                                                    newImages[i] = url
+                                                    setAdditionalImages(newImages)
+                                                }}
+                                                aspectRatio="1:1"
+                                            />
+                                            {additionalImages.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newImages = additionalImages.filter((_, idx) => idx !== i)
+                                                        setAdditionalImages(newImages.length > 0 ? newImages : [''])
+                                                    }}
+                                                    className="absolute -top-2 -right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
+                                                    title="Hapus foto"
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                            )}
+                                        </div>
+                                        <Input
+                                            placeholder="Atau tempel URL gambar..."
                                             value={img}
-                                            onChange={(url) => {
+                                            onChange={(e) => {
                                                 const newImages = [...additionalImages]
-                                                newImages[i] = url
+                                                newImages[i] = e.target.value
                                                 setAdditionalImages(newImages)
                                             }}
-                                            aspectRatio="1:1"
+                                            className="h-8 text-xs bg-white"
                                         />
-                                        {additionalImages.length > 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const newImages = additionalImages.filter((_, idx) => idx !== i)
-                                                    setAdditionalImages(newImages.length > 0 ? newImages : [''])
-                                                }}
-                                                className="absolute -top-2 -right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110"
-                                                title="Hapus foto"
-                                            >
-                                                <X className="h-3.5 w-3.5" />
-                                            </button>
-                                        )}
                                     </div>
                                 ))}
                             </div>
