@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Star, TrendingUp } from 'lucide-react'
+import { TrendingUp } from 'lucide-react'
 import { formatRupiah } from '@/lib/utils'
 import { WishlistButton } from './WishlistButton'
 import { Button } from '@/components/ui/button'
@@ -88,24 +88,25 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                         )}
                     </div>
 
-                    {/* Rating + Sold row */}
+                    {/* Sold + View count row */}
                     <div className="flex items-center gap-2 mt-1.5 text-xs text-brand-muted dark:text-dark-muted">
-                        {product.shopeeRating != null && product.shopeeRating > 0 && (
+                        {(product.shopeeSoldStr || (product.shopeeSold != null && product.shopeeSold > 0)) ? (
+                            <>
+                                <span className="flex items-center gap-1 font-medium text-brand-primary dark:text-dark-primary">
+                                    <TrendingUp className="h-3 w-3" />
+                                    {product.shopeeSoldStr || (product.shopeeSold != null && product.shopeeSold >= 1000
+                                        ? `${(product.shopeeSold / 1000).toFixed(1)}rb`
+                                        : product.shopeeSold)}
+                                </span>
+                                <span className="w-1 h-1 rounded-full bg-brand-muted/30 dark:bg-dark-muted/30" />
+                                <span className="flex items-center gap-0.5">
+                                    👁 {product.viewCount}
+                                </span>
+                            </>
+                        ) : (
                             <span className="flex items-center gap-0.5">
-                                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                                {product.shopeeRating.toFixed(1)}
+                                👁 {product.viewCount} dilihat
                             </span>
-                        )}
-                        {product.shopeeSold != null && product.shopeeSold > 0 && (
-                            <span className="flex items-center gap-0.5">
-                                <TrendingUp className="h-3 w-3" />
-                                {product.shopeeSold >= 1000
-                                    ? `${(product.shopeeSold / 1000).toFixed(1)}rb`
-                                    : product.shopeeSold}
-                            </span>
-                        )}
-                        {(!product.shopeeRating || product.shopeeRating === 0) && (!product.shopeeSold || product.shopeeSold === 0) && (
-                            <span>👁 {product.viewCount} dilihat</span>
                         )}
                     </div>
 

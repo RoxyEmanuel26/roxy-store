@@ -65,13 +65,15 @@ function parseStringWithMultipliers(val: unknown): number {
     
     // Remove currency prefix RP/IDR etc first
     str = str.replace(/^(rp|idr|usd|sgd)\.?\s*/i, '')
+    // Remove 'terjual' word if present
+    str = str.replace(/terjual/g, '').trim()
     
-    // Handle multipliers
+    // Handle multipliers - use includes to support trailing + like 10rb+ or 10k+
     let multiplier = 1
-    if (str.includes('ribu') || str.endsWith('rb') || str.endsWith('k')) {
+    if (str.includes('ribu') || str.includes('rb') || str.includes('k')) {
         multiplier = 1000
         str = str.replace(/ribu|rb|\+/g, '').replace(/k/g, '').trim()
-    } else if (str.includes('juta') || str.endsWith('jt')) {
+    } else if (str.includes('juta') || str.includes('jt')) {
         multiplier = 1000000
         str = str.replace(/juta|jt|\+/g, '').trim()
     } else {
