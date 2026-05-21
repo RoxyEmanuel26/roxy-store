@@ -6,8 +6,96 @@ import { validateOrigin } from '@/lib/csrf'
 import { sanitizeText, sanitizeDescription } from '@/lib/sanitize'
 import slugify from 'slugify'
 import { revalidateTag } from 'next/cache'
+import { z } from 'zod'
 
 const MAX_PRODUCTS_PER_IMPORT = 100
+
+function cleanNumberString(val: string): string {
+    let str = val.trim()
+    // Remove currency prefixes
+    str = str.replace(/^(rp|idr|usd|sgd)\.?\s*/i, '')
+    // Remove any remaining letters/symbols except digits, dots, commas, and '-'
+    str = str.replace(/[^\d.,-]/g, '')
+    
+    if (!str) return '0'
+
+    // Check if both dots and commas exist
+    const hasDot = str.includes('.')
+    const hasComma = str.includes(',')
+
+    if (hasDot && hasComma) {
+        const dotIndex = str.lastIndexOf('.')
+        const commaIndex = str.lastIndexOf(',')
+        if (dotIndex > commaIndex) {
+            // Dot is decimal, commas are thousands
+            str = str.replace(/,/g, '')
+        } else {
+            // Comma is decimal, dots are thousands
+            str = str.replace(/\./g, '').replace(/,/g, '.')
+        }
+    } else if (hasComma) {
+        // Only commas. Check if it's thousands or decimal separator
+        const parts = str.split(',')
+        const lastPart = parts[parts.length - 1]
+        if (lastPart.length === 3 && parts.length > 1) {
+            // Thousands separator
+            str = str.replace(/,/g, '')
+        } else {
+            // Decimal separator
+            str = str.replace(/,/g, '.')
+        }
+    } else if (hasDot) {
+        // Only dots. Check if it's thousands or decimal separator
+        const parts = str.split('.')
+        const lastPart = parts[parts.length - 1]
+        if (lastPart.length === 3 && parts.length > 1) {
+            // Thousands separator
+            str = str.replace(/\./g, '')
+        } else {
+            // Decimal separator (keep it as dot)
+        }
+    }
+    return str
+}
+
+function parseCsvPrice(val: unknown): number {
+    if (val === '' || val === undefined || val === null) return 0
+    const cleaned = cleanNumberString(String(val))
+    const parsed = parseFloat(cleaned)
+    return isNaN(parsed) ? 0 : parsed
+}
+
+function parseCsvPriceOrUndefined(val: unknown): number | undefined {
+    if (val === '' || val === undefined || val === null) return undefined
+    const price = parseCsvPrice(val)
+    return price > 0 ? price : undefined
+}
+
+function parseCsvSold(val: unknown): z.infer<typeof CsvProductSchema>['shopeeSold'] {
+    if (val === '' || val === undefined || val === null) return undefined
+    let str = String(val).trim().toLowerCase()
+    
+    let multiplier = 1
+    if (str.endsWith('rb')) {
+        multiplier = 1000
+        str = str.substring(0, str.length - 2).trim()
+    } else if (str.endsWith('k')) {
+        multiplier = 1000
+        str = str.substring(0, str.length - 1).trim()
+    }
+
+    const cleaned = cleanNumberString(str)
+    const parsed = parseFloat(cleaned)
+    if (isNaN(parsed)) return undefined
+    return Math.round(parsed * multiplier)
+}
+
+function parseCsvFloat(val: unknown): number | undefined {
+    if (val === '' || val === undefined || val === null) return undefined
+    const cleaned = cleanNumberString(String(val))
+    const parsed = parseFloat(cleaned)
+    return isNaN(parsed) ? undefined : parsed
+}
 
 interface ImportResult {
     row: number
@@ -64,18 +152,10 @@ export async function POST(request: NextRequest) {
                 // Parse & validate
                 const parsed = CsvProductSchema.safeParse({
                     ...rawProduct,
-                    price: rawProduct.price === '' || rawProduct.price === undefined || rawProduct.price === null
-                        ? 0
-                        : Number(rawProduct.price),
-                    originalPrice: rawProduct.originalPrice === '' || rawProduct.originalPrice === undefined || rawProduct.originalPrice === null
-                        ? undefined
-                        : Number(rawProduct.originalPrice),
-                    shopeeRating: rawProduct.shopeeRating === '' || rawProduct.shopeeRating === undefined || rawProduct.shopeeRating === null
-                        ? undefined
-                        : Number(rawProduct.shopeeRating),
-                    shopeeSold: rawProduct.shopeeSold === '' || rawProduct.shopeeSold === undefined || rawProduct.shopeeSold === null
-                        ? undefined
-                        : Number(rawProduct.shopeeSold),
+                    price: parseCsvPrice(rawProduct.price),
+                    originalPrice: parseCsvPriceOrUndefined(rawProduct.originalPrice),
+                    shopeeRating: parseCsvFloat(rawProduct.shopeeRating),
+                    shopeeSold: parseCsvSold(rawProduct.shopeeSold),
                     description: rawProduct.description || '',
                     image: rawProduct.image || '',
                     images: rawProduct.images || '',
@@ -115,9 +195,9 @@ export async function POST(request: NextRequest) {
                     categoryMap.set(categoryName.toLowerCase(), categoryId)
                 }
 
-                // Parse images (pipe-separated)
+                // Parse images (pipe, comma, or semicolon separated)
                 const imageUrls = data.images
-                    ? data.images.split('|').map(u => u.trim()).filter(Boolean)
+                    ? data.images.split(/[|,;]/).map(u => u.trim()).filter(Boolean)
                     : []
 
                 // Cek apakah produk dengan slug yang sama sudah ada

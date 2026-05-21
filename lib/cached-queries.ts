@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache'
 import { prisma } from '@/lib/prisma'
+import { determineProductBadge } from '@/lib/badge'
 
 /**
  * Cache product by slug — dipakai di generateMetadata & ProductDetailPage
@@ -8,7 +9,7 @@ import { prisma } from '@/lib/prisma'
 export const getCachedProductBySlug = (slug: string) =>
     unstable_cache(
         async () => {
-            return prisma.product.findUnique({
+            const product = await prisma.product.findUnique({
                 where: { slug, isActive: true },
                 select: {
                     id: true,
@@ -24,11 +25,17 @@ export const getCachedProductBySlug = (slug: string) =>
                     shopeeSold: true,
                     badge: true,
                     viewCount: true,
+                    createdAt: true,
                     shopeeClicks: true,
                     categoryId: true,
                     category: { select: { id: true, name: true, slug: true } },
                 },
             })
+            if (!product) return null
+            return {
+                ...product,
+                badge: determineProductBadge(product)
+            }
         },
         [`product-slug-${slug}`],
         { revalidate: 60, tags: ['products', `product-${slug}`] }
@@ -53,8 +60,18 @@ export const getCachedCategories = unstable_cache(
 
 export const getCachedFeaturedProducts = unstable_cache(
     async () => {
-        return prisma.product.findMany({
-            where: { isActive: true, badge: { in: ['HOT', 'BEST SELLER'] } },
+        const oneWeekAgo = new Date()
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+        const products = await prisma.product.findMany({
+            where: {
+                isActive: true,
+                OR: [
+                    { badge: 'HOT' },
+                    { badge: 'NEW', createdAt: { lt: oneWeekAgo } },
+                    { viewCount: { gt: 0 } }
+                ]
+            },
             select: {
                 id: true,
                 title: true,
@@ -63,20 +80,32 @@ export const getCachedFeaturedProducts = unstable_cache(
                 image: true,
                 badge: true,
                 viewCount: true,
+                createdAt: true,
                 category: { select: { name: true, slug: true } },
             },
             orderBy: { viewCount: 'desc' },
             take: 8,
         })
+        return products.map(product => ({
+            ...product,
+            badge: determineProductBadge(product)
+        }))
     },
     ['featured-products'],
-    { revalidate: 3600, tags: ['products'] }
+    { revalidate: 60, tags: ['products'] }
 )
 
 export const getCachedNewProducts = unstable_cache(
     async () => {
-        return prisma.product.findMany({
-            where: { isActive: true, badge: 'NEW' },
+        const oneWeekAgo = new Date()
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+        const products = await prisma.product.findMany({
+            where: {
+                isActive: true,
+                badge: 'NEW',
+                createdAt: { gte: oneWeekAgo }
+            },
             select: {
                 id: true,
                 title: true,
@@ -85,14 +114,19 @@ export const getCachedNewProducts = unstable_cache(
                 image: true,
                 badge: true,
                 viewCount: true,
+                createdAt: true,
                 category: { select: { name: true, slug: true } },
             },
             orderBy: { createdAt: 'desc' },
             take: 8,
         })
+        return products.map(product => ({
+            ...product,
+            badge: determineProductBadge(product)
+        }))
     },
     ['new-products'],
-    { revalidate: 3600, tags: ['products'] }
+    { revalidate: 60, tags: ['products'] }
 )
 
 export const getCachedProductCount = unstable_cache(
@@ -100,5 +134,6 @@ export const getCachedProductCount = unstable_cache(
         return prisma.product.count({ where: { isActive: true } })
     },
     ['product-count-active'],
-    { revalidate: 3600, tags: ['products'] }
+    { revalidate: 60, tags: ['products'] }
 )
+

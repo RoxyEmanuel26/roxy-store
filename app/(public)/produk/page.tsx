@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Search as SearchIcon, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { prisma } from '@/lib/prisma'
+import { determineProductBadge } from '@/lib/badge'
 import FilterSidebar from '@/components/public/FilterSidebar'
 import ProductToolbar from '@/components/public/ProductToolbar'
 import ProductListClient from '@/components/public/ProductListClient'
@@ -55,10 +56,33 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     const sort = params.sort || 'terbaru'
 
     // Build where clause
-    const where: Record<string, unknown> = { isActive: true }
+    const where: Record<string, any> = { isActive: true }
     if (q) where.title = { contains: q, mode: 'insensitive' }
     if (category) where.category = { slug: category }
-    if (badge) where.badge = badge
+
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+    if (badge) {
+        if (badge === 'NEW') {
+            where.badge = 'NEW'
+            where.createdAt = { gte: oneWeekAgo }
+        } else if (badge === 'HOT') {
+            where.OR = [
+                { badge: 'HOT' },
+                { badge: 'NEW', createdAt: { lt: oneWeekAgo } }
+            ]
+        } else if (badge === 'BEST SELLER') {
+            where.viewCount = { gt: 0 }
+            where.OR = [
+                { badge: null },
+                { badge: { notIn: ['NEW', 'HOT'] } }
+            ]
+        } else {
+            where.badge = badge
+        }
+    }
+
     if (minPrice || maxPrice) {
         const priceFilter: Record<string, number> = {}
         if (minPrice) priceFilter.gte = minPrice
@@ -77,7 +101,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         'price-desc': { price: 'desc' },
         popular: { viewCount: 'desc' },
     }
-    const orderBy = orderByMap[sort] || orderByMap.terbaru
+    const resolvedSort = badge === 'BEST SELLER' ? 'popular' : sort
+    const orderBy = orderByMap[resolvedSort] || orderByMap.terbaru
 
     const [products, total, allCategories, priceAgg] = await Promise.all([
         prisma.product.findMany({
@@ -91,6 +116,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                 image: true,
                 badge: true,
                 viewCount: true,
+                createdAt: true,
                 shopeeRating: true,
                 shopeeSold: true,
                 category: { select: { name: true, slug: true } }
@@ -119,6 +145,11 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         min: priceAgg._min.price || 0,
         max: priceAgg._max.price || 1000000,
     }
+
+    const productsMapped = products.map(product => ({
+        ...product,
+        badge: determineProductBadge(product)
+    }))
 
     // Build search params for infinite scroll client — use SEO-friendly params
     const clientSearchParams: Record<string, string> = {}
@@ -187,9 +218,9 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                     </Suspense>
 
                     {/* Products Grid with Infinite Scroll */}
-                    {products.length > 0 ? (
+                    {productsMapped.length > 0 ? (
                         <ProductListClient
-                            initialProducts={products as unknown as import('@/types').ProductType[]}
+                            initialProducts={productsMapped as unknown as import('@/types').ProductType[]}
                             initialTotal={total}
                             searchParams={clientSearchParams}
                             limit={ITEMS_PER_PAGE}

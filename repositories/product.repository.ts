@@ -1,11 +1,12 @@
 import { prisma } from '@/lib/prisma'
+import { determineProductBadge } from '@/lib/badge'
 
 export class ProductRepository {
     async findActiveProductsWithSearch(query: string, take: number = 50) {
         const where: any = { isActive: true }
         if (query) where.title = { contains: query, mode: 'insensitive' }
 
-        return await prisma.product.findMany({
+        const products = await prisma.product.findMany({
             where,
             select: {
                 id: true,
@@ -14,11 +15,18 @@ export class ProductRepository {
                 price: true,
                 image: true,
                 badge: true,
+                viewCount: true,
+                createdAt: true,
                 category: { select: { name: true, slug: true } },
             },
             orderBy: { createdAt: 'desc' },
             take,
         })
+
+        return products.map(product => ({
+            ...product,
+            badge: determineProductBadge(product)
+        }))
     }
 
     async incrementViewCount(id: string) {
@@ -40,10 +48,33 @@ export class ProductRepository {
     }) {
         const { query, categorySlug, badge, minPrice, maxPrice, sort, page, limit } = params
 
-        const where: Record<string, unknown> = { isActive: true }
+        const where: Record<string, any> = { isActive: true }
         if (query) where.title = { contains: query, mode: 'insensitive' }
         if (categorySlug) where.category = { slug: categorySlug }
-        if (badge) where.badge = badge
+
+        const oneWeekAgo = new Date()
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+        if (badge) {
+            if (badge === 'NEW') {
+                where.badge = 'NEW'
+                where.createdAt = { gte: oneWeekAgo }
+            } else if (badge === 'HOT') {
+                where.OR = [
+                    { badge: 'HOT' },
+                    { badge: 'NEW', createdAt: { lt: oneWeekAgo } }
+                ]
+            } else if (badge === 'BEST SELLER') {
+                where.viewCount = { gt: 0 }
+                where.OR = [
+                    { badge: null },
+                    { badge: { notIn: ['NEW', 'HOT'] } }
+                ]
+            } else {
+                where.badge = badge
+            }
+        }
+
         if (minPrice || maxPrice) {
             const priceFilter: Record<string, number> = {}
             if (minPrice) priceFilter.gte = minPrice
@@ -63,6 +94,9 @@ export class ProductRepository {
             'rating-tertinggi': { shopeeRating: 'desc' },
         }
 
+        // Auto-sort to popular (viewCount: desc) when filtering by BEST SELLER
+        const resolvedSort = badge === 'BEST SELLER' ? 'popular' : sort
+
         const [products, total] = await Promise.all([
             prisma.product.findMany({
                 where,
@@ -75,19 +109,26 @@ export class ProductRepository {
                     image: true,
                     badge: true,
                     viewCount: true,
+                    createdAt: true,
                     shopeeRating: true,
                     shopeeSold: true,
                     category: { select: { name: true, slug: true } }
                 },
-                orderBy: orderByMap[sort] || orderByMap.newest,
+                orderBy: orderByMap[resolvedSort] || orderByMap.newest,
                 skip: (page - 1) * limit,
                 take: limit,
             }),
             prisma.product.count({ where }),
         ])
 
-        return { products, total }
+        const productsMapped = products.map(product => ({
+            ...product,
+            badge: determineProductBadge(product)
+        }))
+
+        return { products: productsMapped, total }
     }
+
 
     // === Admin CRUD ===
 

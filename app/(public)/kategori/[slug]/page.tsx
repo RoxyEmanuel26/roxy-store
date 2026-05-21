@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
+import { determineProductBadge } from '@/lib/badge'
 import {
     Breadcrumb, BreadcrumbItem, BreadcrumbLink,
     BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator,
@@ -50,7 +51,30 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
     const where: any = { isActive: true, categoryId: category.id }
     if (q) where.title = { contains: q, mode: 'insensitive' }
-    if (badge) where.badge = badge
+
+    const oneWeekAgo = new Date()
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+
+    if (badge) {
+        if (badge === 'NEW') {
+            where.badge = 'NEW'
+            where.createdAt = { gte: oneWeekAgo }
+        } else if (badge === 'HOT') {
+            where.OR = [
+                { badge: 'HOT' },
+                { badge: 'NEW', createdAt: { lt: oneWeekAgo } }
+            ]
+        } else if (badge === 'BEST SELLER') {
+            where.viewCount = { gt: 0 }
+            where.OR = [
+                { badge: null },
+                { badge: { notIn: ['NEW', 'HOT'] } }
+            ]
+        } else {
+            where.badge = badge
+        }
+    }
+
     if (minPrice || maxPrice) {
         where.price = {}
         if (minPrice) where.price.gte = minPrice
@@ -64,6 +88,9 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         popular: { viewCount: 'desc' },
     }
 
+    const resolvedSort = badge === 'BEST SELLER' ? 'popular' : sort
+    const orderBy = orderByMap[resolvedSort] || orderByMap.newest
+
     const [products, total, priceAgg] = await Promise.all([
         prisma.product.findMany({
             where,
@@ -76,11 +103,12 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                 image: true,
                 badge: true,
                 viewCount: true,
+                createdAt: true,
                 shopeeRating: true,
                 shopeeSold: true,
                 category: { select: { name: true, slug: true } },
             },
-            orderBy: orderByMap[sort] || orderByMap.newest,
+            orderBy,
             skip: (page - 1) * ITEMS_PER_PAGE,
             take: ITEMS_PER_PAGE,
         }),
@@ -91,6 +119,11 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             where: { isActive: true, categoryId: category.id },
         }),
     ])
+
+    const productsMapped = products.map((product: any) => ({
+        ...product,
+        badge: determineProductBadge(product)
+    }))
 
     const totalPages = Math.ceil(total / ITEMS_PER_PAGE)
 
@@ -133,9 +166,9 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                 />
             </Suspense>
 
-            {products.length > 0 ? (
+            {productsMapped.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6">
-                    {products.map((product: any) => (
+                    {productsMapped.map((product: any) => (
                         <ProductCard key={product.id} product={product} />
                     ))}
                 </div>

@@ -46,10 +46,13 @@ const CSV_TEMPLATE_HEADERS = [
     'title',
     'description',
     'price',
+    'originalPrice',
     'image',
     'images',
     'shopeeUrl',
     'tokopediaUrl',
+    'shopeeRating',
+    'shopeeSold',
     'category',
     'badge',
     'isActive',
@@ -59,10 +62,13 @@ const CSV_TEMPLATE_EXAMPLE = [
     'Serum Vitamin C',
     'Serum wajah terbaik untuk kulit cerah dan sehat',
     '89000',
+    '120000',
     'https://example.com/serum.jpg',
     'https://example.com/serum2.jpg|https://example.com/serum3.jpg',
     'https://shopee.co.id/product-link',
     '',
+    '4.8',
+    '150',
     'Skincare & Kecantikan',
     'NEW',
     'true',
@@ -155,17 +161,74 @@ export default function CsvImportDialog({
                     return
                 }
 
-                // Validate headers
-                const headers = Object.keys(data[0])
-                const hasTitle = headers.some(
-                    (h) => h.toLowerCase().trim() === 'title'
-                )
-                if (!hasTitle) {
-                    toast.error('File CSV harus memiliki kolom "title"')
+                // Map CSV headers to expected field names (bilingual & case-insensitive)
+                const fieldMap: Record<string, string> = {
+                    title: 'title',
+                    description: 'description',
+                    price: 'price',
+                    originalprice: 'originalPrice',
+                    originalPrice: 'originalPrice',
+                    image: 'image',
+                    images: 'images',
+                    shopeeurl: 'shopeeUrl',
+                    tokopediaurl: 'tokopediaUrl',
+                    shopeerating: 'shopeeRating',
+                    shopeeRating: 'shopeeRating',
+                    shopeesold: 'shopeeSold',
+                    shopeeSold: 'shopeeSold',
+                    category: 'category',
+                    badge: 'badge',
+                    isactive: 'isActive',
+                    isActive: 'isActive',
+                    shopeeUrl: 'shopeeUrl',
+                    tokopediaUrl: 'tokopediaUrl',
+
+                    // Indonesian
+                    judul: 'title',
+                    nama: 'title',
+                    deskripsi: 'description',
+                    detail: 'description',
+                    harga: 'price',
+                    harga_asal: 'originalPrice',
+                    hargaasal: 'originalPrice',
+                    harga_coret: 'originalPrice',
+                    hargacoret: 'originalPrice',
+                    gambar: 'image',
+                    foto: 'image',
+                    gambar_galeri: 'images',
+                    galeri: 'images',
+                    fotogaleri: 'images',
+                    shopee_url: 'shopeeUrl',
+                    link_shopee: 'shopeeUrl',
+                    tokopedia_url: 'tokopediaUrl',
+                    link_tokopedia: 'tokopediaUrl',
+                    shopee_rating: 'shopeeRating',
+                    rating_shopee: 'shopeeRating',
+                    shopee_terjual: 'shopeeSold',
+                    terjual_shopee: 'shopeeSold',
+                    terjual: 'shopeeSold',
+                    kategori: 'category',
+                    aktif: 'isActive',
+                }
+
+                const normalizedData = data.map((row) => {
+                    const normalized: Record<string, string> = {}
+                    for (const [key, value] of Object.entries(row)) {
+                        const cleanKey = key.trim()
+                        const mappedKey = fieldMap[cleanKey] || fieldMap[cleanKey.toLowerCase()] || cleanKey
+                        normalized[mappedKey] = value
+                    }
+                    return normalized
+                })
+
+                // Validate title/judul exists in normalized keys
+                const firstRow = normalizedData[0]
+                if (!firstRow || firstRow.title === undefined) {
+                    toast.error('File CSV harus memiliki kolom "title", "judul", atau "nama"')
                     return
                 }
 
-                setParsedData(data)
+                setParsedData(normalizedData)
                 setStep('preview')
             },
             error: (error) => {
@@ -177,48 +240,13 @@ export default function CsvImportDialog({
     const handleImport = async () => {
         setImporting(true)
         setStep('importing')
-        setProgress(10)
+        setProgress(30)
 
         try {
-            // Map CSV headers to expected field names (case-insensitive)
-            const fieldMap: Record<string, string> = {
-                title: 'title',
-                description: 'description',
-                price: 'price',
-                originalprice: 'originalPrice',
-                originalPrice: 'originalPrice',
-                image: 'image',
-                images: 'images',
-                shopeeurl: 'shopeeUrl',
-                tokopediaurl: 'tokopediaUrl',
-                shopeerating: 'shopeeRating',
-                shopeeRating: 'shopeeRating',
-                shopeesold: 'shopeeSold',
-                shopeeSold: 'shopeeSold',
-                category: 'category',
-                badge: 'badge',
-                isactive: 'isActive',
-                isActive: 'isActive',
-                shopeeUrl: 'shopeeUrl',
-                tokopediaUrl: 'tokopediaUrl',
-            }
-
-            const normalizedProducts = parsedData.map((row) => {
-                const normalized: Record<string, string> = {}
-                for (const [key, value] of Object.entries(row)) {
-                    const cleanKey = key.trim()
-                    const mappedKey = fieldMap[cleanKey] || fieldMap[cleanKey.toLowerCase()] || cleanKey
-                    normalized[mappedKey] = value
-                }
-                return normalized
-            })
-
-            setProgress(30)
-
             const res = await fetch('/api/admin/products/import', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ products: normalizedProducts }),
+                body: JSON.stringify({ products: parsedData }),
             })
 
             setProgress(80)
@@ -321,13 +349,14 @@ export default function CsvImportDialog({
                                 <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                                 Panduan Format CSV:
                             </p>
-                            <ul className="text-xs text-brand-muted dark:text-dark-muted space-y-1 ml-5 list-disc">
-                                <li>Kolom <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">title</code> wajib diisi (min 3 karakter)</li>
-                                <li>Kolom <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">images</code> bisa berisi beberapa URL dipisahkan <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">|</code></li>
-                                <li>Jika <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">category</code> kosong, otomatis masuk &ldquo;Other&rdquo;</li>
-                                <li>Jika kategori belum ada, akan dibuat secara otomatis</li>
-                                <li>Produk dengan slug sama akan di-update (bukan duplikat)</li>
-                                <li>Badge: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">NEW</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">HOT</code>, atau <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">BEST SELLER</code></li>
+                            <ul className="text-xs text-brand-muted dark:text-dark-muted space-y-1.5 ml-5 list-disc">
+                                <li><strong>Nama Kolom (Bilingual):</strong> Mendukung bahasa Inggris & Indonesia. Contoh: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">judul</code>/<code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">nama</code> untuk title, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">harga</code> untuk price, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">terjual</code> untuk shopeeSold, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">kategori</code> untuk category, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">aktif</code> untuk isActive.</li>
+                                <li><strong>Format Harga:</strong> Sangat fleksibel. Mendukung simbol mata uang dan pemisah ribuan/desimal (misal: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">Rp 89.000</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">89.000,00</code>, atau <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">120,000</code>).</li>
+                                <li><strong>Format Terjual:</strong> Mendukung format ringkasan (misal: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">1,5rb</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">2.3rb</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">1k</code>, <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">500+</code>).</li>
+                                <li><strong>Format Rating:</strong> Mendukung desimal titik atau koma (misal: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">4.8</code> atau <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">4,5</code>).</li>
+                                <li><strong>Gambar Galeri:</strong> Kolom <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">images</code> bisa berisi beberapa URL gambar yang dipisahkan oleh karakter pipa (<code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">|</code>), koma (<code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">,</code>), atau titik koma (<code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">;</code>).</li>
+                                <li>Jika <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">category</code> kosong, otomatis masuk &ldquo;Other&rdquo;. Kategori baru akan dibuat otomatis jika belum terdaftar.</li>
+                                <li>Produk dengan slug sama (diturunkan dari nama) akan memperbarui data yang sudah ada (bukan membuat duplikat).</li>
                             </ul>
                         </div>
                     </div>
