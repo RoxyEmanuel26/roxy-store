@@ -101,11 +101,6 @@ export function Footer({ settings }: FooterProps) {
             {/* Bottom Bar */}
             <div className="border-t border-brand-border dark:border-dark-border py-6 bg-brand-bg dark:bg-dark-bg">
                 <div className="container mx-auto px-4">
-                    {s.affiliate_disclaimer && (
-                        <p className="text-xs text-brand-muted dark:text-dark-muted text-center mb-6 max-w-4xl mx-auto italic">
-                            💡 {s.affiliate_disclaimer}
-                        </p>
-                    )}
                     <div className="flex flex-col md:flex-row justify-between items-center gap-2 text-sm text-brand-muted dark:text-dark-muted">
                         <p>© 2026 Roxy Store. All rights reserved.</p>
                         <p>Website Rekomendasi Produk Terlaris Shopee</p>
