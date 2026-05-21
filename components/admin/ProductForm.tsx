@@ -40,6 +40,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
     const router = useRouter()
     const [categories, setCategories] = useState<Category[]>([])
     const [saving, setSaving] = useState(false)
+    const [tempCategoryName, setTempCategoryName] = useState<string>('')
     const [additionalImages, setAdditionalImages] = useState<string[]>(
         initialData?.images && initialData.images.length > 0
             ? initialData.images
@@ -61,6 +62,10 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             image: initialData?.image || '',
             images: initialData?.images || [],
             shopeeUrl: initialData?.shopeeUrl || '',
+            shopeeRating: initialData?.shopeeRating ?? null,
+            shopeeSold: initialData?.shopeeSold ?? null,
+            shopeeRatingCountStr: initialData?.shopeeRatingCountStr || '',
+            shopeeSoldStr: initialData?.shopeeSoldStr || '',
             categoryId: initialData?.categoryId || '',
             badge: initialData?.badge || null,
             isActive: initialData?.isActive ?? true,
@@ -78,6 +83,10 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                     if (data.description) setValue('description', data.description)
                     if (data.image) setValue('image', data.image)
                     if (data.shopeeUrl) setValue('shopeeUrl', data.shopeeUrl)
+                    if (data.category) setTempCategoryName(data.category)
+                    if (data.images && Array.isArray(data.images)) {
+                        setAdditionalImages(data.images.length > 0 ? data.images : [''])
+                    }
                     
                     toast.success('Data Shopee berhasil dimuat ke dalam form!')
                 } catch (err) {
@@ -88,6 +97,18 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             }
         }
     }, [setValue])
+
+    // Auto-select category once categories are loaded
+    useEffect(() => {
+        if (tempCategoryName && categories.length > 0) {
+            const found = categories.find(
+                (c) => c.name.toLowerCase() === tempCategoryName.toLowerCase()
+            )
+            if (found) {
+                setValue('categoryId', found.id)
+            }
+        }
+    }, [tempCategoryName, categories, setValue])
 
     const title = watch('title')
     const image = watch('image')
@@ -466,6 +487,67 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                                 <span className="inline-block w-1 h-1 rounded-full bg-brand-muted/50"></span>
                                 Kosongkan jika tidak ingin menampilkan tombol Shopee
                             </p>
+                        </div>
+
+                        {/* Grid for Shopee Stats */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-brand-border/50 dark:border-dark-border/50">
+                            <div className="space-y-2.5">
+                                <Label htmlFor="shopeeRating" className="text-sm font-semibold">Rating Shopee (Desimal)</Label>
+                                <Input
+                                    id="shopeeRating"
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="5"
+                                    placeholder="Contoh: 4.9"
+                                    {...register('shopeeRating', { valueAsNumber: true })}
+                                    className="h-11 bg-white"
+                                />
+                                {errors.shopeeRating && (
+                                    <p className="text-xs text-red-500">{errors.shopeeRating.message}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2.5">
+                                <Label htmlFor="shopeeRatingCountStr" className="text-sm font-semibold">Jumlah Penilaian (Teks)</Label>
+                                <Input
+                                    id="shopeeRatingCountStr"
+                                    placeholder="Contoh: 18,8RB atau 500"
+                                    {...register('shopeeRatingCountStr')}
+                                    className="h-11 bg-white"
+                                />
+                                {errors.shopeeRatingCountStr && (
+                                    <p className="text-xs text-red-500">{errors.shopeeRatingCountStr.message}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2.5">
+                                <Label htmlFor="shopeeSold" className="text-sm font-semibold">Jumlah Terjual (Angka Murni)</Label>
+                                <Input
+                                    id="shopeeSold"
+                                    type="number"
+                                    min="0"
+                                    placeholder="Contoh: 10000"
+                                    {...register('shopeeSold', { valueAsNumber: true })}
+                                    className="h-11 bg-white"
+                                />
+                                {errors.shopeeSold && (
+                                    <p className="text-xs text-red-500">{errors.shopeeSold.message}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2.5">
+                                <Label htmlFor="shopeeSoldStr" className="text-sm font-semibold">Teks Terjual</Label>
+                                <Input
+                                    id="shopeeSoldStr"
+                                    placeholder="Contoh: 10RB+ atau 500+"
+                                    {...register('shopeeSoldStr')}
+                                    className="h-11 bg-white"
+                                />
+                                {errors.shopeeSoldStr && (
+                                    <p className="text-xs text-red-500">{errors.shopeeSoldStr.message}</p>
+                                )}
+                            </div>
                         </div>
                     </div>
 

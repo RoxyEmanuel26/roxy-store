@@ -23,6 +23,8 @@ export const getCachedProductBySlug = (slug: string) =>
                     shopeeUrl: true,
                     shopeeRating: true,
                     shopeeSold: true,
+                    shopeeRatingCountStr: true,
+                    shopeeSoldStr: true,
                     badge: true,
                     viewCount: true,
                     createdAt: true,

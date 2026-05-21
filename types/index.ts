@@ -12,6 +12,8 @@ export interface ProductType {
     shopeeUrl: string
     shopeeRating?: number | null
     shopeeSold?: number | null
+    shopeeRatingCountStr?: string | null
+    shopeeSoldStr?: string | null
     categoryId: string
     category: CategoryType
     badge: BadgeType

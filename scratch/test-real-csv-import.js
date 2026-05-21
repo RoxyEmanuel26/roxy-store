@@ -174,6 +174,59 @@ function cleanShopeeTitle(title) {
     return clean.trim();
 }
 
+function extractShopeeIds(url) {
+    const productMatch = url.match(/\/product\/(\d+)\/(\d+)/i);
+    if (productMatch) {
+        return { shopId: productMatch[1], itemId: productMatch[2] };
+    }
+    const hyphenIMatch = url.match(/-i\.(\d+)\.(\d+)/i);
+    if (hyphenIMatch) {
+        return { shopId: hyphenIMatch[1], itemId: hyphenIMatch[2] };
+    }
+    const userMatch = url.match(/shopee\.co\.id\/([^/]+)\/(\d+)\/(\d+)/i);
+    if (userMatch) {
+        const reserved = ['product', 'api', 'cart', 'checkout', 'buyer', 'user', 'search', 'category'];
+        if (!reserved.includes(userMatch[1].toLowerCase())) {
+            return { shopId: userMatch[2], itemId: userMatch[3] };
+        }
+    }
+    return null;
+}
+
+function extractCategoryFromHtml(html) {
+    const ldJsons = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi) || [];
+    for (const tag of ldJsons) {
+        try {
+            const cleanJson = tag.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '').trim();
+            const obj = JSON.parse(cleanJson);
+            if (obj['@type'] === 'BreadcrumbList' && obj.itemListElement && Array.isArray(obj.itemListElement)) {
+                const secondItem = obj.itemListElement.find(el => el.position === 2) || obj.itemListElement[1];
+                if (secondItem) {
+                    if (secondItem.item && secondItem.item.name) {
+                        return secondItem.item.name.trim();
+                    } else if (secondItem.name) {
+                        return secondItem.name.trim();
+                    }
+                }
+            }
+        } catch (e) {}
+    }
+    return '';
+}
+
+function cleanShopeeDescription(description) {
+    if (!description) return '';
+    const lower = description.toLowerCase();
+    if (
+        lower.includes('terbaru harga murah di shopee') ||
+        lower.includes('beli produk ini di shopee') ||
+        (lower.startsWith('beli ') && lower.includes('di shopee.'))
+    ) {
+        return '';
+    }
+    return description.trim();
+}
+
 async function scrapeShopeeProduct(url) {
     if (!url || !url.includes('shopee.co.id')) {
         throw new Error('URL harus berupa link Shopee Indonesia');
@@ -195,11 +248,55 @@ async function scrapeShopeeProduct(url) {
     }
 
     const html = await response.text();
+    const finalUrl = response.url;
 
     const rawTitle = getMetaContent(html, 'og:title') || getMetaContent(html, 'twitter:title') || '';
-    const title = cleanShopeeTitle(rawTitle);
-    const description = getMetaContent(html, 'og:description') || getMetaContent(html, 'description') || '';
-    const rawImageUrl = getMetaContent(html, 'og:square_image') || getMetaContent(html, 'og:image') || '';
+    let title = cleanShopeeTitle(rawTitle);
+    const rawDescription = getMetaContent(html, 'og:description') || getMetaContent(html, 'description') || '';
+    let description = cleanShopeeDescription(rawDescription);
+    let rawImageUrl = getMetaContent(html, 'og:square_image') || getMetaContent(html, 'og:image') || '';
+    let category = extractCategoryFromHtml(html);
+
+    const alWebUrl = getMetaContent(html, 'al:web:url');
+    let ids = extractShopeeIds(url) || extractShopeeIds(finalUrl);
+    if (!ids && alWebUrl) {
+        ids = extractShopeeIds(alWebUrl);
+    }
+
+    if (ids) {
+        const desktopUrl = `https://shopee.co.id/product/${ids.shopId}/${ids.itemId}`;
+        try {
+            const desktopResponse = await fetch(desktopUrl, {
+                headers: {
+                    'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_codedoc.html)',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'id-ID,id;q=0.9',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                },
+                redirect: 'follow'
+            });
+            if (desktopResponse.ok) {
+                const desktopHtml = await desktopResponse.text();
+                if (!category) {
+                    category = extractCategoryFromHtml(desktopHtml);
+                }
+                if (!title) {
+                    const desktopRawTitle = getMetaContent(desktopHtml, 'og:title') || getMetaContent(desktopHtml, 'twitter:title') || '';
+                    title = cleanShopeeTitle(desktopRawTitle);
+                }
+                if (!description) {
+                    const desktopRawDesc = getMetaContent(desktopHtml, 'og:description') || getMetaContent(desktopHtml, 'description') || '';
+                    description = cleanShopeeDescription(desktopRawDesc);
+                }
+                if (!rawImageUrl) {
+                    rawImageUrl = getMetaContent(desktopHtml, 'og:square_image') || getMetaContent(desktopHtml, 'og:image') || '';
+                }
+            }
+        } catch (err) {
+            console.error('Failed to fetch desktop URL for extra details:', err.message);
+        }
+    }
 
     let imageUrl = '';
     if (rawImageUrl) {
@@ -217,7 +314,7 @@ async function scrapeShopeeProduct(url) {
             console.log(`Cloudinary Upload Success: ${imageUrl}`);
         } catch (err) {
             console.error('Failed to upload image to Cloudinary during scraping:', err.message);
-            imageUrl = rawImageUrl; // Fallback
+            imageUrl = rawImageUrl;
         }
     }
 
@@ -225,9 +322,11 @@ async function scrapeShopeeProduct(url) {
         title,
         description,
         imageUrl,
-        rawImageUrl
+        rawImageUrl,
+        category
     };
 }
+
 
 async function runImport() {
     const csvPath = path.resolve(process.cwd(), 'test program/LinkProdukSekaligus20260521193146-b9ffa90b0d64446a98da889bd4b75c8c.csv');
@@ -378,7 +477,8 @@ async function runImport() {
             }
 
             // Scraping on-the-fly for new products
-            if (shopeeUrl && (!description || !imageUrl)) {
+            let scrapedCategory = '';
+            if (shopeeUrl && (!description || !imageUrl || !categoryName || categoryName === 'Other')) {
                 try {
                     console.log(`Scraping details for: ${shopeeUrl}`);
                     const scraped = await scrapeShopeeProduct(shopeeUrl);
@@ -390,6 +490,9 @@ async function runImport() {
                     }
                     if (!imageUrl && scraped.imageUrl) {
                         imageUrl = scraped.imageUrl;
+                    }
+                    if (scraped.category) {
+                        scrapedCategory = scraped.category;
                     }
                 } catch (err) {
                     console.error(`Failed scraping on-the-fly for URL: ${shopeeUrl}`, err.message);
@@ -407,18 +510,19 @@ async function runImport() {
             const slug = slugify(title, { lower: true, locale: 'id', strict: true });
 
             // Resolve category
-            let categoryId = categoryMap.get(categoryName.toLowerCase());
+            const finalCategoryName = scrapedCategory || categoryName || 'Other';
+            let categoryId = categoryMap.get(finalCategoryName.toLowerCase());
             if (!categoryId) {
-                const catSlug = slugify(categoryName, { lower: true, locale: 'id', strict: true });
+                const catSlug = slugify(finalCategoryName, { lower: true, locale: 'id', strict: true });
                 const newCategory = await prisma.category.create({
                     data: {
-                        name: categoryName,
+                        name: finalCategoryName,
                         slug: catSlug || `cat-${Date.now()}`,
                     },
                 });
                 categoryId = newCategory.id;
-                categoryMap.set(categoryName.toLowerCase(), categoryId);
-                console.log(`Created new category: ${categoryName}`);
+                categoryMap.set(finalCategoryName.toLowerCase(), categoryId);
+                console.log(`Created new category: ${finalCategoryName}`);
             }
 
             const imageUrls = rawProduct.images

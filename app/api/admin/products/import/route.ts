@@ -176,6 +176,8 @@ export async function POST(request: NextRequest) {
                     originalPrice: parseCsvPriceOrUndefined(rawProduct.originalPrice),
                     shopeeRating: parseCsvFloat(rawProduct.shopeeRating),
                     shopeeSold: parseCsvSold(rawProduct.shopeeSold),
+                    shopeeRatingCountStr: rawProduct.shopeeRatingCountStr ? String(rawProduct.shopeeRatingCountStr).trim() : '',
+                    shopeeSoldStr: rawProduct.shopeeSoldStr ? String(rawProduct.shopeeSoldStr).trim() : (rawProduct.shopeeSold ? String(rawProduct.shopeeSold).trim() : ''),
                     description: rawProduct.description || '',
                     image: rawProduct.image || '',
                     images: rawProduct.images || '',
@@ -215,7 +217,8 @@ export async function POST(request: NextRequest) {
                 }
 
                 // Scraping on-the-fly for new products
-                if (data.shopeeUrl && (!description || !imageUrl)) {
+                let scrapedCategory = ''
+                if (data.shopeeUrl && (!description || !imageUrl || !data.category || data.category === 'Other')) {
                     try {
                         const scraped = await scrapeShopeeProduct(data.shopeeUrl)
                         if (!title && scraped.title) {
@@ -227,6 +230,9 @@ export async function POST(request: NextRequest) {
                         if (!imageUrl && scraped.imageUrl) {
                             imageUrl = scraped.imageUrl
                         }
+                        if (scraped.category) {
+                            scrapedCategory = scraped.category
+                        }
                     } catch (err) {
                         console.error(`Gagal scraping on-the-fly untuk URL: ${data.shopeeUrl}`, err)
                     }
@@ -234,13 +240,13 @@ export async function POST(request: NextRequest) {
 
                 // Final check to make sure description has a fallback
                 if (!description) {
-                    description = 'Deskripsi belum tersedia'
+                    description = `Dapatkan ${title} original berkualitas terbaik hanya di Roxy Store! Produk pilihan ini dirancang dengan desain modern dan material berkualitas untuk memberikan kenyamanan serta keandalan maksimal dalam penggunaan sehari-hari.`
                 }
 
                 const slug = slugify(title, { lower: true, locale: 'id', strict: true })
 
                 // Resolve kategori
-                const categoryName = data.category.trim() || 'Other'
+                const categoryName = scrapedCategory || data.category.trim() || 'Other'
                 let categoryId = categoryMap.get(categoryName.toLowerCase())
 
                 if (!categoryId) {
@@ -280,6 +286,8 @@ export async function POST(request: NextRequest) {
                             shopeeUrl: data.shopeeUrl || existing.shopeeUrl,
                             shopeeRating: data.shopeeRating ?? existing.shopeeRating,
                             shopeeSold: data.shopeeSold ?? existing.shopeeSold,
+                            shopeeRatingCountStr: data.shopeeRatingCountStr || existing.shopeeRatingCountStr,
+                            shopeeSoldStr: data.shopeeSoldStr || existing.shopeeSoldStr,
                             categoryId,
                             badge: data.badge || existing.badge,
                             isActive: data.isActive,
@@ -307,6 +315,8 @@ export async function POST(request: NextRequest) {
                             shopeeUrl: data.shopeeUrl || '',
                             shopeeRating: data.shopeeRating ?? null,
                             shopeeSold: data.shopeeSold ?? null,
+                            shopeeRatingCountStr: data.shopeeRatingCountStr || null,
+                            shopeeSoldStr: data.shopeeSoldStr || null,
                             categoryId,
                             badge: data.badge || null,
                             isActive: data.isActive,

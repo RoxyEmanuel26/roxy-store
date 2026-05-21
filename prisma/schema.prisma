@@ -40,6 +40,8 @@ model Product {
   shopeeUrl       String   @default("")
   shopeeRating    Float?
   shopeeSold      Int?
+  shopeeRatingCountStr String?
+  shopeeSoldStr        String?
   categoryId      String
   category        Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   badge           String?

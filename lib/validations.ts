@@ -22,7 +22,7 @@ export const ProductSchema = z.object({
         .positive('Harga harus lebih dari 0')
         .max(100000000, 'Harga terlalu besar'),
     image: z.string().url('URL foto utama tidak valid'),
-    images: z.array(z.string().url()).max(20, 'Maksimal 20 foto tambahan').optional().default([]),
+    images: z.array(z.string().url()).max(100, 'Maksimal 100 foto tambahan').optional().default([]),
     shopeeUrl: z.string()
         .url('URL Shopee tidak valid')
         .refine(
@@ -30,6 +30,10 @@ export const ProductSchema = z.object({
             'Harus berupa link Shopee Indonesia'
         )
         .or(z.literal('')),
+    shopeeRating: z.number().min(0).max(5).nullable().optional(),
+    shopeeSold: z.number().int().min(0).nullable().optional(),
+    shopeeRatingCountStr: z.string().max(100).nullable().optional().or(z.literal('')),
+    shopeeSoldStr: z.string().max(100).nullable().optional().or(z.literal('')),
     categoryId: z.string().min(1, 'Kategori wajib dipilih'),
     badge: z.enum(['NEW', 'HOT', 'BEST SELLER']).nullable().optional(),
     isActive: z.boolean().default(true),
@@ -75,6 +79,8 @@ export const CsvProductSchema = z.object({
     shopeeUrl: z.string().url().or(z.literal('')).default(''),
     shopeeRating: z.number().min(0).max(5).optional(),
     shopeeSold: z.number().min(0).optional(),
+    shopeeRatingCountStr: z.string().optional().default(''),
+    shopeeSoldStr: z.string().optional().default(''),
     category: z.string().default('Other'),
     badge: z.enum(['NEW', 'HOT', 'BEST SELLER', '']).default(''),
     isActive: z.preprocess(

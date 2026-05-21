@@ -1,7 +1,7 @@
 import { scrapeShopeeProduct } from '../lib/shopee-scraper'
 
 async function run() {
-  const url = 'https://s.shopee.co.id/5q5BHF9n24'
+  const url = 'https://s.shopee.co.id/1BJLxhR2uv'
   console.log('Scraping URL:', url)
   try {
     const result = await scrapeShopeeProduct(url)
