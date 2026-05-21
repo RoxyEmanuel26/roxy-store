@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, useCallback, useTransition } from 'react'
-import { Search, SlidersHorizontal, X, Flame, Star, TrendingDown, TrendingUp, Clock, ArrowUpDown } from 'lucide-react'
+import { Search, SlidersHorizontal, X, Flame, TrendingDown, TrendingUp, Clock, ArrowUpDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,7 +18,6 @@ import FilterSidebar from './FilterSidebar'
 const SORT_OPTIONS = [
     { value: 'terbaru', label: 'Terbaru', icon: Clock },
     { value: 'terlaris', label: 'Terlaris', icon: Flame },
-    { value: 'rating-tertinggi', label: 'Rating Tertinggi', icon: Star },
     { value: 'harga-terendah', label: 'Harga Terendah', icon: TrendingDown },
     { value: 'harga-tertinggi', label: 'Harga Tertinggi', icon: TrendingUp },
 ]

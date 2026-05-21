@@ -30,7 +30,6 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 
     const sortLabels: Record<string, string> = {
         terlaris: 'Terlaris',
-        'rating-tertinggi': 'Rating Tertinggi',
         'harga-terendah': 'Harga Terendah',
         'harga-tertinggi': 'Harga Tertinggi',
         terbaru: 'Terbaru',
