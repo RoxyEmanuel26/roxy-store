@@ -119,9 +119,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'https', hostname: 'cf.shopee.co.id' },
-      { protocol: 'https', hostname: 'down-**.img.susercontent.com' },
-      // Fallback untuk domain lain — lebih aman dari hostname: '**'
-      { protocol: 'https', hostname: '**' },
+      { protocol: 'https', hostname: '**.img.susercontent.com' }, // [SECURITY FIX] Safe Shopee CDN subdomain wildcard
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

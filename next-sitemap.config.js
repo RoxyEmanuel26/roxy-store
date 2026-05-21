@@ -7,7 +7,14 @@ module.exports = {
     changefreq: 'weekly',
     priority: 0.7,
     sitemapSize: 5000,
-    exclude: ['/admin', '/admin/*', '/api/*', '/offline'],
+    exclude: [
+        '/admin',
+        '/admin/*',
+        '/api/*',
+        '/offline',
+        '/404', // [SECURITY FIX] Exclude error pages
+        '/500', // [SECURITY FIX] Exclude error pages
+    ],
     additionalPaths: async () => {
         return [
             { loc: '/', changefreq: 'daily', priority: 1.0 },

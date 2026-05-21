@@ -52,6 +52,22 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // [SECURITY FIX] Rate limit: meta-events (30 req/menit/IP)
+    if (pathname.startsWith('/api/meta-events')) {
+        const { success } = await apiRateLimit.limit(ip)
+        if (!success) {
+            return new NextResponse(null, { status: 429 })
+        }
+    }
+
+    // [SECURITY FIX] Rate limit: public products search (30 req/menit/IP)
+    if (pathname === '/api/products') {
+        const { success } = await apiRateLimit.limit(`products:${ip}`)
+        if (!success) {
+            return new NextResponse(null, { status: 429 })
+        }
+    }
+
     // Protect admin routes (except login page)
     if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
         try {

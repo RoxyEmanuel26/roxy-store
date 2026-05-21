@@ -22,7 +22,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 try {
                     const validated = LoginSchema.safeParse(credentials)
                     if (!validated.success) {
-                        console.error("Auth validation failed", validated.error)
+                        // [SECURITY FIX] Jangan log detail validation error
+                        console.error("Auth: validation failed")
                         return null
                     }
 
@@ -32,7 +33,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         where: { email },
                     })
                     if (!admin) {
-                        console.error("Admin not found:", email)
+                        // [SECURITY FIX] Log generik tanpa email
+                        console.warn("Auth: login attempt failed — admin not found")
                         return null
                     }
 
@@ -41,7 +43,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         admin.passwordHash
                     )
                     if (!passwordMatch) {
-                        console.error("Password mismatch for:", email)
+                        // [SECURITY FIX] Log generik tanpa email
+                        console.warn("Auth: login attempt failed — password mismatch")
                         return null
                     }
 
@@ -52,7 +55,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                         role: admin.role,
                     }
                 } catch (error) {
-                    console.error("Database/Auth Error during login:", error)
+                    // [SECURITY FIX] Log hanya error message, bukan full object
+                    const errMsg = error instanceof Error ? error.message : 'Unknown error'
+                    console.error("Auth: database error during login —", errMsg)
                     return null
                 }
             },

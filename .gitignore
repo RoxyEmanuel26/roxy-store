@@ -73,3 +73,11 @@ build_error.log
 
 # RTK Antigravity rules
 .agents/
+
+# [SECURITY FIX] Debug, scratch, and testing scripts
+check-db.js
+check-*.js
+debug-*.js
+test-*.js
+scratch/
+test program/

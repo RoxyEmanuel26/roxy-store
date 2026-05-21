@@ -2,8 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { uploadImage } from '@/lib/cloudinary'
 import { captureError } from '@/lib/sentry-helpers'
+import { validateOrigin } from '@/lib/csrf' // [SECURITY FIX] CSRF check import
+
+
+// [SECURITY FIX] Whitelist folder yang diizinkan
+const ALLOWED_FOLDERS = [
+    'Roxy-lay/products',
+    'Roxy-lay/categories',
+    'Roxy-lay/settings',
+] as const
 
 export async function POST(request: NextRequest) {
+    // [SECURITY FIX] CSRF check
+    if (!validateOrigin(request)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const session = await auth()
     if (!session) {
         return NextResponse.json(
@@ -12,10 +26,20 @@ export async function POST(request: NextRequest) {
         )
     }
 
+    // [SECURITY FIX] Tambahkan role check
+    if ((session.user as any)?.role !== 'admin') {
+        return NextResponse.json({ error: 'Akses ditolak' }, { status: 403 })
+    }
+
     try {
         const formData = await request.formData()
         const file = formData.get('file') as File
-        const folder = (formData.get('folder') as string) || 'Roxy-lay/products'
+        const folderInput = (formData.get('folder') as string) || 'Roxy-lay/products'
+
+        // [SECURITY FIX] Validasi folder dari whitelist
+        const folder = ALLOWED_FOLDERS.includes(folderInput as any)
+            ? folderInput
+            : 'Roxy-lay/products'
 
         if (!file) {
             return NextResponse.json(

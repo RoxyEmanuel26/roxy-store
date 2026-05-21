@@ -21,6 +21,11 @@ export function validateOrigin(request: Request): boolean {
         return allowedOrigins.some((allowed) => referer.startsWith(allowed))
     }
 
-    // If no origin/referer (e.g., server-to-server call), allow
+    // [SECURITY FIX] JANGAN izinkan jika tidak ada origin/referer di production
+    if (process.env.NODE_ENV === 'production') {
+        return false // Blokir di production
+    }
+
+    // Izinkan di development (untuk testing dengan Postman/curl)
     return true
 }
