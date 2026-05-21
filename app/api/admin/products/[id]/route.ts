@@ -75,7 +75,6 @@ export async function PUT(
         image: sanitizeUrl(data.image) || data.image,
         images: data.images?.map((img: string) => sanitizeUrl(img) || img) || [],
         shopeeUrl: data.shopeeUrl ? (sanitizeUrl(data.shopeeUrl) || data.shopeeUrl) : '',
-        tokopediaUrl: data.tokopediaUrl ? (sanitizeUrl(data.tokopediaUrl) || data.tokopediaUrl) : '',
         categoryId: data.categoryId,
         badge: data.badge || null,
         isActive: data.isActive ?? true,

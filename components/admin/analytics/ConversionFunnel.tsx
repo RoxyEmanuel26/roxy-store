@@ -1,15 +1,13 @@
 interface FunnelProps {
     views: number
     shopeeClicks: number
-    tokopediaClicks: number
     waClicks: number
 }
 
-export function ConversionFunnel({ views, shopeeClicks, tokopediaClicks, waClicks }: FunnelProps) {
-    const totalClicks = shopeeClicks + tokopediaClicks + waClicks
+export function ConversionFunnel({ views, shopeeClicks, waClicks }: FunnelProps) {
+    const totalClicks = shopeeClicks + waClicks
     const viewToClick = views > 0 ? ((totalClicks / views) * 100).toFixed(1) : '0'
     const viewToShopee = views > 0 ? ((shopeeClicks / views) * 100).toFixed(1) : '0'
-    const viewToTokopedia = views > 0 ? ((tokopediaClicks / views) * 100).toFixed(1) : '0'
 
     return (
         <div className="bg-white dark:bg-dark-surface rounded-2xl p-6 shadow-sm border border-brand-border">
@@ -36,18 +34,7 @@ export function ConversionFunnel({ views, shopeeClicks, tokopediaClicks, waClick
                     </div>
                 </div>
 
-                {/* Step 3 - Tokopedia */}
-                <div className="flex justify-center w-full">
-                    <div
-                        className="relative py-2 px-4 rounded-lg font-bold flex justify-between bg-[#42B549] text-white shadow-sm overflow-hidden"
-                        style={{ width: `max(${viewToTokopedia}%, 30%)` }}
-                    >
-                        <span className="truncate">🟢 Tokopedia</span>
-                        <span>{tokopediaClicks.toLocaleString('id-ID')}</span>
-                    </div>
-                </div>
-
-                {/* Step 4 - WhatsApp */}
+                {/* Step 3 - WhatsApp */}
                 <div className="flex justify-center w-full">
                     <div className="w-1/4 min-w-[120px] relative py-2 px-4 rounded-lg font-bold flex justify-between bg-[#25D366] text-white shadow-sm">
                         <span>💬 WA</span>

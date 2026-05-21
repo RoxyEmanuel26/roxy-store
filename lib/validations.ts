@@ -30,13 +30,6 @@ export const ProductSchema = z.object({
             'Harus berupa link Shopee Indonesia'
         )
         .or(z.literal('')),
-    tokopediaUrl: z.string()
-        .url('URL Tokopedia tidak valid')
-        .refine(
-            (url) => url.includes('tokopedia.com'),
-            'Harus berupa link Tokopedia'
-        )
-        .or(z.literal('')),
     categoryId: z.string().min(1, 'Kategori wajib dipilih'),
     badge: z.enum(['NEW', 'HOT', 'BEST SELLER']).nullable().optional(),
     isActive: z.boolean().default(true),
@@ -80,7 +73,6 @@ export const CsvProductSchema = z.object({
     image: z.string().url('URL gambar utama tidak valid').or(z.literal('')).default(''),
     images: z.string().default(''), // pipe-separated URLs
     shopeeUrl: z.string().url().or(z.literal('')).default(''),
-    tokopediaUrl: z.string().url().or(z.literal('')).default(''),
     shopeeRating: z.number().min(0).max(5).optional(),
     shopeeSold: z.number().min(0).optional(),
     category: z.string().default('Other'),

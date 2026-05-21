@@ -38,7 +38,6 @@ model Product {
   image           String
   images          String[]
   shopeeUrl       String   @default("")
-  tokopediaUrl    String   @default("")
   shopeeRating    Float?
   shopeeSold      Int?
   categoryId      String
@@ -47,7 +46,6 @@ model Product {
   isActive        Boolean  @default(true)
   viewCount       Int      @default(0)
   shopeeClicks    Int      @default(0)
-  tokopediaClicks Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

@@ -45,6 +45,46 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             ? initialData.images
             : ['']
     )
+    const [smartUrl, setSmartUrl] = useState('')
+    const [scraping, setScraping] = useState(false)
+
+    const handleSmartScrape = async () => {
+        if (!smartUrl) {
+            toast.error('Silakan masukkan tautan Shopee terlebih dahulu')
+            return
+        }
+        if (!smartUrl.includes('shopee.co.id')) {
+            toast.error('Harus berupa tautan Shopee Indonesia (shopee.co.id)')
+            return
+        }
+
+        setScraping(true)
+        try {
+            const res = await fetch('/api/admin/products/scrape-shopee', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: smartUrl }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                toast.error(data.error || 'Gagal mengambil data dari Shopee')
+                return
+            }
+
+            if (data.title) setValue('title', data.title)
+            if (data.description) setValue('description', data.description)
+            if (data.imageUrl) setValue('image', data.imageUrl)
+            setValue('shopeeUrl', smartUrl)
+
+            toast.success('Data Shopee berhasil diambil!')
+        } catch (err) {
+            toast.error('Terjadi kesalahan saat mengambil data')
+        } finally {
+            setScraping(false)
+        }
+    }
 
     const {
         register,
@@ -62,7 +102,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             image: initialData?.image || '',
             images: initialData?.images || [],
             shopeeUrl: initialData?.shopeeUrl || '',
-            tokopediaUrl: initialData?.tokopediaUrl || '',
             categoryId: initialData?.categoryId || '',
             badge: initialData?.badge || null,
             isActive: initialData?.isActive ?? true,
@@ -160,6 +199,44 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                     </Button>
                 </Link>
             </div>
+
+            {/* Smart Add Shopee */}
+            {!isEdit && (
+                <div className="rounded-xl border border-brand-border/50 dark:border-dark-border/50 bg-brand-primary/5 dark:bg-brand-primary/10 p-6 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <h4 className="text-base font-bold text-brand-primary">Smart Add dari Shopee 🛍️</h4>
+                            <p className="text-xs text-brand-muted dark:text-dark-muted">
+                                Tempel tautan Shopee di bawah untuk mengisi judul, deskripsi, gambar utama, dan link Shopee secara otomatis.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <Input
+                            type="text"
+                            placeholder="Contoh: https://s.shopee.co.id/5q5BHF9n24 atau https://shopee.co.id/..."
+                            value={smartUrl}
+                            onChange={(e) => setSmartUrl(e.target.value)}
+                            className="flex-1 h-11 border-brand-primary/30 focus-visible:ring-brand-primary bg-white"
+                        />
+                        <Button
+                            type="button"
+                            onClick={handleSmartScrape}
+                            disabled={scraping}
+                            className="bg-brand-primary hover:bg-brand-primary/90 text-white shrink-0 h-11 px-6 gap-2"
+                        >
+                            {scraping ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Mengambil...
+                                </>
+                            ) : (
+                                'Ambil Data Shopee'
+                            )}
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                 {/* LEFT COLUMN - 60% */}
@@ -386,20 +463,20 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                         </div>
                     </div>
 
-                    {/* Card: Link Marketplace */}
+                    {/* Card: Link Shopee */}
                     <div className="rounded-xl border border-brand-border/50 dark:border-dark-border/50 bg-white/50 dark:bg-dark-surface/50 backdrop-blur-sm p-6 lg:p-8 space-y-6 shadow-sm">
                         <h3 className="text-xl font-bold text-brand-text dark:text-dark-text border-b border-brand-border/50 dark:border-dark-border/50 pb-3">
-                            Link Marketplace
+                            Link Shopee
                         </h3>
 
                         <div className="space-y-2.5">
-                            <Label htmlFor="shopeeUrl" className="text-sm font-semibold">Link Shopee</Label>
+                            <Label htmlFor="shopeeUrl" className="text-sm font-semibold">Tautan Shopee</Label>
                             <div className="flex gap-2">
                                 <Input
                                     id="shopeeUrl"
                                     placeholder="https://shopee.co.id/..."
                                     {...register('shopeeUrl')}
-                                    className="flex-1 h-11"
+                                    className="flex-1 h-11 bg-white"
                                 />
                                 {watch('shopeeUrl') && (
                                     <a href={watch('shopeeUrl')} target="_blank" rel="noopener noreferrer">
@@ -418,35 +495,6 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                             <p className="text-xs text-brand-muted dark:text-dark-muted flex items-center gap-1.5">
                                 <span className="inline-block w-1 h-1 rounded-full bg-brand-muted/50"></span>
                                 Kosongkan jika tidak ingin menampilkan tombol Shopee
-                            </p>
-                        </div>
-
-                        <div className="space-y-2.5">
-                            <Label htmlFor="tokopediaUrl" className="text-sm font-semibold">Link Tokopedia</Label>
-                            <div className="flex gap-2">
-                                <Input
-                                    id="tokopediaUrl"
-                                    placeholder="https://www.tokopedia.com/..."
-                                    {...register('tokopediaUrl')}
-                                    className="flex-1 h-11"
-                                />
-                                {watch('tokopediaUrl') && (
-                                    <a href={watch('tokopediaUrl')} target="_blank" rel="noopener noreferrer">
-                                        <Button type="button" variant="outline" size="sm" className="shrink-0 h-11 hover:bg-brand-primary/10 hover:text-brand-primary hover:border-brand-primary">
-                                            Test
-                                        </Button>
-                                    </a>
-                                )}
-                            </div>
-                            {errors.tokopediaUrl && (
-                                <p className="text-xs text-red-500 flex items-center gap-1">
-                                    <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
-                                    {errors.tokopediaUrl.message}
-                                </p>
-                            )}
-                            <p className="text-xs text-brand-muted dark:text-dark-muted flex items-center gap-1.5">
-                                <span className="inline-block w-1 h-1 rounded-full bg-brand-muted/50"></span>
-                                Kosongkan jika tidak ingin menampilkan tombol Tokopedia
                             </p>
                         </div>
                     </div>

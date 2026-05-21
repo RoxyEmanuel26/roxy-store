@@ -18,12 +18,12 @@ export async function GET() {
         })
 
         // Generate CSV content
-        let csvContent = 'ID,Nama Produk,Kategori,Harga,Views,Klik Shopee,Klik Tokopedia,Total Klik,Tanggal Dibuat\n'
+        let csvContent = 'ID,Nama Produk,Kategori,Harga,Views,Klik Shopee,Total Klik,Tanggal Dibuat\n'
 
         products.forEach(p => {
             const escapedTitle = p.title.replace(/"/g, '""')
-            const totalClicks = p.shopeeClicks + p.tokopediaClicks
-            csvContent += `"${p.id}","${escapedTitle}","${p.category?.name || '-'}","${p.price}","${p.viewCount}","${p.shopeeClicks}","${p.tokopediaClicks}","${totalClicks}","${p.createdAt.toISOString()}"\n`
+            const totalClicks = p.shopeeClicks
+            csvContent += `"${p.id}","${escapedTitle}","${p.category?.name || '-'}","${p.price}","${p.viewCount}","${p.shopeeClicks}","${totalClicks}","${p.createdAt.toISOString()}"\n`
         })
 
         const bom = '\uFEFF'

@@ -42,7 +42,6 @@ export default async function AdminDashboardPage() {
     const todayStats: Record<string, number> = {
         view: 0,
         shopee_click: 0,
-        tokopedia_click: 0,
         wa_click: 0,
     }
     for (const event of todayEvents) {
@@ -64,7 +63,7 @@ export default async function AdminDashboardPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StatsCard
                     title="Total Produk Aktif"
                     value={totalProducts}
@@ -84,12 +83,6 @@ export default async function AdminDashboardPage() {
                     value={todayStats.shopee_click}
                     icon={ShoppingBag}
                     color="orange"
-                />
-                <StatsCard
-                    title="Klik Tokopedia Hari Ini"
-                    value={todayStats.tokopedia_click}
-                    icon={Store}
-                    color="green"
                 />
             </div>
 
@@ -139,7 +132,7 @@ export default async function AdminDashboardPage() {
                         <h2 className="text-lg font-semibold text-brand-text dark:text-dark-text mb-4">
                             Aktivitas Hari Ini
                         </h2>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4">
                                 <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                     {todayStats.view}
@@ -154,14 +147,6 @@ export default async function AdminDashboardPage() {
                                 </p>
                                 <p className="text-sm text-orange-600/70 dark:text-orange-400/70 mt-1 flex items-center gap-1">
                                     <ShoppingBag className="h-3.5 w-3.5" /> Klik Shopee
-                                </p>
-                            </div>
-                            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-4">
-                                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                    {todayStats.tokopedia_click}
-                                </p>
-                                <p className="text-sm text-green-600/70 dark:text-green-400/70 mt-1 flex items-center gap-1">
-                                    <Store className="h-3.5 w-3.5" /> Klik Tokopedia
                                 </p>
                             </div>
                             <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 p-4">

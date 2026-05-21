@@ -50,7 +50,6 @@ const CSV_TEMPLATE_HEADERS = [
     'image',
     'images',
     'shopeeUrl',
-    'tokopediaUrl',
     'shopeeRating',
     'shopeeSold',
     'category',
@@ -66,7 +65,6 @@ const CSV_TEMPLATE_EXAMPLE = [
     'https://example.com/serum.jpg',
     'https://example.com/serum2.jpg|https://example.com/serum3.jpg',
     'https://shopee.co.id/product-link',
-    '',
     '4.8',
     '150',
     'Skincare & Kecantikan',
@@ -171,7 +169,6 @@ export default function CsvImportDialog({
                     image: 'image',
                     images: 'images',
                     shopeeurl: 'shopeeUrl',
-                    tokopediaurl: 'tokopediaUrl',
                     shopeerating: 'shopeeRating',
                     shopeeRating: 'shopeeRating',
                     shopeesold: 'shopeeSold',
@@ -181,7 +178,6 @@ export default function CsvImportDialog({
                     isactive: 'isActive',
                     isActive: 'isActive',
                     shopeeUrl: 'shopeeUrl',
-                    tokopediaUrl: 'tokopediaUrl',
 
                     // Indonesian
                     judul: 'title',
@@ -200,8 +196,6 @@ export default function CsvImportDialog({
                     fotogaleri: 'images',
                     shopee_url: 'shopeeUrl',
                     link_shopee: 'shopeeUrl',
-                    tokopedia_url: 'tokopediaUrl',
-                    link_tokopedia: 'tokopediaUrl',
                     shopee_rating: 'shopeeRating',
                     rating_shopee: 'shopeeRating',
                     shopee_terjual: 'shopeeSold',
@@ -209,6 +203,11 @@ export default function CsvImportDialog({
                     terjual: 'shopeeSold',
                     kategori: 'category',
                     aktif: 'isActive',
+
+                    // Shopee mass affiliate CSV
+                    'nama produk': 'title',
+                    'penjualan': 'shopeeSold',
+                    'link komisi ekstra': 'shopeeUrl',
                 }
 
                 const normalizedData = data.map((row) => {

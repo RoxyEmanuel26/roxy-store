@@ -79,7 +79,6 @@ export default async function AnalyticsPage({
                     select: {
                         viewCount: true,
                         shopeeClicks: true,
-                        tokopediaClicks: true,
                     },
                 },
             },
@@ -138,9 +137,6 @@ export default async function AnalyticsPage({
                 }
                 shopeeClicks={
                     totalStats.find((s: any) => s.eventType === 'shopee_click')?._count.id || 0
-                }
-                tokopediaClicks={
-                    totalStats.find((s: any) => s.eventType === 'tokopedia_click')?._count.id || 0
                 }
                 waClicks={
                     totalStats.find((s: any) => s.eventType === 'wa_click')?._count.id || 0

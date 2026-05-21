@@ -10,7 +10,6 @@ export interface ProductType {
     image: string
     images: string[]
     shopeeUrl: string
-    tokopediaUrl: string
     shopeeRating?: number | null
     shopeeSold?: number | null
     categoryId: string
@@ -19,7 +18,6 @@ export interface ProductType {
     isActive: boolean
     viewCount: number
     shopeeClicks: number
-    tokopediaClicks: number
     createdAt: Date
     updatedAt: Date
 }
@@ -46,6 +44,6 @@ export interface SiteSettingsType {
 }
 
 export interface AnalyticsEvent {
-    eventType: 'view' | 'shopee_click' | 'tokopedia_click' | 'wa_click'
+    eventType: 'view' | 'shopee_click' | 'wa_click'
     productId?: string
 }

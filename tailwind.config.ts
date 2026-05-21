@@ -20,7 +20,6 @@ const config: Config = {
 				border: '#BAE6FD',
 				accent: '#0EA5E9',
 				shopee: '#EE4D2D',
-				tokopedia: '#42B549',
 				whatsapp: '#25D366'
 			},
 			dark: {

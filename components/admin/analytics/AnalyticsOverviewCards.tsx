@@ -1,4 +1,4 @@
-import { Eye, ShoppingBag, Store, MessageCircle } from 'lucide-react'
+import { Eye, ShoppingBag, MessageCircle } from 'lucide-react'
 
 interface AnalyticsOverviewCardsProps {
     today: any[]
@@ -29,14 +29,6 @@ export function AnalyticsOverviewCards({ today, last7Days, allTime }: AnalyticsO
             iconColor: 'text-[#EE4D2D]',
         },
         {
-            label: 'Klik Tokopedia Hari Ini',
-            value: getCount(today, 'tokopedia_click'),
-            total: getCount(allTime, 'tokopedia_click'),
-            icon: Store,
-            bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
-            iconColor: 'text-[#42B549]',
-        },
-        {
             label: 'Klik WA Hari Ini',
             value: getCount(today, 'wa_click'),
             total: getCount(allTime, 'wa_click'),
@@ -47,7 +39,7 @@ export function AnalyticsOverviewCards({ today, last7Days, allTime }: AnalyticsO
     ]
 
     return (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {cards.map((card, i) => {
                 const Icon = card.icon
                 return (

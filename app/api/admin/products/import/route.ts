@@ -7,6 +7,7 @@ import { sanitizeText, sanitizeDescription } from '@/lib/sanitize'
 import slugify from 'slugify'
 import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
+import { scrapeShopeeProduct } from '@/lib/shopee-scraper'
 
 const MAX_PRODUCTS_PER_IMPORT = 100
 
@@ -58,11 +59,43 @@ function cleanNumberString(val: string): string {
     return str
 }
 
-function parseCsvPrice(val: unknown): number {
+function parseStringWithMultipliers(val: unknown): number {
     if (val === '' || val === undefined || val === null) return 0
-    const cleaned = cleanNumberString(String(val))
-    const parsed = parseFloat(cleaned)
-    return isNaN(parsed) ? 0 : parsed
+    let str = String(val).trim().toLowerCase()
+    
+    // Remove currency prefix RP/IDR etc first
+    str = str.replace(/^(rp|idr|usd|sgd)\.?\s*/i, '')
+    
+    // Handle multipliers
+    let multiplier = 1
+    if (str.includes('ribu') || str.endsWith('rb') || str.endsWith('k')) {
+        multiplier = 1000
+        str = str.replace(/ribu|rb|\+/g, '').replace(/k/g, '').trim()
+    } else if (str.includes('juta') || str.endsWith('jt')) {
+        multiplier = 1000000
+        str = str.replace(/juta|jt|\+/g, '').trim()
+    } else {
+        str = str.replace(/\+/g, '').trim()
+    }
+    
+    if (multiplier > 1) {
+        const partsComma = str.split(',')
+        const partsDot = str.split('.')
+        if (partsComma.length === 2 && partsDot.length === 1) {
+            str = str.replace(',', '.')
+        } else {
+            str = cleanNumberString(str)
+        }
+    } else {
+        str = cleanNumberString(str)
+    }
+    
+    const parsed = parseFloat(str)
+    return isNaN(parsed) ? 0 : parsed * multiplier
+}
+
+function parseCsvPrice(val: unknown): number {
+    return parseStringWithMultipliers(val)
 }
 
 function parseCsvPriceOrUndefined(val: unknown): number | undefined {
@@ -71,23 +104,10 @@ function parseCsvPriceOrUndefined(val: unknown): number | undefined {
     return price > 0 ? price : undefined
 }
 
-function parseCsvSold(val: unknown): z.infer<typeof CsvProductSchema>['shopeeSold'] {
+function parseCsvSold(val: unknown): number | undefined {
     if (val === '' || val === undefined || val === null) return undefined
-    let str = String(val).trim().toLowerCase()
-    
-    let multiplier = 1
-    if (str.endsWith('rb')) {
-        multiplier = 1000
-        str = str.substring(0, str.length - 2).trim()
-    } else if (str.endsWith('k')) {
-        multiplier = 1000
-        str = str.substring(0, str.length - 1).trim()
-    }
-
-    const cleaned = cleanNumberString(str)
-    const parsed = parseFloat(cleaned)
-    if (isNaN(parsed)) return undefined
-    return Math.round(parsed * multiplier)
+    const sold = Math.round(parseStringWithMultipliers(val))
+    return sold >= 0 ? sold : undefined
 }
 
 function parseCsvFloat(val: unknown): number | undefined {
@@ -160,7 +180,6 @@ export async function POST(request: NextRequest) {
                     image: rawProduct.image || '',
                     images: rawProduct.images || '',
                     shopeeUrl: rawProduct.shopeeUrl || '',
-                    tokopediaUrl: rawProduct.tokopediaUrl || '',
                     category: rawProduct.category?.trim() || 'Other',
                     badge: rawProduct.badge || '',
                     isActive: rawProduct.isActive === undefined || rawProduct.isActive === '' ? true : rawProduct.isActive,
@@ -174,8 +193,50 @@ export async function POST(request: NextRequest) {
                 }
 
                 const data = parsed.data
-                const title = sanitizeText(data.title)
-                const description = sanitizeDescription(data.description || '')
+                let title = sanitizeText(data.title)
+                let description = sanitizeDescription(data.description || '')
+                let imageUrl = data.image || ''
+
+                // Filter Duplikat: check if shopeeUrl already exists in database
+                if (data.shopeeUrl) {
+                    const existingByShopeeUrl = await prisma.product.findFirst({
+                        where: { shopeeUrl: data.shopeeUrl }
+                    })
+                    if (existingByShopeeUrl) {
+                        results.push({
+                            row: rowNum,
+                            title: title || rawProduct.title || '(kosong)',
+                            status: 'error',
+                            error: 'Duplikat (Tautan Shopee sudah ada)'
+                        })
+                        errors++
+                        continue
+                    }
+                }
+
+                // Scraping on-the-fly for new products
+                if (data.shopeeUrl && (!description || !imageUrl)) {
+                    try {
+                        const scraped = await scrapeShopeeProduct(data.shopeeUrl)
+                        if (!title && scraped.title) {
+                            title = sanitizeText(scraped.title)
+                        }
+                        if (!description && scraped.description) {
+                            description = sanitizeDescription(scraped.description)
+                        }
+                        if (!imageUrl && scraped.imageUrl) {
+                            imageUrl = scraped.imageUrl
+                        }
+                    } catch (err) {
+                        console.error(`Gagal scraping on-the-fly untuk URL: ${data.shopeeUrl}`, err)
+                    }
+                }
+
+                // Final check to make sure description has a fallback
+                if (!description) {
+                    description = 'Deskripsi belum tersedia'
+                }
+
                 const slug = slugify(title, { lower: true, locale: 'id', strict: true })
 
                 // Resolve kategori
@@ -214,10 +275,9 @@ export async function POST(request: NextRequest) {
                             description: description || existing.description,
                             price: data.price || existing.price,
                             originalPrice: data.originalPrice ?? existing.originalPrice,
-                            image: data.image || existing.image,
+                            image: imageUrl || existing.image,
                             images: imageUrls.length > 0 ? imageUrls : existing.images,
                             shopeeUrl: data.shopeeUrl || existing.shopeeUrl,
-                            tokopediaUrl: data.tokopediaUrl || existing.tokopediaUrl,
                             shopeeRating: data.shopeeRating ?? existing.shopeeRating,
                             shopeeSold: data.shopeeSold ?? existing.shopeeSold,
                             categoryId,
@@ -229,7 +289,6 @@ export async function POST(request: NextRequest) {
                     updated++
                 } else {
                     // CREATE produk baru
-                    // Cek apakah slug sudah terpakai (edge case: concurrent import)
                     let finalSlug = slug
                     const slugCheck = await prisma.product.findUnique({ where: { slug: finalSlug } })
                     if (slugCheck) {
@@ -240,13 +299,12 @@ export async function POST(request: NextRequest) {
                         data: {
                             title,
                             slug: finalSlug,
-                            description: description || 'Deskripsi belum tersedia',
+                            description,
                             price: data.price,
                             originalPrice: data.originalPrice ?? null,
-                            image: data.image || '',
+                            image: imageUrl,
                             images: imageUrls,
                             shopeeUrl: data.shopeeUrl || '',
-                            tokopediaUrl: data.tokopediaUrl || '',
                             shopeeRating: data.shopeeRating ?? null,
                             shopeeSold: data.shopeeSold ?? null,
                             categoryId,

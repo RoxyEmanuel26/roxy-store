@@ -8,7 +8,6 @@ interface TopProduct {
     image: string
     viewCount: number
     shopeeClicks: number
-    tokopediaClicks: number
     category: { name: string }
 }
 
@@ -46,7 +45,6 @@ export function TopProductsTable({ products }: { products: TopProduct[] }) {
                             <th className="px-4 py-3">Produk</th>
                             <th className="px-4 py-3">Views</th>
                             <th className="px-4 py-3">Shopee</th>
-                            <th className="px-4 py-3">Tokpedia</th>
                             <th className="px-4 py-3 rounded-r-lg">Total Klik</th>
                         </tr>
                     </thead>
@@ -75,15 +73,14 @@ export function TopProductsTable({ products }: { products: TopProduct[] }) {
                                     </div>
                                 </td>
                                 <td className="px-4 py-3 font-semibold text-[#EE4D2D]">{p.shopeeClicks}</td>
-                                <td className="px-4 py-3 font-semibold text-[#42B549]">{p.tokopediaClicks}</td>
                                 <td className="px-4 py-3 font-bold">
-                                    {p.shopeeClicks + p.tokopediaClicks}
+                                    {p.shopeeClicks}
                                 </td>
                             </tr>
                         ))}
                         {products.length === 0 && (
                             <tr>
-                                <td colSpan={6} className="text-center py-6 text-brand-muted">
+                                <td colSpan={5} className="text-center py-6 text-brand-muted">
                                     Belum ada data produk
                                 </td>
                             </tr>

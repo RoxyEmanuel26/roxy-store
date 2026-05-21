@@ -12,7 +12,7 @@ import {
 
 interface CategoryStat {
     name: string
-    products: { viewCount: number; shopeeClicks: number; tokopediaClicks: number }[]
+    products: { viewCount: number; shopeeClicks: number }[]
 }
 
 export function CategoryStatsChart({ categories }: { categories: CategoryStat[] }) {
@@ -21,7 +21,6 @@ export function CategoryStatsChart({ categories }: { categories: CategoryStat[] 
             name: cat.name,
             views: cat.products.reduce((sum, p) => sum + p.viewCount, 0),
             klikShopee: cat.products.reduce((sum, p) => sum + p.shopeeClicks, 0),
-            klikTokopedia: cat.products.reduce((sum, p) => sum + p.tokopediaClicks, 0),
         }))
         .sort((a, b) => b.views - a.views)
 
@@ -45,11 +44,10 @@ export function CategoryStatsChart({ categories }: { categories: CategoryStat[] 
                                 backgroundColor: '#fff',
                                 border: '1px solid #FFD6E7',
                                 borderRadius: '12px',
-                            }}
+                              }}
                         />
                         <Bar dataKey="views" name="Views" fill="#FF6B9D" radius={[0, 4, 4, 0]} />
                         <Bar dataKey="klikShopee" name="Klik Shopee" fill="#EE4D2D" radius={[0, 4, 4, 0]} />
-                        <Bar dataKey="klikTokopedia" name="Klik Tokopedia" fill="#42B549" radius={[0, 4, 4, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>

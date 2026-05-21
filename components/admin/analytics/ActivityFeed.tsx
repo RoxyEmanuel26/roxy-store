@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Eye, ShoppingBag, Store, MessageCircle } from 'lucide-react'
+import { Eye, ShoppingBag, MessageCircle } from 'lucide-react'
 
 // Simple helper to parse the event types
 const EventIcon = ({ type }: { type: string }) => {
@@ -10,8 +10,6 @@ const EventIcon = ({ type }: { type: string }) => {
             return <Eye className="w-4 h-4 text-blue-500" />
         case 'shopee_click':
             return <ShoppingBag className="w-4 h-4 text-[#EE4D2D]" />
-        case 'tokopedia_click':
-            return <Store className="w-4 h-4 text-[#42B549]" />
         case 'wa_click':
             return <MessageCircle className="w-4 h-4 text-[#25D366]" />
         default:
@@ -25,8 +23,6 @@ const getEventText = (type: string) => {
             return 'Melihat produk'
         case 'shopee_click':
             return 'Klik beli di Shopee'
-        case 'tokopedia_click':
-            return 'Klik beli di Tokopedia'
         case 'wa_click':
             return 'Klik tombol WhatsApp'
         default:

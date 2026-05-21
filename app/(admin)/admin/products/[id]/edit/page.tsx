@@ -72,7 +72,6 @@ export default function AdminEditProductPage({
                     image: product.image as string,
                     images: (product.images as string[]) || [],
                     shopeeUrl: product.shopeeUrl as string,
-                    tokopediaUrl: product.tokopediaUrl as string,
                     categoryId: product.categoryId as string,
                     badge: (product.badge as "NEW" | "HOT" | "BEST SELLER" | null | undefined),
                     isActive: product.isActive as boolean,

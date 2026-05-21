@@ -69,14 +69,6 @@ export function AnalyticsLineChart({ data }: AnalyticsLineChartProps) {
                         />
                         <Line
                             type="monotone"
-                            dataKey="tokopedia_click"
-                            name="Klik Tokopedia"
-                            stroke="#42B549"
-                            strokeWidth={2}
-                            dot={{ fill: '#42B549', r: 4 }}
-                        />
-                        <Line
-                            type="monotone"
                             dataKey="wa_click"
                             name="Klik WA"
                             stroke="#25D366"
