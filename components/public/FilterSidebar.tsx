@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
 import { Separator } from '@/components/ui/separator'
-import { RotateCcw, Loader2 } from 'lucide-react'
+import { RotateCcw, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface FilterSidebarProps {
     categories: { id: string; name: string; slug: string; _count?: { products: number } }[]
@@ -29,6 +29,11 @@ export default function FilterSidebar({
     const router = useRouter()
     const searchParams = useSearchParams()
     const [isPending, startTransition] = useTransition()
+    const [isExpanded, setIsExpanded] = useState(() => {
+        if (!currentCategory) return false
+        const selectedIndex = categories.findIndex((cat) => cat.slug === currentCategory)
+        return selectedIndex >= 5
+    })
 
     const updateParams = useCallback(
         (key: string, value: string | null) => {
@@ -125,7 +130,7 @@ export default function FilterSidebar({
             <div className="space-y-2.5">
                 <h4 className="text-sm font-medium text-brand-text dark:text-dark-text">Kategori</h4>
                 <div className="space-y-2">
-                    {categories.map((cat) => (
+                    {(isExpanded ? categories : categories.slice(0, 5)).map((cat) => (
                         <label
                             key={cat.id}
                             className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2 py-1.5 -mx-2 transition-colors ${
@@ -154,6 +159,23 @@ export default function FilterSidebar({
                             )}
                         </label>
                     ))}
+
+                    {categories.length > 5 && (
+                        <button
+                            type="button"
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="flex items-center gap-2 text-sm font-medium text-brand-primary dark:text-dark-primary hover:text-brand-primary/80 dark:hover:text-dark-primary/80 transition-colors py-1 px-2 -mx-2 rounded-lg hover:bg-brand-primary/5 dark:hover:bg-brand-primary/10 w-full text-left"
+                        >
+                            <span className="flex-1">
+                                {isExpanded ? 'Sembunyikan' : 'Lainnya'}
+                            </span>
+                            {isExpanded ? (
+                                <ChevronUp className="h-4 w-4" />
+                            ) : (
+                                <ChevronDown className="h-4 w-4" />
+                            )}
+                        </button>
+                    )}
                 </div>
             </div>
 

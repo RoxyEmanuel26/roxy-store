@@ -186,7 +186,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
             <div className="flex gap-8">
                 {/* Sidebar Filter (desktop only) */}
                 <aside className="hidden lg:block w-64 flex-shrink-0">
-                    <div className="sticky top-24">
+                    <div className="sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto pr-3 custom-scrollbar">
                         <Suspense>
                             <FilterSidebar
                                 categories={allCategories}
