@@ -396,20 +396,18 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                         <div className="pt-2">
                             <div className="flex items-center justify-between mb-4">
                                 <p className="text-sm font-semibold text-brand-text dark:text-dark-text">
-                                    Foto Tambahan <span className="text-brand-muted dark:text-dark-muted font-normal">({additionalImages.filter(Boolean).length}/20)</span>
+                                    Foto Tambahan <span className="text-brand-muted dark:text-dark-muted font-normal">({additionalImages.filter(Boolean).length} foto)</span>
                                 </p>
-                                {additionalImages.length < 20 && (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setAdditionalImages([...additionalImages, ''])}
-                                        className="h-8 text-xs gap-1.5 hover:bg-brand-primary/10 hover:text-brand-primary hover:border-brand-primary"
-                                    >
-                                        <Plus className="h-3.5 w-3.5" />
-                                        Tambah Foto
-                                    </Button>
-                                )}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setAdditionalImages([...additionalImages, ''])}
+                                    className="h-8 text-xs gap-1.5 hover:bg-brand-primary/10 hover:text-brand-primary hover:border-brand-primary"
+                                >
+                                    <Plus className="h-3.5 w-3.5" />
+                                    Tambah Foto
+                                </Button>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {additionalImages.map((img, i) => (

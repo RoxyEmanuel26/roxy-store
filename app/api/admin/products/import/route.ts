@@ -175,9 +175,9 @@ export async function POST(request: NextRequest) {
                     price: parseCsvPrice(rawProduct.price),
                     originalPrice: parseCsvPriceOrUndefined(rawProduct.originalPrice),
                     shopeeRating: parseCsvFloat(rawProduct.shopeeRating),
-                    shopeeSold: parseCsvSold(rawProduct.shopeeSold),
+                    shopeeSold: parseCsvSold(rawProduct.shopeeSold || rawProduct.penjualan),
                     shopeeRatingCountStr: rawProduct.shopeeRatingCountStr ? String(rawProduct.shopeeRatingCountStr).trim() : '',
-                    shopeeSoldStr: rawProduct.shopeeSoldStr ? String(rawProduct.shopeeSoldStr).trim() : (rawProduct.shopeeSold ? String(rawProduct.shopeeSold).trim() : ''),
+                    shopeeSoldStr: rawProduct.shopeeSoldStr ? String(rawProduct.shopeeSoldStr).trim() : (rawProduct.shopeeSold ? String(rawProduct.shopeeSold).trim() : (rawProduct.penjualan ? String(rawProduct.penjualan).trim() : '')),
                     description: rawProduct.description || '',
                     image: rawProduct.image || '',
                     images: rawProduct.images || '',
@@ -199,26 +199,19 @@ export async function POST(request: NextRequest) {
                 let description = sanitizeDescription(data.description || '')
                 let imageUrl = data.image || ''
 
-                // Filter Duplikat: check if shopeeUrl already exists in database
+                // Check if shopeeUrl already exists in database (for UPDATE instead of duplicate skip)
+                let existingByShopeeUrl: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; } | null = null
                 if (data.shopeeUrl) {
-                    const existingByShopeeUrl = await prisma.product.findFirst({
-                        where: { shopeeUrl: data.shopeeUrl }
+                    existingByShopeeUrl = await prisma.product.findFirst({
+                        where: { shopeeUrl: data.shopeeUrl },
+                        select: { id: true, slug: true, image: true, images: true, description: true, shopeeRating: true, shopeeSold: true, shopeeRatingCountStr: true, shopeeSoldStr: true, badge: true }
                     })
-                    if (existingByShopeeUrl) {
-                        results.push({
-                            row: rowNum,
-                            title: title || rawProduct.title || '(kosong)',
-                            status: 'error',
-                            error: 'Duplikat (Tautan Shopee sudah ada)'
-                        })
-                        errors++
-                        continue
-                    }
                 }
 
-                // Scraping on-the-fly for new products
+                // ALWAYS scrape Shopee when URL exists to get images, description, category, etc.
                 let scrapedCategory = ''
-                if (data.shopeeUrl && (!description || !imageUrl || !data.category || data.category === 'Other')) {
+                let scrapedImages: string[] = []
+                if (data.shopeeUrl) {
                     try {
                         const scraped = await scrapeShopeeProduct(data.shopeeUrl)
                         if (!title && scraped.title) {
@@ -232,6 +225,14 @@ export async function POST(request: NextRequest) {
                         }
                         if (scraped.category) {
                             scrapedCategory = scraped.category
+                        }
+                        // Capture ALL scraped images (carousel)
+                        if (scraped.images && scraped.images.length > 0) {
+                            scrapedImages = scraped.images
+                            // If main image wasn't set yet, use first scraped image
+                            if (!imageUrl && scrapedImages.length > 0) {
+                                imageUrl = scrapedImages[0]
+                            }
                         }
                     } catch (err) {
                         console.error(`Gagal scraping on-the-fly untuk URL: ${data.shopeeUrl}`, err)
@@ -262,68 +263,96 @@ export async function POST(request: NextRequest) {
                     categoryMap.set(categoryName.toLowerCase(), categoryId)
                 }
 
-                // Parse images (pipe, comma, or semicolon separated)
-                const imageUrls = data.images
-                    ? data.images.split(/[|,;]/).map(u => u.trim()).filter(Boolean)
-                    : []
+                // Parse images: prefer scraped images (full carousel), fallback to CSV images
+                let imageUrls: string[] = []
+                if (scrapedImages.length > 1) {
+                    // Use scraped carousel images (skip index 0 which is the main image)
+                    imageUrls = scrapedImages.slice(1)
+                } else if (data.images) {
+                    imageUrls = data.images.split(/[|,;]/).map(u => u.trim()).filter(Boolean)
+                }
 
-                // Cek apakah produk dengan slug yang sama sudah ada
-                const existing = await prisma.product.findUnique({
-                    where: { slug },
-                })
-
-                if (existing) {
-                    // UPDATE produk yang sudah ada
+                // Priority 1: Update existing product matched by shopeeUrl
+                if (existingByShopeeUrl) {
                     await prisma.product.update({
-                        where: { id: existing.id },
+                        where: { id: existingByShopeeUrl.id },
                         data: {
                             title,
-                            description: description || existing.description,
-                            price: data.price || existing.price,
-                            originalPrice: data.originalPrice ?? existing.originalPrice,
-                            image: imageUrl || existing.image,
-                            images: imageUrls.length > 0 ? imageUrls : existing.images,
-                            shopeeUrl: data.shopeeUrl || existing.shopeeUrl,
-                            shopeeRating: data.shopeeRating ?? existing.shopeeRating,
-                            shopeeSold: data.shopeeSold ?? existing.shopeeSold,
-                            shopeeRatingCountStr: data.shopeeRatingCountStr || existing.shopeeRatingCountStr,
-                            shopeeSoldStr: data.shopeeSoldStr || existing.shopeeSoldStr,
+                            description: description || existingByShopeeUrl.description,
+                            price: data.price,
+                            originalPrice: data.originalPrice ?? undefined,
+                            image: imageUrl || existingByShopeeUrl.image,
+                            images: imageUrls.length > 0 ? imageUrls : existingByShopeeUrl.images,
+                            shopeeRating: data.shopeeRating ?? existingByShopeeUrl.shopeeRating,
+                            shopeeSold: data.shopeeSold ?? existingByShopeeUrl.shopeeSold,
+                            shopeeRatingCountStr: data.shopeeRatingCountStr || existingByShopeeUrl.shopeeRatingCountStr,
+                            shopeeSoldStr: data.shopeeSoldStr || existingByShopeeUrl.shopeeSoldStr,
                             categoryId,
-                            badge: data.badge || existing.badge,
+                            badge: data.badge || existingByShopeeUrl.badge,
                             isActive: data.isActive,
                         },
                     })
                     results.push({ row: rowNum, title, status: 'updated' })
                     updated++
                 } else {
-                    // CREATE produk baru
-                    let finalSlug = slug
-                    const slugCheck = await prisma.product.findUnique({ where: { slug: finalSlug } })
-                    if (slugCheck) {
-                        finalSlug = `${slug}-${Date.now()}`
-                    }
-
-                    await prisma.product.create({
-                        data: {
-                            title,
-                            slug: finalSlug,
-                            description,
-                            price: data.price,
-                            originalPrice: data.originalPrice ?? null,
-                            image: imageUrl,
-                            images: imageUrls,
-                            shopeeUrl: data.shopeeUrl || '',
-                            shopeeRating: data.shopeeRating ?? null,
-                            shopeeSold: data.shopeeSold ?? null,
-                            shopeeRatingCountStr: data.shopeeRatingCountStr || null,
-                            shopeeSoldStr: data.shopeeSoldStr || null,
-                            categoryId,
-                            badge: data.badge || null,
-                            isActive: data.isActive,
-                        },
+                    // Priority 2: Check by slug
+                    const existing = await prisma.product.findUnique({
+                        where: { slug },
                     })
-                    results.push({ row: rowNum, title, status: 'created' })
-                    created++
+
+                    if (existing) {
+                        // UPDATE produk yang sudah ada
+                        await prisma.product.update({
+                            where: { id: existing.id },
+                            data: {
+                                title,
+                                description: description || existing.description,
+                                price: data.price || existing.price,
+                                originalPrice: data.originalPrice ?? existing.originalPrice,
+                                image: imageUrl || existing.image,
+                                images: imageUrls.length > 0 ? imageUrls : existing.images,
+                                shopeeUrl: data.shopeeUrl || existing.shopeeUrl,
+                                shopeeRating: data.shopeeRating ?? existing.shopeeRating,
+                                shopeeSold: data.shopeeSold ?? existing.shopeeSold,
+                                shopeeRatingCountStr: data.shopeeRatingCountStr || existing.shopeeRatingCountStr,
+                                shopeeSoldStr: data.shopeeSoldStr || existing.shopeeSoldStr,
+                                categoryId,
+                                badge: data.badge || existing.badge,
+                                isActive: data.isActive,
+                            },
+                        })
+                        results.push({ row: rowNum, title, status: 'updated' })
+                        updated++
+                    } else {
+                        // CREATE produk baru
+                        let finalSlug = slug
+                        const slugCheck = await prisma.product.findUnique({ where: { slug: finalSlug } })
+                        if (slugCheck) {
+                            finalSlug = `${slug}-${Date.now()}`
+                        }
+
+                        await prisma.product.create({
+                            data: {
+                                title,
+                                slug: finalSlug,
+                                description,
+                                price: data.price,
+                                originalPrice: data.originalPrice ?? null,
+                                image: imageUrl,
+                                images: imageUrls,
+                                shopeeUrl: data.shopeeUrl || '',
+                                shopeeRating: data.shopeeRating ?? null,
+                                shopeeSold: data.shopeeSold ?? null,
+                                shopeeRatingCountStr: data.shopeeRatingCountStr || null,
+                                shopeeSoldStr: data.shopeeSoldStr || null,
+                                categoryId,
+                                badge: data.badge || null,
+                                isActive: data.isActive,
+                            },
+                        })
+                        results.push({ row: rowNum, title, status: 'created' })
+                        created++
+                    }
                 }
             } catch (err: unknown) {
                 const errorMsg = err instanceof Error ? err.message : 'Kesalahan tidak diketahui'

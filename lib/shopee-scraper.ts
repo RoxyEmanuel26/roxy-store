@@ -121,8 +121,32 @@ export function cleanShopeeImageUrl(url: string): string {
 
 export function extractShopeeImages(html: string): string[] {
     const images: string[] = []
+
+    // 1. Extract from JSON-LD Product schema (most reliable source for carousel images)
+    const ldJsons = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi) || []
+    for (const tag of ldJsons) {
+        try {
+            const cleanJson = tag.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '').trim()
+            const obj = JSON.parse(cleanJson)
+            // Check for Product type with image array
+            if (obj['@type'] === 'Product' && obj.image) {
+                const imgArr = Array.isArray(obj.image) ? obj.image : [obj.image]
+                for (const imgUrl of imgArr) {
+                    if (typeof imgUrl === 'string' && imgUrl.includes('susercontent.com')) {
+                        const cleaned = cleanShopeeImageUrl(imgUrl)
+                        if (cleaned && !images.includes(cleaned)) {
+                            images.push(cleaned)
+                        }
+                    }
+                }
+            }
+        } catch {
+            // Ignore parse errors
+        }
+    }
+
+    // 2. Extract from <img> and <source> tags (filtering avatars)
     const tags = html.match(/<(?:img|source)\b[^>]*>/gi) || []
-    
     const cdnUrlRegex = /https:\/\/(?:[a-z0-9-]+\.img\.susercontent\.com|cf\.shopee\.[a-z.]+)\/file\/[a-zA-Z0-9_-]+/gi
     
     for (const tag of tags) {
@@ -139,6 +163,17 @@ export function extractShopeeImages(html: string): string[] {
             }
         }
     }
+
+    // 3. Scan entire HTML for CDN URLs as final fallback (captures preloaded/lazy images)
+    const globalCdnRegex = /https:\/\/(?:down-[a-z]+\.img\.susercontent\.com|cf\.shopee\.[a-z.]+)\/file\/[a-zA-Z0-9_-]+/g
+    let globalMatch
+    while ((globalMatch = globalCdnRegex.exec(html)) !== null) {
+        const cleaned = cleanShopeeImageUrl(globalMatch[0])
+        if (cleaned && !images.includes(cleaned)) {
+            images.push(cleaned)
+        }
+    }
+
     return images
 }
 

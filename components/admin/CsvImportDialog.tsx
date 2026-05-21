@@ -208,6 +208,11 @@ export default function CsvImportDialog({
                     'nama produk': 'title',
                     'penjualan': 'shopeeSold',
                     'link komisi ekstra': 'shopeeUrl',
+                    'id produk': '_ignore',
+                    'nama toko': '_ignore',
+                    'komisi hingga': '_ignore',
+                    'komisi': '_ignore',
+                    'link produk': '_ignore',
                 }
 
                 const normalizedData = data.map((row) => {
