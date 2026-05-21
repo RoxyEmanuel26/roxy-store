@@ -179,36 +179,44 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
                 {/* ★ Premium Stats Bar */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-amber-50/80 via-white to-orange-50/60 dark:from-amber-950/20 dark:via-dark-surface/60 dark:to-orange-950/15 border border-amber-200/50 dark:border-amber-800/30">
-                    {/* Rating Stars + Number */}
-                    <div className="flex items-center gap-1.5">
-                        <PremiumStarRating rating={shopeeRating} />
-                        <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
-                            {shopeeRating.toFixed(1)}
-                        </span>
-                    </div>
+                    {/* Rating Stars + Number — only show if rating exists */}
+                    {shopeeRating > 0 && (
+                        <>
+                            <div className="flex items-center gap-1.5">
+                                <PremiumStarRating rating={shopeeRating} />
+                                <span className="text-sm font-bold text-amber-600 dark:text-amber-400">
+                                    {shopeeRating.toFixed(1)}
+                                </span>
+                            </div>
 
-                    {/* Separator dot */}
-                    <span className="hidden sm:block w-1 h-1 rounded-full bg-brand-muted/40 dark:bg-dark-muted/40" />
+                            {/* Separator dot */}
+                            <span className="hidden sm:block w-1 h-1 rounded-full bg-brand-muted/40 dark:bg-dark-muted/40" />
 
-                    {/* Rating Count */}
-                    <div className="flex items-center gap-1 text-xs text-brand-muted dark:text-dark-muted">
-                        <MessageSquare className="h-3.5 w-3.5 text-brand-muted/70 dark:text-dark-muted/70" />
-                        <span className="font-medium">{product.shopeeRatingCountStr || '0'} penilaian</span>
-                    </div>
-
-                    {/* Separator dot */}
-                    <span className="hidden sm:block w-1 h-1 rounded-full bg-brand-muted/40 dark:bg-dark-muted/40" />
+                            {/* Rating Count */}
+                            {product.shopeeRatingCountStr && (
+                                <>
+                                    <div className="flex items-center gap-1 text-xs text-brand-muted dark:text-dark-muted">
+                                        <MessageSquare className="h-3.5 w-3.5 text-brand-muted/70 dark:text-dark-muted/70" />
+                                        <span className="font-medium">{product.shopeeRatingCountStr} penilaian</span>
+                                    </div>
+                                    <span className="hidden sm:block w-1 h-1 rounded-full bg-brand-muted/40 dark:bg-dark-muted/40" />
+                                </>
+                            )}
+                        </>
+                    )}
 
                     {/* Sold Count */}
-                    <div className="flex items-center gap-1 text-xs text-brand-muted dark:text-dark-muted">
-                        <TrendingUp className="h-3.5 w-3.5 text-brand-muted/70 dark:text-dark-muted/70" />
-                        <span className="font-medium">{product.shopeeSoldStr || '0'} Terjual</span>
-                    </div>
+                    {(product.shopeeSoldStr || (product.shopeeSold && product.shopeeSold > 0)) && (
+                        <>
+                            <div className="flex items-center gap-1 text-xs text-brand-muted dark:text-dark-muted">
+                                <TrendingUp className="h-3.5 w-3.5 text-brand-muted/70 dark:text-dark-muted/70" />
+                                <span className="font-medium">{product.shopeeSoldStr || product.shopeeSold || '0'} Terjual</span>
+                            </div>
+                            <span className="hidden sm:block w-1 h-1 rounded-full bg-brand-muted/40 dark:bg-dark-muted/40" />
+                        </>
+                    )}
 
-                    {/* Separator dot */}
-                    <span className="hidden sm:block w-1 h-1 rounded-full bg-brand-muted/40 dark:bg-dark-muted/40" />
-
-                    {/* View Count */}
+                    {/* View Count — always show */}
                     <div className="flex items-center gap-1 text-xs text-brand-muted dark:text-dark-muted">
                         <Eye className="h-3.5 w-3.5 text-brand-muted/70 dark:text-dark-muted/70" />
                         <span className="font-medium">{product.viewCount} dilihat</span>
