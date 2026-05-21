@@ -3,7 +3,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Eye } from 'lucide-react'
 import { formatRupiah } from '@/lib/utils'
 import { WishlistButton } from './WishlistButton'
 import type { ProductType } from '@/types'
@@ -65,8 +64,7 @@ export default function SmallProductCard({ product }: SmallProductCardProps) {
                     </p>
 
                     {/* View count */}
-                    <p className="flex items-center gap-1 text-[10px] text-brand-muted dark:text-dark-muted mt-1">
-                        <Eye className="w-2.5 h-2.5 flex-shrink-0" />
+                    <p className="text-[10px] text-brand-muted dark:text-dark-muted mt-1">
                         {product.viewCount ?? 0} dilihat
                     </p>
                 </div>

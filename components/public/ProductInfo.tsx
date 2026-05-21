@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { Eye, ShoppingCart, TrendingUp } from 'lucide-react'
+import { ShoppingCart, TrendingUp } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Separator } from '@/components/ui/separator'
 import { formatRupiah } from '@/lib/utils'
@@ -137,7 +137,6 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
                     {/* View Count — always show */}
                     <div className="flex items-center gap-1.5 text-xs text-brand-muted dark:text-dark-muted">
-                        <Eye className="h-4 w-4 text-brand-muted/70 dark:text-dark-muted/70" />
                         <span className="font-medium">{product.viewCount} dilihat</span>
                     </div>
                 </div>

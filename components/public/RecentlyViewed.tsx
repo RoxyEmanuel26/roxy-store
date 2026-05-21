@@ -40,7 +40,7 @@ export function RecentlyViewed() {
         <section className="py-10 bg-white dark:bg-dark-bg">
             <div className="container mx-auto px-4">
                 <h2 className="text-2xl font-bold text-brand-text dark:text-dark-text mb-5">
-                    Terakhir Kamu Lihat 👁️
+                    Terakhir Kamu Lihat
                 </h2>
 
                 {/* Grid 2 kolom mobile, 4 kolom tablet+, 6 kolom desktop besar */}

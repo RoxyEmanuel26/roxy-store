@@ -96,16 +96,16 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                                     <TrendingUp className="h-3 w-3" />
                                     {product.shopeeSoldStr || (product.shopeeSold != null && product.shopeeSold >= 1000
                                         ? `${(product.shopeeSold / 1000).toFixed(1)}rb`
-                                        : product.shopeeSold)}
+                                        : product.shopeeSold)} terjual
                                 </span>
                                 <span className="w-1 h-1 rounded-full bg-brand-muted/30 dark:bg-dark-muted/30" />
-                                <span className="flex items-center gap-0.5">
-                                    👁 {product.viewCount}
+                                <span>
+                                    {product.viewCount} dilihat
                                 </span>
                             </>
                         ) : (
-                            <span className="flex items-center gap-0.5">
-                                👁 {product.viewCount} dilihat
+                            <span>
+                                {product.viewCount} dilihat
                             </span>
                         )}
                     </div>
