@@ -86,11 +86,18 @@ export default async function AnalyticsPage({
         }),
     ])
 
-    // Convert BigInt counts from queryRaw to Number so they serialize nicely to client
-    const eventsByDay = eventsByDayRaw.map((r: any) => ({
-        ...r,
-        count: Number(r.count)
-    }))
+    // Convert BigInt counts from queryRaw to Number and format date to a timezone-safe YYYY-MM-DD string to prevent client-server hydration mismatch
+    const eventsByDay = eventsByDayRaw.map((r: any) => {
+        const d = new Date(r.date)
+        const year = d.getFullYear()
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const day = String(d.getDate()).padStart(2, '0')
+        return {
+            ...r,
+            dateString: `${year}-${month}-${day}`,
+            count: Number(r.count)
+        }
+    })
 
     return (
         <div className="space-y-8 pb-10">

@@ -29,7 +29,7 @@ export default async function AdminDashboardPage() {
         prisma.analytics.groupBy({
             by: ['eventType'],
             where: { createdAt: { gte: today } },
-            _count: true,
+            _count: { id: true },
         }),
         prisma.product.findMany({
             orderBy: { createdAt: 'desc' },
@@ -45,7 +45,7 @@ export default async function AdminDashboardPage() {
         wa_click: 0,
     }
     for (const event of todayEvents) {
-        todayStats[event.eventType] = event._count
+        todayStats[event.eventType] = event._count.id
     }
 
     const todayFormatted = format(new Date(), 'EEEE, d MMMM yyyy', { locale: id })

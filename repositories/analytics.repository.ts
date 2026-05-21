@@ -29,7 +29,7 @@ export class AnalyticsRepository {
         return await prisma.analytics.groupBy({
             by: ['eventType'],
             where: { createdAt: { gte: today } },
-            _count: true,
+            _count: { id: true },
         })
     }
 
@@ -55,7 +55,7 @@ export class AnalyticsRepository {
             prisma.analytics.groupBy({
                 by: ['eventType'],
                 where: { createdAt: { gte: today } },
-                _count: true,
+                _count: { id: true },
             }),
             prisma.product.findMany({
                 orderBy: { createdAt: 'desc' },

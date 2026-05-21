@@ -17,12 +17,19 @@ interface AnalyticsLineChartProps {
 
 export function AnalyticsLineChart({ data }: AnalyticsLineChartProps) {
     const transformData = (rawData: any[]) => {
-        // Group by date
+        // Group by date using timezone-safe dateString
         const grouped = rawData.reduce((acc, row) => {
-            const date = new Date(row.date).toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'short',
-            })
+            let date = ''
+            if (row.dateString) {
+                const [year, month, day] = row.dateString.split('-')
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+                date = `${parseInt(day)} ${months[parseInt(month) - 1]}`
+            } else {
+                date = new Date(row.date).toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                })
+            }
             if (!acc[date]) acc[date] = { date }
             acc[date][row.eventType] = Number(row.count)
             return acc

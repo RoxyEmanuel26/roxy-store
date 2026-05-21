@@ -36,7 +36,7 @@ export class AnalyticsService {
             shopee_click: 0,
         }
         for (const event of todayEvents) {
-            todayStats[event.eventType] = event._count
+            todayStats[event.eventType] = event._count.id
         }
 
         return { totalProducts, totalCategories, topProducts, todayStats, latestProducts }
