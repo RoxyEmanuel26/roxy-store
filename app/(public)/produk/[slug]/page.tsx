@@ -117,8 +117,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </Breadcrumb>
 
             {/* Main Content — gap disesuaikan mobile/desktop */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
-                <FadeIn direction="left">
+            <div className="grid grid-cols-1 lg:grid-cols-[450px_1fr] gap-6 lg:gap-12 items-start">
+                <FadeIn direction="left" className="w-full max-w-[450px] mx-auto lg:mx-0">
                     <ProductGallery product={product as unknown as import('@/types').ProductType} />
                 </FadeIn>
                 <FadeIn direction="right">

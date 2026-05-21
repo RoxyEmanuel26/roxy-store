@@ -44,19 +44,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
         }
     }
 
-    const getFormattedFavCount = () => {
-        const sold = product.shopeeSold || 0
-        const view = product.viewCount || 0
-        // Stable custom seed from product id to generate consistent fake realistic likes
-        const seed = product.id ? parseInt(product.id.substring(0, 4), 16) % 100 : 42
-        const count = Math.floor(view * 0.8 + sold * 1.5 + seed)
-        
-        if (count >= 1000) {
-            const thousands = count / 1000
-            return `${thousands.toFixed(1).replace('.', ',').replace(',0', '')}RB`
-        }
-        return count.toString()
-    }
+
 
     const getShareUrl = () => {
         return typeof window !== 'undefined'
@@ -288,7 +276,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
                         )}
                     />
                     <span className="text-brand-text dark:text-dark-text font-medium group-hover:underline">
-                        Favorit ({getFormattedFavCount()})
+                        Favorit
                     </span>
                 </motion.button>
             </div>
