@@ -74,6 +74,10 @@ export const SettingsSchema = z.object({
         .regex(/^628\d{8,12}$/, 'Format: 628xxxxxxxxxx (8-12 digit setelah 628)')
         .optional()
         .or(z.literal('')),
+    telegram_channel_url: z.string()
+        .url('Format link Telegram tidak valid (contoh: https://t.me/...)')
+        .optional()
+        .or(z.literal('')),
     home_banners: z.array(
         z.union([
             z.string().url(),

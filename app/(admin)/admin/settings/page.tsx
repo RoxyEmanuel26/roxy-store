@@ -37,6 +37,7 @@ export default function AdminSettingsPage() {
             hero_image: '',
             about_text: '',
             wa_number: '',
+            telegram_channel_url: '',
             home_banners: [],
         },
     })
@@ -58,6 +59,7 @@ export default function AdminSettingsPage() {
                     hero_image: data.hero_image || '',
                     about_text: data.about_text || '',
                     wa_number: data.wa_number || '',
+                    telegram_channel_url: data.telegram_channel_url || '',
                     home_banners: data.home_banners || [],
                 })
             }
@@ -389,10 +391,24 @@ export default function AdminSettingsPage() {
                             <h3 className="text-lg font-semibold text-brand-text dark:text-dark-text border-b border-brand-border dark:border-dark-border pb-3">
                                 Media Sosial
                             </h3>
-                            <p className="text-sm text-brand-muted dark:text-dark-muted">
-                                Tambahkan link media sosial Anda pada bagian ini menggunakan konfigurasi key/value (jika schema mendukung di masa depan).
-                                Saat ini hanya mendukung WhatsApp dari skema pengaturan.
-                            </p>
+                            
+                            <div className="grid grid-cols-1 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="telegram_channel_url">Tautan Channel Telegram</Label>
+                                    <Input
+                                        id="telegram_channel_url"
+                                        type="url"
+                                        placeholder="https://t.me/nama_channel"
+                                        {...register('telegram_channel_url')}
+                                    />
+                                    {errors.telegram_channel_url && (
+                                        <p className="text-xs text-red-500">{errors.telegram_channel_url.message}</p>
+                                    )}
+                                    <p className="text-xs text-brand-muted dark:text-dark-muted">
+                                        Masukkan tautan lengkap channel Telegram Anda (contoh: https://t.me/mychannel). Tautan ini digunakan untuk tautan "📣 Gabung Channel Telegram" di website.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </TabsContent>
                 </form>

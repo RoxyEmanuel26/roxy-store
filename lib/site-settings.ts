@@ -14,6 +14,7 @@ export const getSiteSettings = unstable_cache(
             hero_image: '',
             about_text: 'Roxy Store adalah website rekomendasi produk terlaris.',
             wa_number: '6281234567890',
+            telegram_channel_url: '',
             home_banners: [],
         }
 

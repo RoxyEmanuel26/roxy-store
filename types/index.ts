@@ -48,6 +48,7 @@ export interface SiteSettingsType {
     hero_image: string
     about_text: string
     wa_number: string
+    telegram_channel_url: string
     home_banners: (string | HomeBannerType)[]
 }
 

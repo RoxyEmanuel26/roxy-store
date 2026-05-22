@@ -81,6 +81,7 @@ export async function PUT(request: NextRequest) {
         hero_image: sanitizeUrl(data.hero_image || '') || '',
         about_text: sanitizeDescription(data.about_text || ''),
         wa_number: data.wa_number || '',
+        telegram_channel_url: sanitizeUrl(data.telegram_channel_url || '') || '',
         home_banners: JSON.stringify(sanitizedBanners),
     }
 
