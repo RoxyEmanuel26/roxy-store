@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getWibToday } from '@/lib/date'
 import { captureError } from '@/lib/sentry-helpers'
 
 export async function GET(request: Request) {
     const session = await auth()
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || session.user.role?.toLowerCase() !== 'admin') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -13,8 +14,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url)
         const period = searchParams.get('period') || '7days'
 
-        const now = new Date()
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const today = getWibToday()
         let gteDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
 
         if (period === '30days') {

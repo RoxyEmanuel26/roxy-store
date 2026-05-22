@@ -11,8 +11,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid event type' }, { status: 400 })
         }
 
-        // Fire and forget
-        analyticsService.trackEvent(
+        // Await tracking completion to ensure database write is finalized in serverless environments
+        await analyticsService.trackEvent(
             eventType,
             productId,
             request.headers.get('user-agent')

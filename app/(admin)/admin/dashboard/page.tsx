@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { getWibToday } from '@/lib/date'
 import { Package, Tag, ShoppingBag, Store, Eye, MessageCircle } from 'lucide-react'
 import StatsCard from '@/components/admin/StatsCard'
 import { ActivityFeed } from '@/components/admin/analytics/ActivityFeed'
@@ -8,8 +9,7 @@ import { id } from 'date-fns/locale'
 import { Badge } from '@/components/ui/badge'
 
 export default async function AdminDashboardPage() {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = getWibToday()
 
     const [
         totalProducts,

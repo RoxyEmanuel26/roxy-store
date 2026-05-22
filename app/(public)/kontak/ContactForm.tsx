@@ -22,6 +22,14 @@ export default function ContactForm({ waNumber }: ContactFormProps) {
         const text = encodeURIComponent(
             `Halo Roxy Store! Nama saya ${name}. Saya ingin bertanya: ${message}`
         )
+
+        // Record 'wa_click' event in database analytics
+        fetch('/api/analytics/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventType: 'wa_click' }),
+        }).catch(() => {})
+
         window.open(`https://wa.me/${waNumber}?text=${text}`, '_blank')
     }
 

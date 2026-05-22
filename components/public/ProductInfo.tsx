@@ -66,6 +66,16 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
         // Increment database viewCount
         fetch(`/api/products/${product.id}/view`, { method: 'POST' }).catch(console.error)
+
+        // Record 'view' event in database analytics
+        fetch('/api/analytics/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                eventType: 'view',
+                productId: product.id,
+            }),
+        }).catch(() => {})
     }, [product.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleShopeeClick = () => {
@@ -91,6 +101,16 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                 eventId,
                 sourceUrl: window.location.href,
                 customData: leadData,
+            }),
+        }).catch(() => {})
+
+        // Record 'shopee_click' event in database analytics
+        fetch('/api/analytics/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                eventType: 'shopee_click',
+                productId: product.id,
             }),
         }).catch(() => {})
     }

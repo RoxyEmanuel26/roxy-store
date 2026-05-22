@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { getWibToday } from '@/lib/date'
 
 export class AnalyticsRepository {
     async createEvent(data: {
@@ -23,8 +24,7 @@ export class AnalyticsRepository {
     }
 
     async getTodayEventsByType() {
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
+        const today = getWibToday()
 
         return await prisma.analytics.groupBy({
             by: ['eventType'],
@@ -34,8 +34,7 @@ export class AnalyticsRepository {
     }
 
     async getDashboardStats() {
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
+        const today = getWibToday()
 
         const [
             totalProducts,

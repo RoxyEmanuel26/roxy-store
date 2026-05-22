@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { getWibToday } from '@/lib/date'
 import { AnalyticsOverviewCards } from '@/components/admin/analytics/AnalyticsOverviewCards'
 import { TopProductsTable } from '@/components/admin/analytics/TopProductsTable'
 import { ConversionFunnel } from '@/components/admin/analytics/ConversionFunnel'
@@ -13,8 +14,7 @@ export default async function AnalyticsPage({
 }) {
     const { period = '7days' } = await searchParams
 
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const today = getWibToday()
     let last7Days = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
 
     if (period === '30days') {

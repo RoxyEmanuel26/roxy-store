@@ -1,7 +1,7 @@
 import { AnalyticsRepository } from '@/repositories/analytics.repository'
 import { captureError } from '@/lib/sentry-helpers'
 
-const VALID_EVENTS = ['view', 'shopee_click'] as const
+const VALID_EVENTS = ['view', 'shopee_click', 'wa_click'] as const
 
 export class AnalyticsService {
     private analyticsRepository: AnalyticsRepository
@@ -34,6 +34,7 @@ export class AnalyticsService {
         const todayStats: Record<string, number> = {
             view: 0,
             shopee_click: 0,
+            wa_click: 0,
         }
         for (const event of todayEvents) {
             todayStats[event.eventType] = event._count.id
