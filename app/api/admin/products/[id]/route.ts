@@ -45,6 +45,9 @@ export async function PUT(
     const body = await request.json()
 
     if (Object.keys(body).length === 1 && 'isActive' in body) {
+        if (typeof body.isActive !== 'boolean') {
+            return NextResponse.json({ error: 'isActive harus berupa boolean' }, { status: 400 })
+        }
         const product = await productRepository.update(id, { isActive: body.isActive })
         revalidateTag('products', { expire: 0 })
         revalidateTag('categories', { expire: 0 })
@@ -104,6 +107,11 @@ export async function DELETE(
     }
 
     const { id } = await params
+
+    const existingProduct = await productRepository.findById(id)
+    if (!existingProduct) {
+        return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 })
+    }
 
     await productRepository.delete(id)
 

@@ -10,8 +10,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json([])
         }
 
+        // Limit maximum IDs to prevent unbounded IN query DB load
+        const limitedIds = ids.slice(0, 50)
+
         const products = await prisma.product.findMany({
-            where: { id: { in: ids }, isActive: true },
+            where: { id: { in: limitedIds }, isActive: true },
             include: { category: true },
         })
 

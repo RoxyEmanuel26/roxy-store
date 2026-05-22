@@ -59,14 +59,14 @@ export function useProductSearch() {
     const handleSelect = useCallback((slug: string) => {
         setIsOpen(false)
         setQuery('')
-        router.push(`/products/${slug}`)
+        router.push(`/produk/${slug}`)
     }, [router])
 
     const handleSubmit = useCallback(() => {
         if (debouncedQuery.length > 0) {
             setIsOpen(false)
             trackSearch(debouncedQuery, results.length)
-            router.push(`/products?q=${encodeURIComponent(debouncedQuery)}`)
+            router.push(`/produk?q=${encodeURIComponent(debouncedQuery)}`)
         }
     }, [debouncedQuery, results.length, router])
 

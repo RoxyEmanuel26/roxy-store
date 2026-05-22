@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 interface CategoryCardProps {
@@ -23,7 +24,13 @@ export default function CategoryCard({ category }: CategoryCardProps) {
             <div className="h-full flex flex-col items-center justify-start p-3 md:p-4">
                 <div className="w-16 h-16 md:w-20 md:h-20 bg-gray-50 dark:bg-dark-bg rounded-full flex items-center justify-center group-hover/card:scale-105 transition-transform mb-2 overflow-hidden">
                     {isImage ? (
-                        <img src={icon} alt={category.name} className="w-10 h-10 md:w-14 md:h-14 object-contain drop-shadow-sm" />
+                        <Image 
+                            src={icon} 
+                            alt={category.name} 
+                            width={56} 
+                            height={56} 
+                            className="w-10 h-10 md:w-14 md:h-14 object-contain drop-shadow-sm"
+                        />
                     ) : (
                         <span className="text-3xl md:text-4xl leading-none">{icon}</span>
                     )}

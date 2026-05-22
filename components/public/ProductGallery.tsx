@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Heart } from 'lucide-react'
 import Zoom from 'react-medium-image-zoom'
@@ -20,6 +20,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
     const filteredImages = images.filter(Boolean)
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [touchStart, setTouchStart] = useState(0)
+    const thumbContainerRef = useRef<HTMLDivElement>(null)
 
     const { toggleWishlist, isInWishlist, mounted } = useWishlist()
     const isWishlisted = mounted ? isInWishlist(product.id) : false
@@ -150,7 +151,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
                     {/* Left Scroll Button */}
                     <button
                         onClick={() => {
-                            const container = document.getElementById('thumb-container')
+                            const container = thumbContainerRef.current
                             if (container) container.scrollBy({ left: -80, behavior: 'smooth' })
                         }}
                         className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-12 bg-black/35 hover:bg-black/55 text-white flex items-center justify-center rounded-r opacity-0 group-hover/thumb:opacity-100 transition-opacity z-10 select-none cursor-pointer"
@@ -160,6 +161,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
                     </button>
 
                     <div
+                        ref={thumbContainerRef}
                         id="thumb-container"
                         className="flex gap-2 overflow-x-auto pb-1 scroll-smooth"
                         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -189,7 +191,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
                     {/* Right Scroll Button */}
                     <button
                         onClick={() => {
-                            const container = document.getElementById('thumb-container')
+                            const container = thumbContainerRef.current
                             if (container) container.scrollBy({ left: 80, behavior: 'smooth' })
                         }}
                         className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-12 bg-black/35 hover:bg-black/55 text-white flex items-center justify-center rounded-l opacity-0 group-hover/thumb:opacity-100 transition-opacity z-10 select-none cursor-pointer"

@@ -13,12 +13,17 @@ export function validateOrigin(request: Request): boolean {
 
     if (origin) {
         return allowedOrigins.some(
-            (allowed) => origin === allowed || origin.startsWith(allowed)
+            (allowed) => origin === allowed
         )
     }
 
     if (referer) {
-        return allowedOrigins.some((allowed) => referer.startsWith(allowed))
+        try {
+            const refererUrl = new URL(referer)
+            return allowedOrigins.some((allowed) => refererUrl.origin === allowed)
+        } catch {
+            return false
+        }
     }
 
     // [SECURITY FIX] JANGAN izinkan jika tidak ada origin/referer di production

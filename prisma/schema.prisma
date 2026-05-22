@@ -57,7 +57,6 @@ model Product {
   @@index([createdAt(sort: Desc)])
   @@index([viewCount(sort: Desc)])
   @@index([badge])
-  @@index([slug])
   @@index([isActive, price])
   @@index([isActive, shopeeSold(sort: Desc)])
   @@index([isActive, shopeeRating(sort: Desc)])

@@ -14,7 +14,8 @@ export async function GET() {
     try {
         const products = await prisma.product.findMany({
             include: { category: true },
-            orderBy: { viewCount: 'desc' }
+            orderBy: { viewCount: 'desc' },
+            take: 10000
         })
 
         // Generate CSV content

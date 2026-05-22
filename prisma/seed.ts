@@ -7,9 +7,16 @@ async function main() {
     // ───────────────────────────────────────────
     // ADMIN
     // ───────────────────────────────────────────
-    // Gunakan password dari .env, atau fallback (TIDAK AMAN UNTUK PRODUKSI)
-    const initialEmail = process.env.ADMIN_INITIAL_EMAIL || 'admin@roxystore.com'
-    const initialPassword = process.env.ADMIN_INITIAL_PASSWORD || 'RoxyStore@2026'
+    // Gunakan password dari .env, wajibkan env var
+    const initialEmail = process.env.ADMIN_INITIAL_EMAIL
+    const initialPassword = process.env.ADMIN_INITIAL_PASSWORD
+
+    if (!initialEmail || !initialPassword) {
+        throw new Error(
+            'CRITICAL SECURITY ERROR: ADMIN_INITIAL_EMAIL and ADMIN_INITIAL_PASSWORD environment variables must be defined in your .env file to seed the database!'
+        )
+    }
+
     const passwordHash = await bcrypt.hash(initialPassword, 12)
 
     await prisma.admin.upsert({
@@ -192,8 +199,8 @@ async function main() {
     // ───────────────────────────────────────────
     console.log('✅ Seed Roxy Store Affiliate berhasil!')
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log(`📧 Email admin       : ${process.env.ADMIN_INITIAL_EMAIL || 'admin@roxystore.com'}`)
-    console.log(`🔑 Password          : ${process.env.ADMIN_INITIAL_PASSWORD ? '******** (dari .env)' : 'RoxyStore@2026'}`)
+    console.log(`📧 Email admin       : ${initialEmail}`)
+    console.log('🔑 Password          : ******** (dari .env)')
     console.log('🌐 Jenis website     : Shopee Affiliate')
     console.log('📦 Total kategori    :', categories.length)
     console.log('⚙️  Total settings    :', defaultSettings.length)

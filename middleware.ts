@@ -68,6 +68,14 @@ export async function middleware(request: NextRequest) {
         }
     }
 
+    // [SECURITY FIX] Rate limit: public products batch and list endpoints (30 req/menit/IP)
+    if (pathname === '/api/products/batch' || pathname === '/api/products/list') {
+        const { success } = await apiRateLimit.limit(`products:${pathname}:${ip}`)
+        if (!success) {
+            return new NextResponse(null, { status: 429 })
+        }
+    }
+
     // [SECURITY FIX] Rate limit: product view count increment (10 req/menit/IP)
     if (pathname.startsWith('/api/products/') && pathname.endsWith('/view')) {
         const { success } = await uploadRateLimit.limit(`view:${ip}`)
@@ -114,7 +122,7 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith('/api/admin')) {
         try {
             const session = await auth()
-            if (!session) {
+            if (!session || (session.user as any)?.role !== 'admin') {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
             }
         } catch {

@@ -21,6 +21,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true })
     } catch (error) {
         captureError(error, { endpoint: '/api/analytics/track' })
-        return NextResponse.json({ success: false })
+        return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 })
     }
 }
