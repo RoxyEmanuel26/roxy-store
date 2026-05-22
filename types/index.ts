@@ -35,6 +35,11 @@ export interface CategoryType {
     updatedAt: Date
 }
 
+export interface HomeBannerType {
+    url: string
+    link?: string | null
+}
+
 export interface SiteSettingsType {
     tagline: string
     logo_url: string
@@ -43,7 +48,7 @@ export interface SiteSettingsType {
     hero_image: string
     about_text: string
     wa_number: string
-    home_banners: string[]
+    home_banners: (string | HomeBannerType)[]
 }
 
 export interface AnalyticsEvent {

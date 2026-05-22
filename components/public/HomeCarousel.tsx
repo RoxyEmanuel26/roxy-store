@@ -2,9 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
+
+interface HomeBanner {
+    url: string
+    link?: string | null
+}
 
 interface HomeCarouselProps {
-    banners: string[]
+    banners: (string | HomeBanner)[]
 }
 
 export default function HomeCarousel({ banners }: HomeCarouselProps) {
@@ -13,19 +19,27 @@ export default function HomeCarousel({ banners }: HomeCarouselProps) {
     const timerRef = useRef<NodeJS.Timeout | null>(null)
     const touchStartX = useRef<number | null>(null)
 
+    // Normalize banners to always be objects with url and link
+    const normalizedBanners = (banners || []).map((b) => {
+        if (typeof b === 'string') {
+            return { url: b, link: null }
+        }
+        return { url: b.url, link: b.link || null }
+    })
+
     const nextSlide = () => {
-        if (banners.length <= 1) return
-        setCurrentIndex((prev) => (prev === banners.length - 1 ? 0 : prev + 1))
+        if (normalizedBanners.length <= 1) return
+        setCurrentIndex((prev) => (prev === normalizedBanners.length - 1 ? 0 : prev + 1))
     }
 
     const prevSlide = () => {
-        if (banners.length <= 1) return
-        setCurrentIndex((prev) => (prev === 0 ? banners.length - 1 : prev - 1))
+        if (normalizedBanners.length <= 1) return
+        setCurrentIndex((prev) => (prev === 0 ? normalizedBanners.length - 1 : prev - 1))
     }
 
     // Auto-play timer
     useEffect(() => {
-        if (banners.length <= 1 || isHovered) {
+        if (normalizedBanners.length <= 1 || isHovered) {
             if (timerRef.current) {
                 clearInterval(timerRef.current)
                 timerRef.current = null
@@ -41,11 +55,11 @@ export default function HomeCarousel({ banners }: HomeCarouselProps) {
                 timerRef.current = null
             }
         }
-    }, [currentIndex, isHovered, banners.length])
+    }, [currentIndex, isHovered, normalizedBanners.length])
 
-    if (!banners || banners.length === 0) return null
+    if (normalizedBanners.length === 0) return null
 
-    const isSingle = banners.length === 1
+    const isSingle = normalizedBanners.length === 1
 
     const handleTouchStart = (e: React.TouchEvent) => {
         touchStartX.current = e.touches[0].clientX
@@ -79,16 +93,27 @@ export default function HomeCarousel({ banners }: HomeCarouselProps) {
                     className="flex h-full transition-transform duration-500 ease-out"
                     style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                 >
-                    {banners.map((url, idx) => (
-                        <div key={`${url}-${idx}`} className="w-full h-full shrink-0 relative">
-                            {/* Next.js unoptimized img is highly robust for dynamic cloud URLs */}
+                    {normalizedBanners.map((banner, idx) => {
+                        const content = (
                             <img
-                                src={url}
+                                src={banner.url}
                                 alt={`Banner Promosi ${idx + 1}`}
                                 className="w-full h-full object-cover select-none pointer-events-none"
                             />
-                        </div>
-                    ))}
+                        )
+
+                        return (
+                            <div key={`${banner.url}-${idx}`} className="w-full h-full shrink-0 relative">
+                                {banner.link ? (
+                                    <Link href={banner.link} className="block w-full h-full cursor-pointer">
+                                        {content}
+                                    </Link>
+                                ) : (
+                                    content
+                                )}
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
 
@@ -121,7 +146,7 @@ export default function HomeCarousel({ banners }: HomeCarouselProps) {
             {/* Indicator Dots - Tokopedia style bottom-left dots */}
             {!isSingle && (
                 <div className="absolute bottom-3 md:bottom-4 left-5 md:left-6 flex items-center gap-1.5 z-10 bg-black/10 px-2 py-1 rounded-full backdrop-blur-[2px]">
-                    {banners.map((_, idx) => (
+                    {normalizedBanners.map((_, idx) => (
                         <button
                             key={idx}
                             onClick={() => setCurrentIndex(idx)}

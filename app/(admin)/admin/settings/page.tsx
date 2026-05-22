@@ -234,91 +234,119 @@ export default function AdminSettingsPage() {
                                         </div>
                                     ) : (
                                         <div className="space-y-3">
-                                            {home_banners.map((bannerUrl: string, index: number) => (
-                                                <div 
-                                                    key={`${bannerUrl}-${index}`}
-                                                    className="flex items-center gap-4 p-4 border border-brand-border dark:border-dark-border rounded-xl bg-white dark:bg-dark-surface/50 hover:shadow-sm transition-all"
-                                                >
-                                                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold shrink-0">
-                                                        {index + 1}
+                                            {home_banners.map((banner: any, index: number) => {
+                                                const isObj = banner && typeof banner === 'object';
+                                                const bannerUrl = isObj ? banner.url : banner;
+                                                const bannerLink = isObj ? (banner.link || '') : '';
+
+                                                return (
+                                                    <div 
+                                                        key={`${bannerUrl}-${index}`}
+                                                        className="flex flex-col md:flex-row md:items-center gap-4 p-4 border border-brand-border dark:border-dark-border rounded-xl bg-white dark:bg-dark-surface/50 hover:shadow-sm transition-all"
+                                                    >
+                                                        <div className="flex items-center gap-4 flex-1">
+                                                            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold shrink-0">
+                                                                {index + 1}
+                                                            </div>
+                                                            
+                                                            <div className="relative h-16 w-32 shrink-0 rounded-lg overflow-hidden border border-brand-border dark:border-dark-border bg-gray-50">
+                                                                <img
+                                                                    src={bannerUrl}
+                                                                    alt={`Banner ${index + 1}`}
+                                                                    className="h-full w-full object-cover"
+                                                                />
+                                                            </div>
+                                                            
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-brand-text dark:text-dark-text truncate">
+                                                                    {bannerUrl.split('/').pop() || `Banner Image ${index + 1}`}
+                                                                </p>
+                                                                <p className="text-xs text-brand-muted dark:text-dark-muted truncate mt-0.5">
+                                                                    {bannerUrl}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="flex items-center gap-3 w-full md:w-auto shrink-0 border-t md:border-t-0 pt-3 md:pt-0">
+                                                            <div className="flex-1 md:w-64">
+                                                                <Input
+                                                                    type="text"
+                                                                    placeholder="Link pengalihan (misal: /produk/slug atau shopee...)"
+                                                                    value={bannerLink}
+                                                                    onChange={(e) => {
+                                                                        const updated = [...home_banners];
+                                                                        if (isObj) {
+                                                                            updated[index] = { ...banner, link: e.target.value };
+                                                                        } else {
+                                                                            updated[index] = { url: banner, link: e.target.value };
+                                                                        }
+                                                                        setValue('home_banners', updated, { shouldDirty: true });
+                                                                    }}
+                                                                    className="h-8 text-xs bg-brand-surface/40 dark:bg-dark-surface/20 border-brand-border dark:border-dark-border text-brand-text dark:text-dark-text"
+                                                                />
+                                                            </div>
+                                                            
+                                                            <div className="flex items-center gap-1 shrink-0">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="icon"
+                                                                    disabled={index === 0}
+                                                                    onClick={() => {
+                                                                        const updated = [...home_banners];
+                                                                        const temp = updated[index];
+                                                                        updated[index] = updated[index - 1];
+                                                                        updated[index - 1] = temp;
+                                                                        setValue('home_banners', updated, { shouldDirty: true });
+                                                                    }}
+                                                                    className="h-8 w-8 text-brand-text dark:text-dark-text hover:text-brand-primary hover:border-brand-primary"
+                                                                >
+                                                                    <ArrowUp className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="icon"
+                                                                    disabled={index === home_banners.length - 1}
+                                                                    onClick={() => {
+                                                                        const updated = [...home_banners];
+                                                                        const temp = updated[index];
+                                                                        updated[index] = updated[index + 1];
+                                                                        updated[index + 1] = temp;
+                                                                        setValue('home_banners', updated, { shouldDirty: true });
+                                                                    }}
+                                                                    className="h-8 w-8 text-brand-text dark:text-dark-text hover:text-brand-primary hover:border-brand-primary"
+                                                                >
+                                                                    <ArrowDown className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="icon"
+                                                                    onClick={() => {
+                                                                        const updated = home_banners.filter((_, idx) => idx !== index);
+                                                                        setValue('home_banners', updated, { shouldDirty: true });
+                                                                    }}
+                                                                    className="h-8 w-8 border-red-200 dark:border-red-950 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 hover:border-red-300"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    
-                                                    <div className="relative h-16 w-32 shrink-0 rounded-lg overflow-hidden border border-brand-border dark:border-dark-border bg-gray-50">
-                                                        <img
-                                                            src={bannerUrl}
-                                                            alt={`Banner ${index + 1}`}
-                                                            className="h-full w-full object-cover"
-                                                        />
-                                                    </div>
-                                                    
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium text-brand-text dark:text-dark-text truncate">
-                                                            {bannerUrl.split('/').pop() || `Banner Image ${index + 1}`}
-                                                        </p>
-                                                        <p className="text-xs text-brand-muted dark:text-dark-muted truncate mt-0.5">
-                                                            {bannerUrl}
-                                                        </p>
-                                                    </div>
-                                                    
-                                                    <div className="flex items-center gap-1.5 shrink-0">
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="icon"
-                                                            disabled={index === 0}
-                                                            onClick={() => {
-                                                                const updated = [...home_banners];
-                                                                const temp = updated[index];
-                                                                updated[index] = updated[index - 1];
-                                                                updated[index - 1] = temp;
-                                                                setValue('home_banners', updated, { shouldDirty: true });
-                                                            }}
-                                                            className="h-8 w-8 text-brand-text dark:text-dark-text hover:text-brand-primary hover:border-brand-primary"
-                                                        >
-                                                            <ArrowUp className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="icon"
-                                                            disabled={index === home_banners.length - 1}
-                                                            onClick={() => {
-                                                                const updated = [...home_banners];
-                                                                const temp = updated[index];
-                                                                updated[index] = updated[index + 1];
-                                                                updated[index + 1] = temp;
-                                                                setValue('home_banners', updated, { shouldDirty: true });
-                                                            }}
-                                                            className="h-8 w-8 text-brand-text dark:text-dark-text hover:text-brand-primary hover:border-brand-primary"
-                                                        >
-                                                            <ArrowDown className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="icon"
-                                                            onClick={() => {
-                                                                const updated = home_banners.filter((_, idx) => idx !== index);
-                                                                setValue('home_banners', updated, { shouldDirty: true });
-                                                            }}
-                                                            className="h-8 w-8 border-red-200 dark:border-red-950 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 hover:border-red-300"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
-
+ 
                                 <div className="space-y-3 pt-4 border-t border-brand-border dark:border-dark-border">
                                     <Label className="text-sm font-semibold">Unggah Banner Baru</Label>
                                     <ImageUpload
                                         value=""
                                         onChange={(url) => {
                                             if (url) {
-                                                setValue('home_banners', [...home_banners, url], { shouldDirty: true });
+                                                setValue('home_banners', [...home_banners, { url, link: '' }], { shouldDirty: true });
                                             }
                                         }}
                                         folder="Roxy-lay/settings"

@@ -74,7 +74,15 @@ export const SettingsSchema = z.object({
         .regex(/^628\d{8,12}$/, 'Format: 628xxxxxxxxxx (8-12 digit setelah 628)')
         .optional()
         .or(z.literal('')),
-    home_banners: z.array(z.string().url()).optional(),
+    home_banners: z.array(
+        z.union([
+            z.string().url(),
+            z.object({
+                url: z.string().url('URL gambar tidak valid'),
+                link: z.string().max(500, 'Link redirection terlalu panjang').optional().nullable().or(z.literal('')),
+            })
+        ])
+    ).optional(),
 })
 
 

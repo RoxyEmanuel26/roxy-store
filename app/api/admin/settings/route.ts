@@ -21,7 +21,13 @@ export async function GET() {
     for (const s of settings) {
         if (s.key === 'home_banners') {
             try {
-                settingsObj[s.key] = JSON.parse(s.value)
+                const parsed = JSON.parse(s.value)
+                settingsObj[s.key] = (parsed || []).map((b: any) => {
+                    if (typeof b === 'string') {
+                        return { url: b, link: '' }
+                    }
+                    return { url: b.url || '', link: b.link || '' }
+                })
             } catch {
                 settingsObj[s.key] = []
             }
@@ -52,6 +58,20 @@ export async function PUT(request: NextRequest) {
 
     const data = validation.data
 
+    // Sanitize home banners
+    const sanitizedBanners = (data.home_banners || []).map((b: any) => {
+        if (typeof b === 'string') {
+            return {
+                url: sanitizeUrl(b) || '',
+                link: '',
+            }
+        }
+        return {
+            url: sanitizeUrl(b.url || '') || '',
+            link: b.link ? sanitizeText(b.link) : '',
+        }
+    }).filter((b: any) => b.url !== '')
+
     // Sanitize data
     const sanitizedData = {
         tagline: sanitizeText(data.tagline || ''),
@@ -61,7 +81,7 @@ export async function PUT(request: NextRequest) {
         hero_image: sanitizeUrl(data.hero_image || '') || '',
         about_text: sanitizeDescription(data.about_text || ''),
         wa_number: data.wa_number || '',
-        home_banners: JSON.stringify(data.home_banners || []),
+        home_banners: JSON.stringify(sanitizedBanners),
     }
 
     for (const [key, value] of Object.entries(sanitizedData)) {
@@ -77,7 +97,13 @@ export async function PUT(request: NextRequest) {
     for (const s of settings) {
         if (s.key === 'home_banners') {
             try {
-                settingsObj[s.key] = JSON.parse(s.value)
+                const parsed = JSON.parse(s.value)
+                settingsObj[s.key] = (parsed || []).map((b: any) => {
+                    if (typeof b === 'string') {
+                        return { url: b, link: '' }
+                    }
+                    return { url: b.url || '', link: b.link || '' }
+                })
             } catch {
                 settingsObj[s.key] = []
             }

@@ -20,7 +20,13 @@ export const getSiteSettings = unstable_cache(
         return settings.reduce((acc, s) => {
             if (s.key === 'home_banners') {
                 try {
-                    acc.home_banners = JSON.parse(s.value)
+                    const parsed = JSON.parse(s.value)
+                    acc.home_banners = (parsed || []).map((b: any) => {
+                        if (typeof b === 'string') {
+                            return { url: b, link: null }
+                        }
+                        return { url: b.url || '', link: b.link || null }
+                    })
                 } catch {
                     acc.home_banners = []
                 }
