@@ -192,21 +192,21 @@ export function CategoryStatsChart({ categories }: { categories: CategoryStat[] 
                                 {/* Premium Linear Gradients */}
                                 <defs>
                                     <linearGradient id="viewsGradient" x1="0" y1="0" x2="1" y2="0">
-                                        <stop offset="0%" stopColor="#FF8E8F" />
-                                        <stop offset="100%" stopColor="#FF6B9D" />
+                                        <stop offset="0%" stopColor="#7DD3FC" />
+                                        <stop offset="100%" stopColor="#38BDF8" />
                                     </linearGradient>
                                     <linearGradient id="shopeeGradient" x1="0" y1="0" x2="1" y2="0">
-                                        <stop offset="0%" stopColor="#FF7A5A" />
+                                        <stop offset="0%" stopColor="#FF8A65" />
                                         <stop offset="100%" stopColor="#EE4D2D" />
                                     </linearGradient>
                                 </defs>
 
-                                <CartesianGrid strokeDasharray="3 3" stroke="#FFD6E7" opacity={0.15} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="#BAE6FD" opacity={0.15} />
                                 
                                 <XAxis 
                                     type="number" 
-                                    tick={{ fill: '#6B6B8A', fontSize: 10, fontWeight: 500 }}
-                                    axisLine={{ stroke: '#FFD6E7', opacity: 0.2 }}
+                                    tick={{ fill: '#64748B', fontSize: 10, fontWeight: 500 }}
+                                    axisLine={{ stroke: '#BAE6FD', opacity: 0.2 }}
                                     tickLine={false}
                                 />
                                 
@@ -215,14 +215,14 @@ export function CategoryStatsChart({ categories }: { categories: CategoryStat[] 
                                     dataKey="name"
                                     width={105}
                                     tickFormatter={formatYAxisTick}
-                                    tick={{ fill: '#4B5563', fontSize: 10, fontWeight: 600 }}
-                                    axisLine={{ stroke: '#FFD6E7', opacity: 0.2 }}
+                                    tick={{ fill: '#0C1A2E', fontSize: 10, fontWeight: 600 }}
+                                    axisLine={{ stroke: '#BAE6FD', opacity: 0.2 }}
                                     tickLine={false}
                                 />
                                 
                                 <Tooltip
                                     content={<CustomTooltip />}
-                                    cursor={{ fill: 'rgba(255, 107, 157, 0.05)', radius: 6 }}
+                                    cursor={{ fill: 'rgba(56, 189, 248, 0.05)', radius: 6 }}
                                 />
                                 
                                 <Bar 
