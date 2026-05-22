@@ -64,18 +64,56 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             }),
         }).catch(() => {})
 
-        // Increment database viewCount
-        fetch(`/api/products/${product.id}/view`, { method: 'POST' }).catch(console.error)
+        // Increment database viewCount and record event only if not viewed in the last 24 hours
+        let shouldTrackView = true
+        const COOLDOWN_MS = 24 * 60 * 60 * 1000 // 24 hours
 
-        // Record 'view' event in database analytics
-        fetch('/api/analytics/track', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                eventType: 'view',
-                productId: product.id,
-            }),
-        }).catch(() => {})
+        try {
+            const viewedString = localStorage.getItem('roxy_viewed_products')
+            const viewed: Record<string, number> = viewedString ? JSON.parse(viewedString) : {}
+            const now = Date.now()
+
+            // Clean up expired entries (older than 24 hours) to prevent localStorage bloating
+            const cleaned: Record<string, number> = {}
+            let hasExpired = false
+            for (const [id, timestamp] of Object.entries(viewed)) {
+                if (now - timestamp < COOLDOWN_MS) {
+                    cleaned[id] = timestamp
+                } else {
+                    hasExpired = true
+                }
+            }
+
+            if (cleaned[product.id]) {
+                shouldTrackView = false
+            } else {
+                cleaned[product.id] = now
+            }
+
+            // Save updated state (only write back if something changed: either an expired item was cleaned or a new item was added)
+            if (!cleaned[product.id] || hasExpired || shouldTrackView) {
+                localStorage.setItem('roxy_viewed_products', JSON.stringify(cleaned))
+            }
+        } catch (error) {
+            console.error('Error reading/writing localStorage for view tracking:', error)
+            // Fallback: If localStorage is blocked/fails, default to letting the track run so analytics doesn't break
+            shouldTrackView = true
+        }
+
+        if (shouldTrackView) {
+            // Increment database viewCount
+            fetch(`/api/products/${product.id}/view`, { method: 'POST' }).catch(console.error)
+
+            // Record 'view' event in database analytics
+            fetch('/api/analytics/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventType: 'view',
+                    productId: product.id,
+                }),
+            }).catch(() => {})
+        }
     }, [product.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleShopeeClick = () => {
