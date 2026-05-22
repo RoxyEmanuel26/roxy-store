@@ -14,10 +14,19 @@ export const getSiteSettings = unstable_cache(
             hero_image: '',
             about_text: 'Roxy Store adalah website rekomendasi produk terlaris.',
             wa_number: '6281234567890',
+            home_banners: [],
         }
 
         return settings.reduce((acc, s) => {
-            acc[s.key as keyof SiteSettingsType] = s.value
+            if (s.key === 'home_banners') {
+                try {
+                    acc.home_banners = JSON.parse(s.value)
+                } catch {
+                    acc.home_banners = []
+                }
+            } else {
+                acc[s.key as keyof SiteSettingsType] = s.value as any
+            }
             return acc
         }, defaults)
     },

@@ -43,6 +43,7 @@ export interface SiteSettingsType {
     hero_image: string
     about_text: string
     wa_number: string
+    home_banners: string[]
 }
 
 export interface AnalyticsEvent {

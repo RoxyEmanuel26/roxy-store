@@ -11,6 +11,7 @@ import CategoryCarousel from '@/components/public/CategoryCarousel'
 import { FadeIn } from '@/components/animations/FadeIn'
 import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerContainer'
 import HeroCTA from './HeroCTA'
+import HomeCarousel from '@/components/public/HomeCarousel'
 
 import { generatePageMetadata } from '@/lib/metadata'
 import { getOrganizationSchema, getWebsiteSchema } from '@/lib/structured-data'
@@ -45,6 +46,15 @@ export default async function HomePage() {
         <>
             <JsonLd data={getOrganizationSchema(settings as any)} />
             <JsonLd data={getWebsiteSchema()} />
+
+            {/* === BANNER HOME CAROUSEL === */}
+            {settings.home_banners && settings.home_banners.length > 0 && (
+                <section className="pt-6 pb-2 bg-brand-surface dark:bg-dark-bg">
+                    <div className="container mx-auto px-4">
+                        <HomeCarousel banners={settings.home_banners} />
+                    </div>
+                </section>
+            )}
 
             {/* === SECTION 5: NEW PRODUCTS (Moved to top) === */}
             <section className="py-8 bg-brand-surface dark:bg-dark-bg">

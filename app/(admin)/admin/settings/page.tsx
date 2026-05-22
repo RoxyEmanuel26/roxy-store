@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { SettingsSchema } from '@/lib/validations'
 import { z } from 'zod'
-import { Loader2, Save } from 'lucide-react'
+import { Loader2, Save, ArrowUp, ArrowDown, Trash2, Image as ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -37,12 +37,13 @@ export default function AdminSettingsPage() {
             hero_image: '',
             about_text: '',
             wa_number: '',
+            home_banners: [],
         },
     })
 
     // Watch image URLs for ImageUpload components
     const logo_url = watch('logo_url')
-    const hero_image = watch('hero_image')
+    const home_banners = watch('home_banners') || []
 
     const fetchSettings = useCallback(async () => {
         try {
@@ -57,6 +58,7 @@ export default function AdminSettingsPage() {
                     hero_image: data.hero_image || '',
                     about_text: data.about_text || '',
                     wa_number: data.wa_number || '',
+                    home_banners: data.home_banners || [],
                 })
             }
         } catch {
@@ -144,7 +146,7 @@ export default function AdminSettingsPage() {
                         Umum & SEO
                     </TabsTrigger>
                     <TabsTrigger value="hero" className="data-[state=active]:bg-white data-[state=active]:dark:bg-dark-surface data-[state=active]:shadow-sm">
-                        Banner Hero
+                        Banner Home
                     </TabsTrigger>
                     <TabsTrigger value="social" className="data-[state=active]:bg-white data-[state=active]:dark:bg-dark-surface data-[state=active]:shadow-sm">
                         Kontak & Sosial
@@ -213,52 +215,117 @@ export default function AdminSettingsPage() {
                         </div>
                     </TabsContent>
 
-                    {/* TAB 2: BANNER HERO */}
+                    {/* TAB 2: BANNER HOME */}
                     <TabsContent value="hero" className="space-y-6">
                         <div className="rounded-xl border border-brand-border dark:border-dark-border bg-white dark:bg-dark-surface p-6 space-y-5">
                             <h3 className="text-lg font-semibold text-brand-text dark:text-dark-text border-b border-brand-border dark:border-dark-border pb-3">
-                                Hero Section (Halaman Utama)
+                                Banner Halaman Utama (Home Banner Carousel)
                             </h3>
 
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="hero_title">Judul Hero (Headline)</Label>
-                                    <Input
-                                        id="hero_title"
-                                        placeholder="Lengkapi Gayamu dengan Koleksi Terbaik Kami"
-                                        {...register('hero_title')}
-                                    />
-                                    {errors.hero_title && (
-                                        <p className="text-xs text-red-500">{errors.hero_title.message}</p>
+                            <div className="space-y-6">
+                                <div className="space-y-4">
+                                    <Label className="text-sm font-semibold">Daftar Banner Aktif</Label>
+                                    
+                                    {home_banners.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center p-8 border border-dashed border-brand-border dark:border-dark-border rounded-xl bg-brand-surface/30 dark:bg-dark-surface/10 text-center">
+                                            <ImageIcon className="h-10 w-10 text-brand-muted dark:text-dark-muted mb-2" />
+                                            <p className="text-sm font-medium text-brand-text dark:text-dark-text">Belum ada banner terunggah</p>
+                                            <p className="text-xs text-brand-muted dark:text-dark-muted mt-0.5">Unggah gambar baru di bawah untuk mulai menambahkan banner.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {home_banners.map((bannerUrl: string, index: number) => (
+                                                <div 
+                                                    key={`${bannerUrl}-${index}`}
+                                                    className="flex items-center gap-4 p-4 border border-brand-border dark:border-dark-border rounded-xl bg-white dark:bg-dark-surface/50 hover:shadow-sm transition-all"
+                                                >
+                                                    <div className="flex items-center justify-center h-8 w-8 rounded-full bg-brand-primary/10 text-brand-primary text-xs font-bold shrink-0">
+                                                        {index + 1}
+                                                    </div>
+                                                    
+                                                    <div className="relative h-16 w-32 shrink-0 rounded-lg overflow-hidden border border-brand-border dark:border-dark-border bg-gray-50">
+                                                        <img
+                                                            src={bannerUrl}
+                                                            alt={`Banner ${index + 1}`}
+                                                            className="h-full w-full object-cover"
+                                                        />
+                                                    </div>
+                                                    
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium text-brand-text dark:text-dark-text truncate">
+                                                            {bannerUrl.split('/').pop() || `Banner Image ${index + 1}`}
+                                                        </p>
+                                                        <p className="text-xs text-brand-muted dark:text-dark-muted truncate mt-0.5">
+                                                            {bannerUrl}
+                                                        </p>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center gap-1.5 shrink-0">
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="icon"
+                                                            disabled={index === 0}
+                                                            onClick={() => {
+                                                                const updated = [...home_banners];
+                                                                const temp = updated[index];
+                                                                updated[index] = updated[index - 1];
+                                                                updated[index - 1] = temp;
+                                                                setValue('home_banners', updated, { shouldDirty: true });
+                                                            }}
+                                                            className="h-8 w-8 text-brand-text dark:text-dark-text hover:text-brand-primary hover:border-brand-primary"
+                                                        >
+                                                            <ArrowUp className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="icon"
+                                                            disabled={index === home_banners.length - 1}
+                                                            onClick={() => {
+                                                                const updated = [...home_banners];
+                                                                const temp = updated[index];
+                                                                updated[index] = updated[index + 1];
+                                                                updated[index + 1] = temp;
+                                                                setValue('home_banners', updated, { shouldDirty: true });
+                                                            }}
+                                                            className="h-8 w-8 text-brand-text dark:text-dark-text hover:text-brand-primary hover:border-brand-primary"
+                                                        >
+                                                            <ArrowDown className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="icon"
+                                                            onClick={() => {
+                                                                const updated = home_banners.filter((_, idx) => idx !== index);
+                                                                setValue('home_banners', updated, { shouldDirty: true });
+                                                            }}
+                                                            className="h-8 w-8 border-red-200 dark:border-red-950 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 hover:border-red-300"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="hero_subtitle">Sub-judul Hero</Label>
-                                    <Textarea
-                                        id="hero_subtitle"
-                                        rows={2}
-                                        placeholder="Temukan berbagai aksesori wanita eksklusif yang dirancang khusus untuk memancarkan pesona manismu."
-                                        {...register('hero_subtitle')}
-                                    />
-                                    {errors.hero_subtitle && (
-                                        <p className="text-xs text-red-500">{errors.hero_subtitle.message}</p>
-                                    )}
-                                </div>
-
-                                <div className="space-y-2 pt-2">
-                                    <Label>Gambar Latar Hero</Label>
+                                <div className="space-y-3 pt-4 border-t border-brand-border dark:border-dark-border">
+                                    <Label className="text-sm font-semibold">Unggah Banner Baru</Label>
                                     <ImageUpload
-                                        value={hero_image || ''}
-                                        onChange={(url) => setValue('hero_image', url, { shouldDirty: true })}
+                                        value=""
+                                        onChange={(url) => {
+                                            if (url) {
+                                                setValue('home_banners', [...home_banners, url], { shouldDirty: true });
+                                            }
+                                        }}
                                         folder="Roxy-lay/settings"
-                                        aspectRatio="16:9"
+                                        aspectRatio="auto"
                                     />
-                                    {errors.hero_image && (
-                                        <p className="text-xs text-red-500">{errors.hero_image.message}</p>
-                                    )}
                                     <p className="text-xs text-brand-muted dark:text-dark-muted">
-                                        Gunakan gambar berkualitas tinggi, format Landscape (16:9).
+                                        Rekomendasi format gambar landscape (misalnya 1200x320px atau rasio aspek ~3.5:1). Anda dapat mengunggah 10+ banner.
                                     </p>
                                 </div>
                             </div>

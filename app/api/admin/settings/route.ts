@@ -17,9 +17,17 @@ export async function GET() {
 
     const settings = await prisma.siteSettings.findMany()
 
-    const settingsObj: Record<string, string> = {}
+    const settingsObj: Record<string, any> = {}
     for (const s of settings) {
-        settingsObj[s.key] = s.value
+        if (s.key === 'home_banners') {
+            try {
+                settingsObj[s.key] = JSON.parse(s.value)
+            } catch {
+                settingsObj[s.key] = []
+            }
+        } else {
+            settingsObj[s.key] = s.value
+        }
     }
 
     return NextResponse.json(settingsObj)
@@ -53,6 +61,7 @@ export async function PUT(request: NextRequest) {
         hero_image: sanitizeUrl(data.hero_image || '') || '',
         about_text: sanitizeDescription(data.about_text || ''),
         wa_number: data.wa_number || '',
+        home_banners: JSON.stringify(data.home_banners || []),
     }
 
     for (const [key, value] of Object.entries(sanitizedData)) {
@@ -64,9 +73,17 @@ export async function PUT(request: NextRequest) {
     }
 
     const settings = await prisma.siteSettings.findMany()
-    const settingsObj: Record<string, string> = {}
+    const settingsObj: Record<string, any> = {}
     for (const s of settings) {
-        settingsObj[s.key] = s.value
+        if (s.key === 'home_banners') {
+            try {
+                settingsObj[s.key] = JSON.parse(s.value)
+            } catch {
+                settingsObj[s.key] = []
+            }
+        } else {
+            settingsObj[s.key] = s.value
+        }
     }
 
     revalidateTag('settings', { expire: 0 })
