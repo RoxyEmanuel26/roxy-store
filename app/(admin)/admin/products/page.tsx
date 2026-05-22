@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet, Sparkles } from 'lucide-react'
+import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet, Sparkles, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
 import CsvImportDialog from '@/components/admin/CsvImportDialog'
 import LinkImportDialog from '@/components/admin/LinkImportDialog'
 import { Button } from '@/components/ui/button'
@@ -70,6 +70,19 @@ export default function AdminProductsPage() {
     const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
     const [deleting, setDeleting] = useState(false)
 
+    // Shopee Link Checker State
+    const [checkStatus, setCheckStatus] = useState<{
+        status: 'idle' | 'running' | 'completed' | 'cancelled'
+        checked: number
+        total: number
+        deactivated: number
+        logs: string[]
+        startedAt: string | null
+        completedAt: string | null
+    } | null>(null)
+    const [showCheckLogs, setShowCheckLogs] = useState(false)
+    const [isDismissed, setIsDismissed] = useState(false)
+
     // Debounce search
     useEffect(() => {
         const timer = setTimeout(() => setSearchDebounced(search), 500)
@@ -108,6 +121,60 @@ export default function AdminProductsPage() {
         } catch { /* ignore */ }
     }, [])
 
+    const fetchCheckStatus = useCallback(async () => {
+        try {
+            const res = await fetch('/api/admin/products/check-links')
+            if (res.ok) {
+                const data = await res.json()
+                setCheckStatus(data)
+                
+                // If it finished running, refresh the product list to show deactivated products
+                if (data.status === 'completed' || data.status === 'cancelled') {
+                    fetchProducts()
+                }
+            }
+        } catch { /* ignore */ }
+    }, [fetchProducts])
+
+    const handleStartCheck = async () => {
+        try {
+            const res = await fetch('/api/admin/products/check-links', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'start' }),
+            })
+            if (res.ok) {
+                toast.success('Pengecekan link aktif telah dimulai di background!')
+                setIsDismissed(false)
+                fetchCheckStatus()
+            } else {
+                const data = await res.json()
+                toast.error(data.error || 'Gagal memulai pengecekan')
+            }
+        } catch {
+            toast.error('Terjadi kesalahan koneksi')
+        }
+    }
+
+    const handleCancelCheck = async () => {
+        try {
+            const res = await fetch('/api/admin/products/check-links', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'cancel' }),
+            })
+            if (res.ok) {
+                toast.success('Pengecekan sedang dibatalkan...')
+                fetchCheckStatus()
+            } else {
+                const data = await res.json()
+                toast.error(data.error || 'Gagal membatalkan pengecekan')
+            }
+        } catch {
+            toast.error('Terjadi kesalahan koneksi')
+        }
+    }
+
     useEffect(() => {
         fetchProducts()
     }, [fetchProducts])
@@ -115,6 +182,20 @@ export default function AdminProductsPage() {
     useEffect(() => {
         fetchCategories()
     }, [fetchCategories])
+
+    useEffect(() => {
+        fetchCheckStatus()
+    }, [fetchCheckStatus])
+
+    useEffect(() => {
+        if (!checkStatus || checkStatus.status !== 'running') return
+
+        const interval = setInterval(() => {
+            fetchCheckStatus()
+        }, 3000)
+
+        return () => clearInterval(interval)
+    }, [checkStatus?.status, fetchCheckStatus])
 
     // Reset page when filters change
     useEffect(() => {
@@ -198,6 +279,127 @@ export default function AdminProductsPage() {
 
     return (
         <div className="space-y-6">
+            {/* Progress Banner Tautan Shopee */}
+            {checkStatus && checkStatus.status !== 'idle' && !isDismissed && (
+                <div className={`p-5 rounded-2xl border transition-all duration-300 ${
+                    checkStatus.status === 'running' 
+                        ? 'bg-blue-50/75 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40 backdrop-blur-md'
+                        : checkStatus.status === 'completed'
+                        ? 'bg-emerald-50/75 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40 backdrop-blur-md'
+                        : 'bg-amber-50/75 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/40 backdrop-blur-md'
+                }`}>
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div className="space-y-1 flex-1 w-full">
+                            <div className="flex items-center gap-2">
+                                <span className={`h-2.5 w-2.5 rounded-full ${
+                                    checkStatus.status === 'running' 
+                                        ? 'bg-blue-500 animate-ping'
+                                        : checkStatus.status === 'completed'
+                                        ? 'bg-emerald-500'
+                                        : 'bg-amber-500'
+                                }`} />
+                                <h3 className="font-semibold text-brand-text dark:text-dark-text">
+                                    {checkStatus.status === 'running' 
+                                        ? 'Sedang Memverifikasi Tautan Shopee...' 
+                                        : checkStatus.status === 'completed'
+                                        ? 'Verifikasi Tautan Shopee Selesai!'
+                                        : 'Verifikasi Tautan Shopee Dibatalkan'}
+                                </h3>
+                                {checkStatus.deactivated > 0 && (
+                                    <Badge variant="destructive" className="ml-2 animate-bounce">
+                                        {checkStatus.deactivated} Produk Dinonaktifkan
+                                    </Badge>
+                                )}
+                            </div>
+                            
+                            {checkStatus.status === 'running' ? (
+                                <p className="text-sm text-brand-muted dark:text-dark-muted">
+                                    Memeriksa: <span className="font-medium text-brand-primary">{checkStatus.checked}</span> dari <span className="font-medium">{checkStatus.total}</span> produk ({Math.round((checkStatus.checked / (checkStatus.total || 1)) * 100)}%)
+                                </p>
+                            ) : (
+                                <p className="text-sm text-brand-muted dark:text-dark-muted">
+                                    Pemeriksaan selesai pada {checkStatus.completedAt ? new Date(checkStatus.completedAt).toLocaleTimeString() : ''}. Total {checkStatus.checked} diperiksa, {checkStatus.deactivated} dinonaktifkan karena link mati.
+                                </p>
+                            )}
+
+                            {/* Progress Bar */}
+                            {checkStatus.status === 'running' && (
+                                <div className="w-full bg-brand-border dark:bg-dark-border/40 h-2.5 rounded-full overflow-hidden mt-3">
+                                    <div 
+                                        className="bg-brand-primary h-full transition-all duration-500 ease-out"
+                                        style={{ width: `${(checkStatus.checked / (checkStatus.total || 1)) * 100}%` }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setShowCheckLogs(!showCheckLogs)}
+                                className="border-brand-primary/20 text-brand-primary hover:bg-brand-primary/5 dark:border-brand-primary/30 h-9"
+                            >
+                                {showCheckLogs ? (
+                                    <>
+                                        <ChevronUp className="h-4 w-4 mr-2" />
+                                        Sembunyikan Log
+                                    </>
+                                ) : (
+                                    <>
+                                        <ChevronDown className="h-4 w-4 mr-2" />
+                                        Lihat Log
+                                    </>
+                                )}
+                            </Button>
+
+                            {checkStatus.status === 'running' ? (
+                                <Button 
+                                    variant="destructive" 
+                                    size="sm"
+                                    onClick={handleCancelCheck}
+                                    className="bg-red-600 hover:bg-red-700 text-white h-9"
+                                >
+                                    Batal
+                                </Button>
+                            ) : (
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => setIsDismissed(true)}
+                                    className="h-9"
+                                >
+                                    Tutup
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Console Logs Box */}
+                    {showCheckLogs && (
+                        <div className="mt-4 p-4 rounded-xl bg-gray-950 text-gray-200 dark:bg-black/40 border border-gray-800 font-mono text-xs max-h-48 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-gray-800">
+                            {checkStatus.logs.length === 0 ? (
+                                <p className="text-gray-500 italic">Belum ada log...</p>
+                            ) : (
+                                checkStatus.logs.map((log, index) => {
+                                    let textColor = 'text-gray-300'
+                                    if (log.includes('✅')) textColor = 'text-emerald-400 font-medium'
+                                    if (log.includes('⚠️')) textColor = 'text-rose-400 font-medium'
+                                    if (log.includes('❌') || log.includes('Error')) textColor = 'text-red-400 font-semibold animate-pulse'
+                                    if (log.includes('🎉')) textColor = 'text-brand-primary font-bold text-sm'
+                                    
+                                    return (
+                                        <p key={index} className={`${textColor} border-b border-gray-900/40 pb-0.5 last:border-0`}>
+                                            {log}
+                                        </p>
+                                    )
+                                })
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -209,6 +411,15 @@ export default function AdminProductsPage() {
                     </Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={handleStartCheck}
+                        disabled={checkStatus?.status === 'running'}
+                        className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 h-10 shrink-0"
+                    >
+                        <RefreshCw className={`h-4 w-4 mr-2 text-brand-primary ${checkStatus?.status === 'running' ? 'animate-spin' : ''}`} />
+                        Cek Produk Aktif
+                    </Button>
                     <Button
                         variant="outline"
                         onClick={() => setCsvDialogOpen(true)}
