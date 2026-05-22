@@ -10,8 +10,8 @@ export interface BadgeProductInput {
  * 
  * Rules:
  * 1. If DB badge is 'NEW':
- *    - Age < 7 days: 'NEW'
- *    - Age >= 7 days: 'HOT'
+ *    - Age < 3 days: 'NEW'
+ *    - Age >= 3 days: Falls through to next checks (treated as null badge, which becomes 'BEST SELLER' if viewCount > 0, else null)
  * 2. If DB badge is 'HOT':
  *    - Always 'HOT'
  * 3. If DB badge is anything else (or null):
@@ -24,13 +24,12 @@ export function determineProductBadge(product: BadgeProductInput): string | null
   const viewCount = product.viewCount || 0;
 
   if (badgeDb === 'NEW') {
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    if (createdAt >= oneWeekAgo) {
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    if (createdAt >= threeDaysAgo) {
       return 'NEW';
-    } else {
-      return 'HOT';
     }
+    // Falls through to next checks! Older than 3 days means it is a regular product.
   }
 
   if (badgeDb === 'HOT') {

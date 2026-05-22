@@ -39,6 +39,7 @@ export class ProductRepository {
     async getProductList(params: {
         query?: string
         categorySlug?: string
+        subcategorySlug?: string
         badge?: string
         minPrice?: number
         maxPrice?: number
@@ -46,28 +47,27 @@ export class ProductRepository {
         page: number
         limit: number
     }) {
-        const { query, categorySlug, badge, minPrice, maxPrice, sort, page, limit } = params
+        const { query, categorySlug, subcategorySlug, badge, minPrice, maxPrice, sort, page, limit } = params
 
         const where: Record<string, any> = { isActive: true }
         if (query) where.title = { contains: query, mode: 'insensitive' }
         if (categorySlug) where.category = { slug: categorySlug }
+        if (subcategorySlug) where.subcategory = { slug: subcategorySlug }
 
-        const oneWeekAgo = new Date()
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+        const threeDaysAgo = new Date()
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
 
         if (badge) {
             if (badge === 'NEW') {
                 where.badge = 'NEW'
-                where.createdAt = { gte: oneWeekAgo }
+                where.createdAt = { gte: threeDaysAgo }
             } else if (badge === 'HOT') {
-                where.OR = [
-                    { badge: 'HOT' },
-                    { badge: 'NEW', createdAt: { lt: oneWeekAgo } }
-                ]
+                where.badge = 'HOT'
             } else if (badge === 'BEST SELLER') {
                 where.viewCount = { gt: 0 }
                 where.OR = [
                     { badge: null },
+                    { badge: 'NEW', createdAt: { lt: threeDaysAgo } },
                     { badge: { notIn: ['NEW', 'HOT'] } }
                 ]
             } else {
@@ -135,15 +135,17 @@ export class ProductRepository {
     async findAdminPaginated(params: {
         search?: string
         categoryId?: string
+        subcategoryId?: string
         isActive?: boolean | null
         page: number
         limit: number
     }) {
-        const { search, categoryId, isActive, page, limit } = params
+        const { search, categoryId, subcategoryId, isActive, page, limit } = params
         const where: Record<string, unknown> = {}
 
         if (search) where.title = { contains: search, mode: 'insensitive' }
         if (categoryId) where.categoryId = categoryId
+        if (subcategoryId) where.subcategoryId = subcategoryId
         if (isActive !== null && isActive !== undefined) where.isActive = isActive
 
         const [products, total] = await Promise.all([

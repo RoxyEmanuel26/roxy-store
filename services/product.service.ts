@@ -18,6 +18,7 @@ export class ProductService {
     async getPaginatedList(searchParams: URLSearchParams) {
         const q = searchParams.get('q') || ''
         const category = searchParams.get('category') || searchParams.get('kategori') || ''
+        const subcategory = searchParams.get('subcategory') || searchParams.get('subkategori') || ''
         const badge = searchParams.get('badge') || ''
         const minPrice = searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined
         const maxPrice = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined
@@ -28,6 +29,7 @@ export class ProductService {
         const { products, total } = await this.productRepository.getProductList({
             query: q,
             categorySlug: category,
+            subcategorySlug: subcategory,
             badge,
             minPrice,
             maxPrice,

@@ -18,42 +18,63 @@ model Admin {
 }
 
 model Category {
+  id            String        @id @default(cuid())
+  name          String        @unique
+  slug          String        @unique
+  description   String?       @db.Text
+  icon          String?
+  subcategories Subcategory[]
+  products      Product[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Subcategory {
   id          String    @id @default(cuid())
-  name        String    @unique
-  slug        String    @unique
+  name        String
+  slug        String
   description String?   @db.Text
-  icon        String?
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@unique([categoryId, slug])
+  @@unique([categoryId, name])
+  @@index([categoryId])
 }
 
 model Product {
-  id              String   @id @default(cuid())
+  id              String       @id @default(cuid())
   title           String
-  slug            String   @unique
-  description     String   @db.Text
+  slug            String       @unique
+  description     String       @db.Text
   price           Float
   originalPrice   Float?
   image           String
   images          String[]
-  shopeeUrl       String   @default("")
+  shopeeUrl       String       @default("")
   shopeeRating    Float?
   shopeeSold      Int?
   shopeeRatingCountStr String?
   shopeeSoldStr        String?
   categoryId      String
-  category        Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  category        Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  subcategoryId   String?
+  subcategory     Subcategory? @relation(fields: [subcategoryId], references: [id], onDelete: Restrict)
   badge           String?
-  isActive        Boolean  @default(true)
-  viewCount       Int      @default(0)
-  shopeeClicks    Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  isActive        Boolean      @default(true)
+  viewCount       Int          @default(0)
+  shopeeClicks    Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   @@index([isActive])
   @@index([categoryId])
+  @@index([subcategoryId])
   @@index([isActive, categoryId])
+  @@index([isActive, subcategoryId])
   @@index([createdAt(sort: Desc)])
   @@index([viewCount(sort: Desc)])
   @@index([badge])

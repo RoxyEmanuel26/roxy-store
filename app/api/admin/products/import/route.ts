@@ -161,6 +161,13 @@ export async function POST(request: NextRequest) {
             categoryMap.set(cat.name.toLowerCase(), cat.id)
         }
 
+        // Cache sub-kategori yang ada
+        const existingSubcategories = await prisma.subcategory.findMany()
+        const subcategoryMap = new Map<string, string>() // `${categoryId}:${name.toLowerCase()}` -> id
+        for (const sub of existingSubcategories) {
+            subcategoryMap.set(`${sub.categoryId}:${sub.name.toLowerCase()}`, sub.id)
+        }
+
         const results: ImportResult[] = []
         let created = 0
         let updated = 0
@@ -168,7 +175,7 @@ export async function POST(request: NextRequest) {
 
         for (let i = 0; i < products.length; i++) {
             const rawProduct = products[i]
-            const rowNum = i + 2 // +2 because row 1 is header, data starts at row 2
+            const rowNum = rawProduct.originalRow ? Number(rawProduct.originalRow) : (i + 2)
 
             try {
                 // Parse & validate
@@ -185,7 +192,8 @@ export async function POST(request: NextRequest) {
                     images: rawProduct.images || '',
                     shopeeUrl: rawProduct.shopeeUrl || '',
                     category: rawProduct.category?.trim() || 'Other',
-                    badge: rawProduct.badge || '',
+                    subcategory: rawProduct.subcategory?.trim() || '',
+                    badge: rawProduct.badge || 'NEW',
                     isActive: rawProduct.isActive === undefined || rawProduct.isActive === '' ? true : rawProduct.isActive,
                 })
 
@@ -212,6 +220,7 @@ export async function POST(request: NextRequest) {
 
                 // ALWAYS scrape Shopee when URL exists to get images, description, category, etc.
                 let scrapedCategory = ''
+                let scrapedSubcategory = ''
                 let scrapedImages: string[] = []
                 if (data.shopeeUrl) {
                     try {
@@ -227,6 +236,9 @@ export async function POST(request: NextRequest) {
                         }
                         if (scraped.category) {
                             scrapedCategory = scraped.category
+                        }
+                        if (scraped.subcategory) {
+                            scrapedSubcategory = scraped.subcategory
                         }
                         // Capture ALL scraped images (carousel)
                         if (scraped.images && scraped.images.length > 0) {
@@ -265,6 +277,30 @@ export async function POST(request: NextRequest) {
                     categoryMap.set(categoryName.toLowerCase(), categoryId)
                 }
 
+                // Resolve sub-kategori
+                const subcategoryName = scrapedSubcategory || data.subcategory || ''
+                let subcategoryId: string | null = null
+
+                if (subcategoryName) {
+                    const subMapKey = `${categoryId}:${subcategoryName.toLowerCase()}`
+                    let subId = subcategoryMap.get(subMapKey)
+
+                    if (!subId) {
+                        // Buat sub-kategori baru
+                        const subSlug = slugify(subcategoryName, { lower: true, locale: 'id', strict: true })
+                        const newSubcategory = await prisma.subcategory.create({
+                            data: {
+                                name: subcategoryName,
+                                slug: subSlug || `sub-${Date.now()}`,
+                                categoryId,
+                            },
+                        })
+                        subId = newSubcategory.id
+                        subcategoryMap.set(subMapKey, subId)
+                    }
+                    subcategoryId = subId
+                }
+
                 // Parse images: prefer scraped images (full carousel), fallback to CSV images
                 let imageUrls: string[] = []
                 if (scrapedImages.length > 1) {
@@ -290,7 +326,8 @@ export async function POST(request: NextRequest) {
                             shopeeRatingCountStr: data.shopeeRatingCountStr || existingByShopeeUrl.shopeeRatingCountStr,
                             shopeeSoldStr: data.shopeeSoldStr || existingByShopeeUrl.shopeeSoldStr,
                             categoryId,
-                            badge: data.badge || existingByShopeeUrl.badge,
+                            subcategoryId,
+                            badge: data.badge || 'NEW',
                             isActive: data.isActive,
                         },
                     })
@@ -319,7 +356,8 @@ export async function POST(request: NextRequest) {
                                 shopeeRatingCountStr: data.shopeeRatingCountStr || existing.shopeeRatingCountStr,
                                 shopeeSoldStr: data.shopeeSoldStr || existing.shopeeSoldStr,
                                 categoryId,
-                                badge: data.badge || existing.badge,
+                                subcategoryId,
+                                badge: data.badge || 'NEW',
                                 isActive: data.isActive,
                             },
                         })
@@ -348,7 +386,8 @@ export async function POST(request: NextRequest) {
                                 shopeeRatingCountStr: data.shopeeRatingCountStr || null,
                                 shopeeSoldStr: data.shopeeSoldStr || null,
                                 categoryId,
-                                badge: data.badge || null,
+                                subcategoryId,
+                                badge: data.badge || 'NEW',
                                 isActive: data.isActive,
                             },
                         })

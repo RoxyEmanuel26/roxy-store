@@ -58,6 +58,15 @@ export const getCachedCategories = unstable_cache(
                 name: true,
                 slug: true,
                 icon: true,
+                subcategories: {
+                    select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                        _count: { select: { products: { where: { isActive: true } } } }
+                    },
+                    orderBy: { name: 'asc' }
+                },
                 _count: { select: { products: { where: { isActive: true } } } },
             },
             orderBy: { name: 'asc' },
@@ -69,15 +78,11 @@ export const getCachedCategories = unstable_cache(
 
 export const getCachedFeaturedProducts = unstable_cache(
     async () => {
-        const oneWeekAgo = new Date()
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-
         const products = await prisma.product.findMany({
             where: {
                 isActive: true,
                 OR: [
                     { badge: 'HOT' },
-                    { badge: 'NEW', createdAt: { lt: oneWeekAgo } },
                     { viewCount: { gt: 0 } }
                 ]
             },
@@ -106,14 +111,14 @@ export const getCachedFeaturedProducts = unstable_cache(
 
 export const getCachedNewProducts = unstable_cache(
     async () => {
-        const oneWeekAgo = new Date()
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+        const threeDaysAgo = new Date()
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
 
         const products = await prisma.product.findMany({
             where: {
                 isActive: true,
                 badge: 'NEW',
-                createdAt: { gte: oneWeekAgo }
+                createdAt: { gte: threeDaysAgo }
             },
             select: {
                 id: true,

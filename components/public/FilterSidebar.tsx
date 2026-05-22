@@ -10,8 +10,20 @@ import { Separator } from '@/components/ui/separator'
 import { RotateCcw, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
 
 interface FilterSidebarProps {
-    categories: { id: string; name: string; slug: string; _count?: { products: number } }[]
+    categories: {
+        id: string
+        name: string
+        slug: string
+        subcategories?: {
+            id: string
+            name: string
+            slug: string
+            _count?: { products: number }
+        }[]
+        _count?: { products: number }
+    }[]
     currentCategory?: string
+    currentSubcategory?: string
     currentBadge?: string
     priceRange: { min: number; max: number }
     currentMinPrice?: number
@@ -21,6 +33,7 @@ interface FilterSidebarProps {
 export default function FilterSidebar({
     categories,
     currentCategory,
+    currentSubcategory,
     currentBadge,
     priceRange,
     currentMinPrice,
@@ -72,6 +85,19 @@ export default function FilterSidebar({
         })
     }
 
+    const handleSubcategoryChange = (subSlug: string | null) => {
+        const params = new URLSearchParams(searchParams.toString())
+        params.delete('subcategory')
+        params.delete('subkategori')
+        if (subSlug) {
+            params.set('subkategori', subSlug)
+        }
+        params.delete('page')
+        startTransition(() => {
+            router.push(`/produk?${params.toString()}`)
+        })
+    }
+
     const [localPrice, setLocalPrice] = useState([
         currentMinPrice || priceRange.min,
         currentMaxPrice || priceRange.max
@@ -107,7 +133,7 @@ export default function FilterSidebar({
         })
     }, [priceRange.min, priceRange.max, router, searchParams])
 
-    const hasActiveFilters = currentCategory || currentBadge || currentMinPrice || currentMaxPrice
+    const hasActiveFilters = currentCategory || currentSubcategory || currentBadge || currentMinPrice || currentMaxPrice
 
     return (
         <div className="space-y-5">
@@ -127,57 +153,125 @@ export default function FilterSidebar({
             <Separator />
 
             {/* Categories */}
-            <div className="space-y-2.5">
-                <h4 className="text-sm font-medium text-brand-text dark:text-dark-text">Kategori</h4>
-                <div className="space-y-2">
-                    {(isExpanded ? categories : categories.slice(0, 5)).map((cat) => (
-                        <label
-                            key={cat.id}
-                            className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2 py-1.5 -mx-2 transition-colors ${
-                                currentCategory === cat.slug
-                                    ? 'bg-brand-primary/5 dark:bg-brand-primary/10'
-                                    : 'hover:bg-brand-surface/50 dark:hover:bg-dark-surface/50'
-                            }`}
-                        >
-                            <Checkbox
-                                checked={currentCategory === cat.slug}
-                                onCheckedChange={(checked) =>
-                                    handleCategoryChange(cat.slug, checked === true)
-                                }
-                            />
-                            <span className={`text-sm flex-1 ${
-                                currentCategory === cat.slug
-                                    ? 'font-medium text-brand-primary dark:text-dark-primary'
-                                    : 'text-brand-muted dark:text-dark-muted group-hover:text-brand-text dark:group-hover:text-dark-text'
-                            }`}>
-                                {cat.name}
-                            </span>
-                            {cat._count && (
-                                <span className="text-xs text-brand-muted/60 dark:text-dark-muted/60 tabular-nums">
-                                    {cat._count.products}
-                                </span>
-                            )}
-                        </label>
-                    ))}
+            {currentCategory ? (
+                <div className="space-y-3.5">
+                    {/* Semua Kategori Back Button */}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const params = new URLSearchParams(searchParams.toString())
+                            params.delete('category')
+                            params.delete('kategori')
+                            params.delete('subcategory')
+                            params.delete('subkategori')
+                            params.delete('page')
+                            startTransition(() => {
+                                router.push(`/produk?${params.toString()}`)
+                            })
+                        }}
+                        className="flex items-center gap-2 text-sm font-semibold text-brand-text dark:text-dark-text hover:text-brand-primary dark:hover:text-dark-primary transition-colors py-1.5 w-full text-left group"
+                    >
+                        <span className="w-5 h-5 rounded bg-brand-surface dark:bg-dark-surface flex items-center justify-center text-brand-muted group-hover:text-brand-primary transition-colors">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </span>
+                        <span>Semua Kategori</span>
+                    </button>
 
-                    {categories.length > 5 && (
-                        <button
-                            type="button"
-                            onClick={() => setIsExpanded(!isExpanded)}
-                            className="flex items-center gap-2 text-sm font-medium text-brand-primary dark:text-dark-primary hover:text-brand-primary/80 dark:hover:text-dark-primary/80 transition-colors py-1 px-2 -mx-2 rounded-lg hover:bg-brand-primary/5 dark:hover:bg-brand-primary/10 w-full text-left"
-                        >
-                            <span className="flex-1">
-                                {isExpanded ? 'Sembunyikan' : 'Lainnya'}
+                    <Separator className="opacity-50" />
+
+                    {/* Selected Category Header */}
+                    <div className="flex items-center gap-1.5 text-brand-primary dark:text-dark-primary font-bold text-sm py-1">
+                        <span className="text-[10px] text-brand-primary">▶</span>
+                        <span>{categories.find(c => c.slug === currentCategory)?.name || currentCategory}</span>
+                    </div>
+
+                    {/* Subcategories list */}
+                    <div className="space-y-1.5 pl-3 border-l border-brand-border/30 dark:border-dark-border/30 ml-1.5">
+                        {categories.find(c => c.slug === currentCategory)?.subcategories?.map((sub) => {
+                            const isActive = currentSubcategory === sub.slug
+                            return (
+                                <button
+                                    key={sub.id}
+                                    type="button"
+                                    onClick={() => handleSubcategoryChange(isActive ? null : sub.slug)}
+                                    className={`flex items-center justify-between w-full text-left text-xs py-1.5 transition-colors ${
+                                        isActive
+                                            ? 'font-semibold text-brand-primary dark:text-dark-primary'
+                                            : 'text-brand-muted hover:text-brand-text dark:text-dark-muted dark:hover:text-dark-text'
+                                    }`}
+                                >
+                                    <span className="truncate pr-2">{sub.name}</span>
+                                    {sub._count?.products !== undefined && (
+                                        <span className="text-[10px] text-brand-muted/50 dark:text-dark-muted/50 tabular-nums">
+                                            ({sub._count.products})
+                                        </span>
+                                    )}
+                                </button>
+                            )
+                        })}
+                        {(!categories.find(c => c.slug === currentCategory)?.subcategories || 
+                          categories.find(c => c.slug === currentCategory)?.subcategories?.length === 0) && (
+                            <span className="text-xs text-brand-muted/50 dark:text-dark-muted/50 italic pl-1">
+                                Tidak ada sub-kategori
                             </span>
-                            {isExpanded ? (
-                                <ChevronUp className="h-4 w-4" />
-                            ) : (
-                                <ChevronDown className="h-4 w-4" />
-                            )}
-                        </button>
-                    )}
+                        )}
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div className="space-y-2.5">
+                    <h4 className="text-sm font-medium text-brand-text dark:text-dark-text">Kategori</h4>
+                    <div className="space-y-2">
+                        {(isExpanded ? categories : categories.slice(0, 5)).map((cat) => (
+                            <label
+                                key={cat.id}
+                                className={`flex items-center gap-2.5 cursor-pointer group rounded-lg px-2 py-1.5 -mx-2 transition-colors ${
+                                    currentCategory === cat.slug
+                                        ? 'bg-brand-primary/5 dark:bg-brand-primary/10'
+                                        : 'hover:bg-brand-surface/50 dark:hover:bg-dark-surface/50'
+                                }`}
+                            >
+                                <Checkbox
+                                    checked={currentCategory === cat.slug}
+                                    onCheckedChange={(checked) =>
+                                        handleCategoryChange(cat.slug, checked === true)
+                                    }
+                                />
+                                <span className={`text-sm flex-1 ${
+                                    currentCategory === cat.slug
+                                        ? 'font-medium text-brand-primary dark:text-dark-primary'
+                                        : 'text-brand-muted dark:text-dark-muted group-hover:text-brand-text dark:group-hover:text-dark-text'
+                                }`}>
+                                    {cat.name}
+                                </span>
+                                {cat._count && (
+                                    <span className="text-xs text-brand-muted/60 dark:text-dark-muted/60 tabular-nums">
+                                        {cat._count.products}
+                                    </span>
+                                )}
+                            </label>
+                        ))}
+
+                        {categories.length > 5 && (
+                            <button
+                                type="button"
+                                onClick={() => setIsExpanded(!isExpanded)}
+                                className="flex items-center gap-2 text-sm font-medium text-brand-primary dark:text-dark-primary hover:text-brand-primary/80 dark:hover:text-dark-primary/80 transition-colors py-1 px-2 -mx-2 rounded-lg hover:bg-brand-primary/5 dark:hover:bg-brand-primary/10 w-full text-left"
+                            >
+                                <span className="flex-1">
+                                    {isExpanded ? 'Sembunyikan' : 'Lainnya'}
+                                </span>
+                                {isExpanded ? (
+                                    <ChevronUp className="h-4 w-4" />
+                                ) : (
+                                    <ChevronDown className="h-4 w-4" />
+                                )}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             <Separator />
 

@@ -58,8 +58,11 @@ export function cleanShopeeDescription(description: string): string {
     return description.trim()
 }
 
-export function extractCategoryFromHtml(html: string): string {
+export function extractBreadcrumbsFromHtml(html: string): { category: string; subcategory: string } {
     const ldJsons = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi) || []
+    
+    let category = ''
+    let subcategory = ''
     
     for (const tag of ldJsons) {
         try {
@@ -67,14 +70,20 @@ export function extractCategoryFromHtml(html: string): string {
             const obj = JSON.parse(cleanJson)
             
             if (obj['@type'] === 'BreadcrumbList' && obj.itemListElement && Array.isArray(obj.itemListElement)) {
-                // Find item at position 2 or index 1
+                // Find category at position 2 (index 1)
                 const secondItem = obj.itemListElement.find((el: any) => el.position === 2) || obj.itemListElement[1]
                 if (secondItem) {
-                    if (secondItem.item && secondItem.item.name) {
-                        return secondItem.item.name.trim()
-                    } else if (secondItem.name) {
-                        return secondItem.name.trim()
-                    }
+                    category = (secondItem.item && secondItem.item.name ? secondItem.item.name : (secondItem.name || '')).trim()
+                }
+                
+                // Find subcategory at position 3 (index 2)
+                const thirdItem = obj.itemListElement.find((el: any) => el.position === 3) || obj.itemListElement[2]
+                if (thirdItem) {
+                    subcategory = (thirdItem.item && thirdItem.item.name ? thirdItem.item.name : (thirdItem.name || '')).trim()
+                }
+                
+                if (category) {
+                    break
                 }
             }
         } catch {
@@ -82,7 +91,11 @@ export function extractCategoryFromHtml(html: string): string {
         }
     }
     
-    return ''
+    return { category, subcategory }
+}
+
+export function extractCategoryFromHtml(html: string): string {
+    return extractBreadcrumbsFromHtml(html).category
 }
 
 export function extractShopeeIds(url: string): { shopId: string; itemId: string } | null {
@@ -188,6 +201,7 @@ export async function scrapeShopeeProduct(url: string): Promise<{
     imageUrl: string
     rawImageUrl: string
     category: string
+    subcategory: string
     images: string[]
 }> {
     if (!url || !url.includes('shopee.co.id')) {
@@ -221,7 +235,10 @@ export async function scrapeShopeeProduct(url: string): Promise<{
     let description = cleanShopeeDescription(rawDescription)
     
     let rawImageUrl = getMetaContent(html, 'og:square_image') || getMetaContent(html, 'og:image') || ''
-    let category = extractCategoryFromHtml(html)
+    
+    const initialBreadcrumbs = extractBreadcrumbsFromHtml(html)
+    let category = initialBreadcrumbs.category
+    let subcategory = initialBreadcrumbs.subcategory
 
     // Also extract images from initial HTML
     let extractedImages = extractShopeeImages(html)
@@ -251,9 +268,12 @@ export async function scrapeShopeeProduct(url: string): Promise<{
             if (desktopResponse.ok) {
                 const desktopHtml = await desktopResponse.text()
                 
-                // If category was not found, search the desktop page
-                if (!category) {
-                    category = extractCategoryFromHtml(desktopHtml)
+                const desktopBreadcrumbs = extractBreadcrumbsFromHtml(desktopHtml)
+                if (!category && desktopBreadcrumbs.category) {
+                    category = desktopBreadcrumbs.category
+                }
+                if (!subcategory && desktopBreadcrumbs.subcategory) {
+                    subcategory = desktopBreadcrumbs.subcategory
                 }
                 
                 // If title was empty or not found, try to search the desktop page
@@ -320,6 +340,7 @@ export async function scrapeShopeeProduct(url: string): Promise<{
         imageUrl,
         rawImageUrl: cleanedRawImageUrl || rawImageUrl,
         category,
+        subcategory,
         images: uploadedImages
     }
 }

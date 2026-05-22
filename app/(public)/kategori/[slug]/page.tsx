@@ -54,22 +54,20 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     const where: any = { isActive: true, categoryId: category.id }
     if (q) where.title = { contains: q, mode: 'insensitive' }
 
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    const threeDaysAgo = new Date()
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
 
     if (badge) {
         if (badge === 'NEW') {
             where.badge = 'NEW'
-            where.createdAt = { gte: oneWeekAgo }
+            where.createdAt = { gte: threeDaysAgo }
         } else if (badge === 'HOT') {
-            where.OR = [
-                { badge: 'HOT' },
-                { badge: 'NEW', createdAt: { lt: oneWeekAgo } }
-            ]
+            where.badge = 'HOT'
         } else if (badge === 'BEST SELLER') {
             where.viewCount = { gt: 0 }
             where.OR = [
                 { badge: null },
+                { badge: 'NEW', createdAt: { lt: threeDaysAgo } },
                 { badge: { notIn: ['NEW', 'HOT'] } }
             ]
         } else {

@@ -83,6 +83,7 @@ export async function PUT(
         shopeeRatingCountStr: data.shopeeRatingCountStr || null,
         shopeeSoldStr: data.shopeeSoldStr || null,
         categoryId: data.categoryId,
+        subcategoryId: data.subcategoryId || null,
         badge: data.badge || null,
         isActive: data.isActive ?? true,
     })

@@ -50,6 +50,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     // Support both Indonesian and English query params
     const q = params.q || ''
     const category = params.kategori || params.category || ''
+    const subcategory = params.subkategori || params.subcategory || ''
     const badge = params.badge || ''
     const minPrice = params.minPrice ? Number(params.minPrice) : undefined
     const maxPrice = params.maxPrice ? Number(params.maxPrice) : undefined
@@ -59,23 +60,22 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     const where: Record<string, any> = { isActive: true }
     if (q) where.title = { contains: q, mode: 'insensitive' }
     if (category) where.category = { slug: category }
+    if (subcategory) where.subcategory = { slug: subcategory }
 
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+    const threeDaysAgo = new Date()
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
 
     if (badge) {
         if (badge === 'NEW') {
             where.badge = 'NEW'
-            where.createdAt = { gte: oneWeekAgo }
+            where.createdAt = { gte: threeDaysAgo }
         } else if (badge === 'HOT') {
-            where.OR = [
-                { badge: 'HOT' },
-                { badge: 'NEW', createdAt: { lt: oneWeekAgo } }
-            ]
+            where.badge = 'HOT'
         } else if (badge === 'BEST SELLER') {
             where.viewCount = { gt: 0 }
             where.OR = [
                 { badge: null },
+                { badge: 'NEW', createdAt: { lt: threeDaysAgo } },
                 { badge: { notIn: ['NEW', 'HOT'] } }
             ]
         } else {
@@ -143,13 +143,14 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     const clientSearchParams: Record<string, string> = {}
     if (q) clientSearchParams.q = q
     if (category) clientSearchParams.kategori = category
+    if (subcategory) clientSearchParams.subkategori = subcategory
     if (badge) clientSearchParams.badge = badge
     if (minPrice) clientSearchParams.minPrice = String(minPrice)
     if (maxPrice) clientSearchParams.maxPrice = String(maxPrice)
     if (sort) clientSearchParams.sort = sort
 
     // Active filter count
-    const activeFilters = [category, badge, minPrice, maxPrice].filter(Boolean).length
+    const activeFilters = [category, subcategory, badge, minPrice, maxPrice].filter(Boolean).length
 
     return (
         <div className="container mx-auto px-4 py-6 md:py-8">
@@ -177,8 +178,9 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                     <div className="sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto pr-3 custom-scrollbar">
                         <Suspense>
                             <FilterSidebar
-                                categories={allCategories}
+                                categories={allCategories as any}
                                 currentCategory={category}
+                                currentSubcategory={subcategory}
                                 currentBadge={badge}
                                 priceRange={priceRange}
                                 currentMinPrice={minPrice}
@@ -196,8 +198,9 @@ export default async function ProductsPage({ searchParams }: PageProps) {
                             currentQuery={q}
                             total={total}
                             activeFilters={activeFilters}
-                            categories={allCategories}
+                            categories={allCategories as any}
                             currentCategory={category}
+                            currentSubcategory={subcategory}
                             currentBadge={badge}
                             priceRange={priceRange}
                             currentMinPrice={minPrice}

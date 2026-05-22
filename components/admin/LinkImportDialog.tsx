@@ -55,6 +55,7 @@ export default function LinkImportDialog({ open, onOpenChange }: LinkImportDialo
                 images: data.images || [],
                 shopeeUrl: url,
                 category: data.category || '',
+                subcategory: data.subcategory || '',
             }
 
             sessionStorage.setItem('prefilledProduct', JSON.stringify(prefilledProduct))

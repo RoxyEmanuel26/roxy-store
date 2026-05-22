@@ -19,11 +19,13 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const search = searchParams.get('search') || ''
     const categoryId = searchParams.get('categoryId') || ''
+    const subcategoryId = searchParams.get('subcategoryId') || ''
     const isActive = searchParams.get('isActive')
 
     const result = await productRepository.findAdminPaginated({
         search: search || undefined,
         categoryId: categoryId || undefined,
+        subcategoryId: subcategoryId || undefined,
         isActive: isActive !== null && isActive !== '' ? isActive === 'true' : null,
         page,
         limit,
@@ -72,6 +74,7 @@ export async function POST(request: NextRequest) {
         shopeeRatingCountStr: data.shopeeRatingCountStr || null,
         shopeeSoldStr: data.shopeeSoldStr || null,
         categoryId: data.categoryId,
+        subcategoryId: data.subcategoryId || null,
         badge: data.badge || null,
         isActive: data.isActive ?? true,
     })

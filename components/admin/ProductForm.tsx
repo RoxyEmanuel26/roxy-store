@@ -31,6 +31,12 @@ interface Category {
     name: string
 }
 
+interface Subcategory {
+    id: string
+    name: string
+    categoryId: string
+}
+
 interface ProductFormProps {
     initialData?: ProductValues & { id?: string }
     isEdit?: boolean
@@ -39,8 +45,10 @@ interface ProductFormProps {
 export default function ProductForm({ initialData, isEdit = false }: ProductFormProps) {
     const router = useRouter()
     const [categories, setCategories] = useState<Category[]>([])
+    const [subcategories, setSubcategories] = useState<Subcategory[]>([])
     const [saving, setSaving] = useState(false)
     const [tempCategoryName, setTempCategoryName] = useState<string>('')
+    const [tempSubcategoryName, setTempSubcategoryName] = useState<string>('')
     const [additionalImages, setAdditionalImages] = useState<string[]>(
         initialData?.images && initialData.images.length > 0
             ? initialData.images
@@ -67,6 +75,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
             shopeeRatingCountStr: initialData?.shopeeRatingCountStr || '',
             shopeeSoldStr: initialData?.shopeeSoldStr || '',
             categoryId: initialData?.categoryId || '',
+            subcategoryId: initialData?.subcategoryId || null,
             badge: initialData?.badge || null,
             isActive: initialData?.isActive ?? true,
         } as ProductValues,
@@ -84,6 +93,7 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                     if (data.image) setValue('image', data.image)
                     if (data.shopeeUrl) setValue('shopeeUrl', data.shopeeUrl)
                     if (data.category) setTempCategoryName(data.category)
+                    if (data.subcategory) setTempSubcategoryName(data.subcategory)
                     if (data.images && Array.isArray(data.images)) {
                         setAdditionalImages(data.images.length > 0 ? data.images : [''])
                     }
@@ -110,6 +120,19 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         }
     }, [tempCategoryName, categories, setValue])
 
+    // Auto-select subcategory once category is selected and subcategories are loaded
+    useEffect(() => {
+        const categoryId = watch('categoryId')
+        if (tempSubcategoryName && subcategories.length > 0 && categoryId) {
+            const found = subcategories.find(
+                (s) => s.categoryId === categoryId && s.name.toLowerCase() === tempSubcategoryName.toLowerCase()
+            )
+            if (found) {
+                setValue('subcategoryId', found.id)
+            }
+        }
+    }, [tempSubcategoryName, subcategories, watch('categoryId'), setValue])
+
     const title = watch('title')
     const image = watch('image')
     const badge = watch('badge')
@@ -130,9 +153,17 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
         } catch { /* ignore */ }
     }, [])
 
+    const fetchSubcategories = useCallback(async () => {
+        try {
+            const res = await fetch('/api/admin/subcategories')
+            if (res.ok) setSubcategories(await res.json())
+        } catch { /* ignore */ }
+    }, [])
+
     useEffect(() => {
         fetchCategories()
-    }, [fetchCategories])
+        fetchSubcategories()
+    }, [fetchCategories, fetchSubcategories])
 
     // Sync additional images to form
     useEffect(() => {
@@ -326,7 +357,10 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                             <Label className="text-sm font-semibold">Kategori *</Label>
                             <Select
                                 value={watch('categoryId')}
-                                onValueChange={(v) => setValue('categoryId', v)}
+                                onValueChange={(v) => {
+                                    setValue('categoryId', v)
+                                    setValue('subcategoryId', null)
+                                }}
                             >
                                 <SelectTrigger className="h-11">
                                     <SelectValue placeholder="-- Pilih Kategori --" />
@@ -352,6 +386,36 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
                                 <p className="text-xs text-red-500 flex items-center gap-1">
                                     <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
                                     {errors.categoryId.message}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Sub Kategori */}
+                        <div className="space-y-2.5">
+                            <Label className="text-sm font-semibold">Sub Kategori</Label>
+                            <Select
+                                value={watch('subcategoryId') || 'none'}
+                                onValueChange={(v) => setValue('subcategoryId', v === 'none' ? null : v)}
+                                disabled={!watch('categoryId')}
+                            >
+                                <SelectTrigger className="h-11">
+                                    <SelectValue placeholder={watch('categoryId') ? "-- Pilih Sub Kategori --" : "-- Pilih Kategori Utama Terlebih Dahulu --"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Tidak Ada Sub Kategori</SelectItem>
+                                    {subcategories
+                                        .filter((sub) => sub.categoryId === watch('categoryId'))
+                                        .map((sub) => (
+                                            <SelectItem key={sub.id} value={sub.id}>
+                                                {sub.name}
+                                            </SelectItem>
+                                        ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.subcategoryId && (
+                                <p className="text-xs text-red-500 flex items-center gap-1">
+                                    <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
+                                    {errors.subcategoryId.message}
                                 </p>
                             )}
                         </div>

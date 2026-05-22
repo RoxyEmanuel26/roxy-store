@@ -72,13 +72,83 @@ const CSV_TEMPLATE_EXAMPLE = [
     'true',
 ]
 
+function cleanNumberString(val: string): string {
+    let str = val.trim()
+    str = str.replace(/^(rp|idr|usd|sgd)\.?\s*/i, '')
+    str = str.replace(/[^\d.,-]/g, '')
+    
+    if (!str) return '0'
+
+    const hasDot = str.includes('.')
+    const hasComma = str.includes(',')
+
+    if (hasDot && hasComma) {
+        const dotIndex = str.lastIndexOf('.')
+        const commaIndex = str.lastIndexOf(',')
+        if (dotIndex > commaIndex) {
+            str = str.replace(/,/g, '')
+        } else {
+            str = str.replace(/\./g, '').replace(/,/g, '.')
+        }
+    } else if (hasComma) {
+        const parts = str.split(',')
+        const lastPart = parts[parts.length - 1]
+        if (lastPart.length === 3 && parts.length > 1) {
+            str = str.replace(/,/g, '')
+        } else {
+            str = str.replace(/,/g, '.')
+        }
+    } else if (hasDot) {
+        const parts = str.split('.')
+        const lastPart = parts[parts.length - 1]
+        if (lastPart.length === 3 && parts.length > 1) {
+            str = str.replace(/\./g, '')
+        }
+    }
+    return str
+}
+
+function parseStringWithMultipliers(val: unknown): number {
+    if (val === '' || val === undefined || val === null) return 0
+    let str = String(val).trim().toLowerCase()
+    
+    str = str.replace(/^(rp|idr|usd|sgd)\.?\s*/i, '')
+    str = str.replace(/terjual/g, '').trim()
+    
+    let multiplier = 1
+    if (str.includes('ribu') || str.includes('rb') || str.includes('k')) {
+        multiplier = 1000
+        str = str.replace(/ribu|rb|\+/g, '').replace(/k/g, '').trim()
+    } else if (str.includes('juta') || str.includes('jt')) {
+        multiplier = 1000000
+        str = str.replace(/juta|jt|\+/g, '').trim()
+    } else {
+        str = str.replace(/\+/g, '').trim()
+    }
+    
+    if (multiplier > 1) {
+        const partsComma = str.split(',')
+        const partsDot = str.split('.')
+        if (partsComma.length === 2 && partsDot.length === 1) {
+            str = str.replace(',', '.')
+        } else {
+            str = cleanNumberString(str)
+        }
+    } else {
+        str = cleanNumberString(str)
+    }
+    
+    const parsed = parseFloat(str)
+    return isNaN(parsed) ? 0 : parsed * multiplier
+}
+
 export default function CsvImportDialog({
     open,
     onOpenChange,
     onImportComplete,
 }: CsvImportDialogProps) {
     const [step, setStep] = useState<'upload' | 'preview' | 'importing' | 'result'>('upload')
-    const [parsedData, setParsedData] = useState<Record<string, string>[]>([])
+    const [parsedData, setParsedData] = useState<Record<string, any>[]>([])
     const [fileName, setFileName] = useState('')
     const [importing, setImporting] = useState(false)
     const [progress, setProgress] = useState(0)
@@ -215,13 +285,14 @@ export default function CsvImportDialog({
                     'link produk': '_ignore',
                 }
 
-                const normalizedData = data.map((row) => {
-                    const normalized: Record<string, string> = {}
+                const normalizedData = data.map((row, index) => {
+                    const normalized: Record<string, any> = {}
                     for (const [key, value] of Object.entries(row)) {
                         const cleanKey = key.trim()
                         const mappedKey = fieldMap[cleanKey] || fieldMap[cleanKey.toLowerCase()] || cleanKey
                         normalized[mappedKey] = value
                     }
+                    normalized.originalRow = index + 2 // row 1 is header, data starts at row 2
                     return normalized
                 })
 
@@ -244,44 +315,95 @@ export default function CsvImportDialog({
     const handleImport = async () => {
         setImporting(true)
         setStep('importing')
-        setProgress(30)
+        setProgress(0)
+
+        const CHUNK_SIZE = 3
+        const totalProducts = parsedData.length
+        let created = 0
+        let updated = 0
+        let errors = 0
+        const allResults: ImportResult[] = []
 
         try {
-            const res = await fetch('/api/admin/products/import', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ products: parsedData }),
-            })
-
-            setProgress(80)
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                toast.error(data.error || 'Gagal mengimport produk')
-                setStep('preview')
-                setImporting(false)
-                return
+            // Split parsedData into chunks of size 3 to avoid gateway timeouts
+            const chunks: Record<string, any>[][] = []
+            for (let i = 0; i < totalProducts; i += CHUNK_SIZE) {
+                chunks.push(parsedData.slice(i, i + CHUNK_SIZE))
             }
 
-            setProgress(100)
-            setSummary(data.summary)
-            setResults(data.results)
+            for (let c = 0; c < chunks.length; c++) {
+                const chunk = chunks[c]
+                
+                try {
+                    const res = await fetch('/api/admin/products/import', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ products: chunk }),
+                    })
+
+                    const data = await res.json()
+
+                    if (res.ok && data.summary) {
+                        created += data.summary.created
+                        updated += data.summary.updated
+                        errors += data.summary.errors
+                        if (data.results) {
+                            allResults.push(...data.results)
+                        }
+                    } else {
+                        // Chunk-level failure
+                        errors += chunk.length
+                        chunk.forEach((prod, pIdx) => {
+                            allResults.push({
+                                row: (c * CHUNK_SIZE) + pIdx + 2,
+                                title: prod.title || '(kosong)',
+                                status: 'error',
+                                error: data.error || 'Gagal mengimport batch ini',
+                            })
+                        })
+                    }
+                } catch (err) {
+                    // Network level failure
+                    errors += chunk.length
+                    chunk.forEach((prod, pIdx) => {
+                        allResults.push({
+                            row: (c * CHUNK_SIZE) + pIdx + 2,
+                            title: prod.title || '(kosong)',
+                            status: 'error',
+                            error: err instanceof Error ? err.message : 'Kesalahan koneksi jaringan',
+                        })
+                    })
+                }
+
+                // Smoothly update the progress bar after each chunk
+                const currentProgress = Math.round(((c + 1) / chunks.length) * 100)
+                setProgress(currentProgress)
+            }
+
+            setSummary({
+                total: totalProducts,
+                created,
+                updated,
+                errors,
+            })
+            setResults(allResults)
             setStep('result')
 
-            if (data.summary.errors === 0) {
+            if (errors === 0) {
                 toast.success(
-                    `Import berhasil! ${data.summary.created} ditambahkan, ${data.summary.updated} diperbarui.`
+                    `Import berhasil! ${created} ditambahkan, ${updated} diperbarui.`
+                )
+            } else if (created > 0 || updated > 0) {
+                toast.warning(
+                    `Import selesai dengan ${errors} error dari ${totalProducts} produk.`
                 )
             } else {
-                toast.warning(
-                    `Import selesai dengan ${data.summary.errors} error.`
-                )
+                toast.error(`Gagal mengimport produk (${errors} error).`)
             }
 
             onImportComplete()
         } catch {
-            toast.error('Terjadi kesalahan saat import')
+            toast.error('Terjadi kesalahan tidak terduga saat import')
             setStep('preview')
         } finally {
             setImporting(false)
@@ -388,6 +510,18 @@ export default function CsvImportDialog({
                             </Button>
                         </div>
 
+                        {/* Scraping Auto-Fill Explanatory Alert */}
+                        <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-3 text-xs text-blue-700 dark:text-blue-400 space-y-1">
+                            <p className="font-semibold flex items-center gap-1.5">
+                                <AlertTriangle className="h-3.5 w-3.5 text-blue-500" />
+                                Informasi Scraping Otomatis
+                            </p>
+                            <p>
+                                Beberapa kolom seperti <strong>Kategori</strong> dan <strong>Gambar</strong> terlihat kosong (&ldquo;Other&rdquo; / &ldquo;0 foto&rdquo;) karena tidak ada di file CSV. 
+                                Sistem akan otomatis mengambil (scrape) kategori, deskripsi, dan galeri foto lengkap dari Shopee saat proses import berlangsung.
+                            </p>
+                        </div>
+
                         {/* Preview Table */}
                         <div className="rounded-lg border border-brand-border dark:border-dark-border overflow-hidden overflow-x-auto">
                             <table className="w-full text-xs">
@@ -419,6 +553,7 @@ export default function CsvImportDialog({
                                             row.title || row.Title || row.TITLE || ''
                                         const price =
                                             row.price || row.Price || row.PRICE || '0'
+                                        const parsedPrice = parseStringWithMultipliers(price)
                                         const category =
                                             row.category ||
                                             row.Category ||
@@ -452,7 +587,7 @@ export default function CsvImportDialog({
                                                     )}
                                                 </td>
                                                 <td className="px-3 py-2 text-brand-text dark:text-dark-text">
-                                                    Rp{Number(price).toLocaleString('id-ID')}
+                                                    {parsedPrice > 0 ? `Rp${parsedPrice.toLocaleString('id-ID')}` : 'Rp0'}
                                                 </td>
                                                 <td className="px-3 py-2">
                                                     <span className="inline-block bg-brand-surface dark:bg-dark-surface px-2 py-0.5 rounded text-[10px]">

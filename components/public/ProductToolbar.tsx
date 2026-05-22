@@ -28,8 +28,20 @@ interface ProductToolbarProps {
     total?: number
     activeFilters?: number
     // For mobile filter sheet
-    categories: { id: string; name: string; slug: string; _count?: { products: number } }[]
+    categories: {
+        id: string
+        name: string
+        slug: string
+        subcategories?: {
+            id: string
+            name: string
+            slug: string
+            _count?: { products: number }
+        }[]
+        _count?: { products: number }
+    }[]
     currentCategory?: string
+    currentSubcategory?: string
     currentBadge?: string
     priceRange: { min: number; max: number }
     currentMinPrice?: number
@@ -43,6 +55,7 @@ export default function ProductToolbar({
     activeFilters = 0,
     categories,
     currentCategory,
+    currentSubcategory,
     currentBadge,
     priceRange,
     currentMinPrice,
@@ -128,6 +141,7 @@ export default function ProductToolbar({
                             <FilterSidebar
                                 categories={categories}
                                 currentCategory={currentCategory}
+                                currentSubcategory={currentSubcategory}
                                 currentBadge={currentBadge}
                                 priceRange={priceRange}
                                 currentMinPrice={currentMinPrice}
@@ -164,25 +178,48 @@ export default function ProductToolbar({
                 })}
             </div>
 
-            {/* Active category quick-filter chips */}
-            {currentCategory && (
-                <div className="flex items-center gap-2">
+            {/* Active category and subcategory quick-filter chips */}
+            {(currentCategory || currentSubcategory) && (
+                <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-brand-muted">Filter aktif:</span>
-                    <Badge
-                        variant="secondary"
-                        className="gap-1 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
-                        onClick={() => {
-                            const params = new URLSearchParams(searchParams.toString())
-                            params.delete('kategori')
-                            params.delete('category')
-                            startTransition(() => {
-                                router.push(`/produk?${params.toString()}`)
-                            })
-                        }}
-                    >
-                        {categories.find(c => c.slug === currentCategory)?.name || currentCategory}
-                        <X className="h-3 w-3" />
-                    </Badge>
+                    {currentCategory && (
+                        <Badge
+                            variant="secondary"
+                            className="gap-1 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                            onClick={() => {
+                                const params = new URLSearchParams(searchParams.toString())
+                                params.delete('kategori')
+                                params.delete('category')
+                                params.delete('subkategori')
+                                params.delete('subcategory')
+                                startTransition(() => {
+                                    router.push(`/produk?${params.toString()}`)
+                                })
+                            }}
+                        >
+                            {categories.find(c => c.slug === currentCategory)?.name || currentCategory}
+                            <X className="h-3 w-3" />
+                        </Badge>
+                    )}
+                    {currentSubcategory && (
+                        <Badge
+                            variant="secondary"
+                            className="gap-1 cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                            onClick={() => {
+                                const params = new URLSearchParams(searchParams.toString())
+                                params.delete('subkategori')
+                                params.delete('subcategory')
+                                startTransition(() => {
+                                    router.push(`/produk?${params.toString()}`)
+                                })
+                            }}
+                        >
+                            {categories
+                                .flatMap(c => c.subcategories || [])
+                                .find(s => s.slug === currentSubcategory)?.name || currentSubcategory}
+                            <X className="h-3 w-3" />
+                        </Badge>
+                    )}
                 </div>
             )}
 

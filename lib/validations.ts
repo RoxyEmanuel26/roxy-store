@@ -35,6 +35,7 @@ export const ProductSchema = z.object({
     shopeeRatingCountStr: z.string().max(100).nullable().optional().or(z.literal('')),
     shopeeSoldStr: z.string().max(100).nullable().optional().or(z.literal('')),
     categoryId: z.string().min(1, 'Kategori wajib dipilih'),
+    subcategoryId: z.string().nullable().optional(),
     badge: z.enum(['NEW', 'HOT', 'BEST SELLER']).nullable().optional(),
     isActive: z.boolean().default(true),
 })
@@ -48,6 +49,17 @@ export const CategorySchema = z.object({
     slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
     description: z.string().max(500, 'Deskripsi maksimal 500 karakter').optional().or(z.literal('')),
     icon: z.string().max(500, 'Icon URL terlalu panjang').optional().or(z.literal('')),
+})
+
+// Sub-Kategori
+export const SubcategorySchema = z.object({
+    name: z.string()
+        .min(2, 'Nama sub-kategori minimal 2 karakter')
+        .max(50, 'Nama sub-kategori maksimal 50 karakter')
+        .trim(),
+    categoryId: z.string().min(1, 'Kategori utama wajib dipilih'),
+    slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
+    description: z.string().max(500, 'Deskripsi maksimal 500 karakter').optional().or(z.literal('')),
 })
 
 // Settings
@@ -82,6 +94,7 @@ export const CsvProductSchema = z.object({
     shopeeRatingCountStr: z.string().optional().default(''),
     shopeeSoldStr: z.string().optional().default(''),
     category: z.string().default('Other'),
+    subcategory: z.string().optional().default(''),
     badge: z.enum(['NEW', 'HOT', 'BEST SELLER', '']).default(''),
     isActive: z.preprocess(
         (val) => {
