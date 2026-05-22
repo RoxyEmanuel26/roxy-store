@@ -123,136 +123,13 @@ async function verifyShopeeLink(url: string): Promise<{ active: boolean; reason:
     }
 }
 
-async function runLinkCheckInBackground() {
-    try {
-        const products = await prisma.product.findMany({
-            where: {
-                shopeeUrl: {
-                    not: ''
-                }
-            },
-            select: {
-                id: true,
-                title: true,
-                shopeeUrl: true,
-                isActive: true
-            }
-        })
-        
-        const activeProducts = products.filter(p => p.shopeeUrl && p.shopeeUrl.trim() !== '')
-        
-        await updateStatus({
-            status: 'running',
-            total: activeProducts.length,
-            checked: 0,
-            deactivated: 0,
-            logs: [`Menemukan ${activeProducts.length} produk dengan link Shopee. Memulai verifikasi...`],
-            startedAt: new Date().toISOString(),
-            completedAt: null
-        })
-        
-        let checkedCount = 0
-        let deactivatedCount = 0
-        
-        for (const product of activeProducts) {
-            // Check cancellation status at the start of each product check
-            const currentSetting = await prisma.siteSettings.findUnique({
-                where: { key: SETTING_KEY }
-            })
-            if (currentSetting) {
-                const currentStatus = JSON.parse(currentSetting.value)
-                if (currentStatus.status === 'cancelled') {
-                    await prisma.siteSettings.update({
-                        where: { key: SETTING_KEY },
-                        data: {
-                            value: JSON.stringify({
-                                ...currentStatus,
-                                status: 'cancelled',
-                                completedAt: new Date().toISOString(),
-                                logs: [...currentStatus.logs, '❌ Verifikasi dibatalkan oleh Admin.']
-                            })
-                        }
-                    })
-                    return
-                }
-            }
-            
-            checkedCount++
-            const checkResult = await verifyShopeeLink(product.shopeeUrl!)
-            
-            let logMsg = ''
-            if (checkResult.active) {
-                logMsg = `✅ [${checkedCount}/${activeProducts.length}] ${product.title} -> AKTIF`
-            } else {
-                deactivatedCount++
-                logMsg = `⚠️ [${checkedCount}/${activeProducts.length}] ${product.title} -> NONAKTIF (${checkResult.reason})`
-                
-                // Deactivate in db
-                await prisma.product.update({
-                    where: { id: product.id },
-                    data: { isActive: false }
-                })
-            }
-            
-            // Read latest status state to update progress and logs
-            const latestStatus = await getCheckStatus()
-            if (latestStatus.status === 'cancelled') {
-                return // Avoid racing if cancelled in between
-            }
-            
-            await updateStatus({
-                checked: checkedCount,
-                deactivated: deactivatedCount,
-                logs: [...latestStatus.logs, logMsg]
-            })
-            
-            // Throttled Sequential delay (1.5 seconds) to prevent Shopee IP rate limit/ban
-            await new Promise(resolve => setTimeout(resolve, 1500))
-        }
-        
-        // Completed successfully
-        const finalStatus = await getCheckStatus()
-        if (finalStatus.status === 'running') {
-            await prisma.siteSettings.update({
-                where: { key: SETTING_KEY },
-                data: {
-                    value: JSON.stringify({
-                        ...finalStatus,
-                        status: 'completed',
-                        completedAt: new Date().toISOString(),
-                        logs: [...finalStatus.logs, `🎉 Verifikasi selesai! ${checkedCount} produk diperiksa. ${deactivatedCount} produk dinonaktifkan.`]
-                    })
-                }
-            })
-        }
-        
-        // Revalidate tags to clear cache for public pages
-        revalidateTag('products', { expire: 0 })
-        
-    } catch (error: any) {
-        console.error('Link check background worker failed:', error)
-        const latestStatus = await getCheckStatus()
-        await prisma.siteSettings.update({
-            where: { key: SETTING_KEY },
-            data: {
-                value: JSON.stringify({
-                    ...latestStatus,
-                    status: 'idle',
-                    completedAt: new Date().toISOString(),
-                    logs: [...latestStatus.logs, `❌ Terjadi kesalahan sistem: ${error.message || error}`]
-                })
-            }
-        })
-    }
-}
-
 export async function GET(request: NextRequest) {
     if (!validateOrigin(request)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const session = await auth()
-    if (!session) {
+    if (!session || (session.user as any)?.role !== 'admin') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -266,7 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     const session = await auth()
-    if (!session) {
+    if (!session || (session.user as any)?.role !== 'admin') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -275,37 +152,125 @@ export async function POST(request: NextRequest) {
         const { action } = body
 
         if (action === 'start') {
-            const currentStatus = await getCheckStatus()
-            
-            // Allow restarting if status is idle, completed, cancelled, or running but timed out (> 10 minutes)
-            if (currentStatus.status === 'running') {
-                const startedAt = currentStatus.startedAt ? new Date(currentStatus.startedAt).getTime() : 0
-                const tenMinutesAgo = Date.now() - 10 * 60 * 1000
-                if (startedAt > tenMinutesAgo) {
-                    // Let it fall through to restart
-                } else {
-                    return NextResponse.json({ error: 'Proses verifikasi sedang berjalan' }, { status: 400 })
+            // Fetch all active products that have a shopee URL
+            const products = await prisma.product.findMany({
+                where: {
+                    shopeeUrl: {
+                        not: ''
+                    }
+                },
+                select: {
+                    id: true,
+                    title: true,
+                    shopeeUrl: true,
+                    isActive: true
                 }
+            })
+
+            const activeProducts = products.filter(p => p.shopeeUrl && p.shopeeUrl.trim() !== '')
+
+            const startedState: CheckStatusState = {
+                status: 'running',
+                total: activeProducts.length,
+                checked: 0,
+                deactivated: 0,
+                logs: [`Menemukan ${activeProducts.length} produk dengan link Shopee. Memulai verifikasi...`],
+                startedAt: new Date().toISOString(),
+                completedAt: null
             }
 
-            // Trigger background task (does NOT await)
-            runLinkCheckInBackground()
+            await prisma.siteSettings.upsert({
+                where: { key: SETTING_KEY },
+                create: {
+                    key: SETTING_KEY,
+                    value: JSON.stringify(startedState)
+                },
+                update: {
+                    value: JSON.stringify(startedState)
+                }
+            })
 
-            return NextResponse.json({ message: 'Verifikasi tautan dimulai' }, { status: 202 })
+            return NextResponse.json({
+                message: 'Verifikasi dimulai',
+                products: activeProducts,
+                status: startedState
+            })
+        }
+
+        if (action === 'check-single') {
+            const { productId } = body
+            if (!productId) {
+                return NextResponse.json({ error: 'productId required' }, { status: 400 })
+            }
+
+            const product = await prisma.product.findUnique({
+                where: { id: productId },
+                select: { id: true, title: true, shopeeUrl: true }
+            })
+
+            if (!product || !product.shopeeUrl) {
+                return NextResponse.json({ error: 'Produk tidak ditemukan atau tidak memiliki URL Shopee' }, { status: 404 })
+            }
+
+            const latestStatus = await getCheckStatus()
+            if (latestStatus.status !== 'running') {
+                return NextResponse.json({ error: 'Pengecekan tidak sedang berjalan' }, { status: 400 })
+            }
+
+            const checkResult = await verifyShopeeLink(product.shopeeUrl)
+            let isDeactivated = false
+
+            let logMsg = ''
+            const currentChecked = latestStatus.checked + 1
+            if (checkResult.active) {
+                logMsg = `✅ [${currentChecked}/${latestStatus.total}] ${product.title} -> AKTIF`
+            } else {
+                isDeactivated = true
+                logMsg = `⚠️ [${currentChecked}/${latestStatus.total}] ${product.title} -> NONAKTIF (${checkResult.reason})`
+
+                // Deactivate product in Postgres
+                await prisma.product.update({
+                    where: { id: product.id },
+                    data: { isActive: false }
+                })
+            }
+
+            const updatedLogs = [...latestStatus.logs, logMsg]
+            const newDeactivatedCount = latestStatus.deactivated + (isDeactivated ? 1 : 0)
+
+            const updatedState = await updateStatus({
+                checked: currentChecked,
+                deactivated: newDeactivatedCount,
+                logs: updatedLogs
+            })
+
+            return NextResponse.json({ success: true, status: updatedState })
         }
 
         if (action === 'cancel') {
-            const currentStatus = await getCheckStatus()
-            if (currentStatus.status !== 'running') {
-                return NextResponse.json({ error: 'Tidak ada proses verifikasi yang sedang berjalan' }, { status: 400 })
-            }
-
-            await updateStatus({
+            const latestStatus = await getCheckStatus()
+            
+            const updatedState = await updateStatus({
                 status: 'cancelled',
-                logs: [...currentStatus.logs, '⏱️ Membatalkan verifikasi...']
+                completedAt: new Date().toISOString(),
+                logs: [...latestStatus.logs, '❌ Verifikasi dibatalkan oleh Admin.']
             })
 
-            return NextResponse.json({ message: 'Proses pembatalan dikirim' })
+            return NextResponse.json({ success: true, status: updatedState })
+        }
+
+        if (action === 'complete') {
+            const latestStatus = await getCheckStatus()
+            
+            const updatedState = await updateStatus({
+                status: 'completed',
+                completedAt: new Date().toISOString(),
+                logs: [...latestStatus.logs, `🎉 Verifikasi selesai! ${latestStatus.checked} produk diperiksa. ${latestStatus.deactivated} produk dinonaktifkan.`]
+            })
+
+            revalidateTag('products', { expire: 0 })
+
+            return NextResponse.json({ success: true, status: updatedState })
         }
 
         return NextResponse.json({ error: 'Aksi tidak valid' }, { status: 400 })

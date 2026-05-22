@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { productService } from '@/services/product.service'
 import { captureError } from '@/lib/sentry-helpers'
 import { validateOrigin } from '@/lib/csrf'
 import { prisma } from '@/lib/prisma'
+import { bufferProductView } from '@/lib/redis-buffer'
 
 export async function POST(
     request: NextRequest,
@@ -26,7 +26,8 @@ export async function POST(
             return NextResponse.json({ error: 'Produk tidak ditemukan' }, { status: 404 })
         }
 
-        await productService.trackProductView(id)
+        // Buffer product views in Upstash Redis to prevent Postgres write-locking bottlenecks at scale
+        await bufferProductView(id)
         return NextResponse.json({ success: true })
     } catch (error) {
         captureError(error, { endpoint: '/api/products/[id]/view' })

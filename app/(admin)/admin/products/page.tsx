@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet, Sparkles, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
@@ -49,6 +49,7 @@ interface Category {
 }
 
 export default function AdminProductsPage() {
+    const isCancelledRef = useRef(false)
     const [products, setProducts] = useState<Product[]>([])
     const [categories, setCategories] = useState<Category[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -137,6 +138,7 @@ export default function AdminProductsPage() {
     }, [fetchProducts])
 
     const handleStartCheck = async () => {
+        isCancelledRef.current = false
         try {
             const res = await fetch('/api/admin/products/check-links', {
                 method: 'POST',
@@ -144,9 +146,66 @@ export default function AdminProductsPage() {
                 body: JSON.stringify({ action: 'start' }),
             })
             if (res.ok) {
-                toast.success('Pengecekan link aktif telah dimulai di background!')
+                const data = await res.json()
+                toast.success('Pengecekan link aktif dimulai!')
                 setIsDismissed(false)
-                fetchCheckStatus()
+                setShowCheckLogs(true)
+                setCheckStatus(data.status)
+
+                const productsToCheck = data.products || []
+                
+                // Sequential execution loop driven entirely by the client browser
+                for (let i = 0; i < productsToCheck.length; i++) {
+                    if (isCancelledRef.current) {
+                        break
+                    }
+
+                    const product = productsToCheck[i]
+                    try {
+                        const checkRes = await fetch('/api/admin/products/check-links', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'check-single', productId: product.id }),
+                        })
+
+                        if (checkRes.ok) {
+                            const checkData = await checkRes.json()
+                            setCheckStatus(checkData.status)
+                        }
+                    } catch (err) {
+                        console.error('Failed to check single link:', err)
+                    }
+
+                    // Throttled delay between checks to prevent Shopee IP rate limit/ban
+                    await new Promise(resolve => setTimeout(resolve, 1500))
+                }
+
+                // Finalize process status based on completion or cancellation
+                if (isCancelledRef.current) {
+                    const cancelRes = await fetch('/api/admin/products/check-links', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'cancel' }),
+                    })
+                    if (cancelRes.ok) {
+                        const cancelData = await cancelRes.json()
+                        setCheckStatus(cancelData.status)
+                        toast.error('Verifikasi dibatalkan!')
+                    }
+                } else {
+                    const completeRes = await fetch('/api/admin/products/check-links', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'complete' }),
+                    })
+                    if (completeRes.ok) {
+                        const completeData = await completeRes.json()
+                        setCheckStatus(completeData.status)
+                        toast.success('Verifikasi link selesai!')
+                    }
+                }
+                
+                fetchProducts()
             } else {
                 const data = await res.json()
                 toast.error(data.error || 'Gagal memulai pengecekan')
@@ -157,6 +216,8 @@ export default function AdminProductsPage() {
     }
 
     const handleCancelCheck = async () => {
+        isCancelledRef.current = true
+        toast.info('Sedang menghentikan pengecekan...')
         try {
             const res = await fetch('/api/admin/products/check-links', {
                 method: 'POST',
@@ -164,8 +225,10 @@ export default function AdminProductsPage() {
                 body: JSON.stringify({ action: 'cancel' }),
             })
             if (res.ok) {
-                toast.success('Pengecekan sedang dibatalkan...')
-                fetchCheckStatus()
+                const data = await res.json()
+                setCheckStatus(data.status)
+                toast.success('Pengecekan dihentikan.')
+                fetchProducts()
             } else {
                 const data = await res.json()
                 toast.error(data.error || 'Gagal membatalkan pengecekan')
@@ -174,6 +237,13 @@ export default function AdminProductsPage() {
             toast.error('Terjadi kesalahan koneksi')
         }
     }
+
+    // Cancel the client checker loop on page unmount to prevent leaked requests
+    useEffect(() => {
+        return () => {
+            isCancelledRef.current = true
+        }
+    }, [])
 
     useEffect(() => {
         fetchProducts()
