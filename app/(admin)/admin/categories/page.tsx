@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Loader2, FolderTree } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,6 +12,13 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog'
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -39,6 +46,15 @@ interface Category {
     _count: { products: number }
 }
 
+interface Subcategory {
+    id: string
+    name: string
+    slug: string
+    description?: string | null
+    categoryId: string
+    _count?: { products: number }
+}
+
 export default function AdminCategoriesPage() {
     const [categories, setCategories] = useState<Category[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -54,6 +70,16 @@ export default function AdminCategoriesPage() {
     // Delete dialog
     const [deleteTarget, setDeleteTarget] = useState<Category | null>(null)
     const [deleting, setDeleting] = useState(false)
+
+    // Sub-category state
+    const [allSubcategories, setAllSubcategories] = useState<Subcategory[]>([])
+    const [activeSubCategoryCategory, setActiveSubCategoryCategory] = useState<Category | null>(null)
+    const [subName, setSubName] = useState('')
+    const [subDescription, setSubDescription] = useState('')
+    const [editingSubCategory, setEditingSubCategory] = useState<Subcategory | null>(null)
+    const [subSaving, setSubSaving] = useState(false)
+    const [subLoading, setSubLoading] = useState(false)
+    const [subDeletingId, setSubDeletingId] = useState<string | null>(null)
 
     const fetchCategories = useCallback(async () => {
         try {
@@ -72,9 +98,28 @@ export default function AdminCategoriesPage() {
         }
     }, [])
 
+    const fetchSubcategories = useCallback(async () => {
+        setSubLoading(true)
+        try {
+            const res = await fetch('/api/admin/subcategories', {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache' },
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setAllSubcategories(data)
+            }
+        } catch {
+            toast.error('Gagal memuat data sub-kategori')
+        } finally {
+            setSubLoading(false)
+        }
+    }, [])
+
     useEffect(() => {
         fetchCategories()
-    }, [fetchCategories])
+        fetchSubcategories()
+    }, [fetchCategories, fetchSubcategories])
 
     const slugPreview = slugify(categoryName || '', { lower: true, locale: 'id', strict: true })
 
@@ -153,6 +198,81 @@ export default function AdminCategoriesPage() {
         }
     }
 
+    const handleSaveSubcategory = async () => {
+        if (!activeSubCategoryCategory) return
+
+        if (!subName.trim()) {
+            toast.error('Nama sub-kategori tidak boleh kosong')
+            return
+        }
+
+        setSubSaving(true)
+        try {
+            const url = editingSubCategory
+                ? `/api/admin/subcategories/${editingSubCategory.id}`
+                : '/api/admin/subcategories'
+            const method = editingSubCategory ? 'PUT' : 'POST'
+
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: subName.trim(),
+                    categoryId: activeSubCategoryCategory.id,
+                    description: subDescription.trim() || '',
+                }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                toast.error(data.error || 'Gagal menyimpan sub-kategori')
+                return
+            }
+
+            toast.success(
+                editingSubCategory
+                    ? 'Sub-kategori berhasil diperbarui!'
+                    : 'Sub-kategori berhasil ditambahkan!'
+            )
+
+            setSubName('')
+            setSubDescription('')
+            setEditingSubCategory(null)
+            fetchSubcategories()
+            fetchCategories()
+        } catch {
+            toast.error('Terjadi kesalahan')
+        } finally {
+            setSubSaving(false)
+        }
+    }
+
+    const handleDeleteSubcategory = async (subId: string) => {
+        setSubDeletingId(subId)
+        try {
+            const res = await fetch(`/api/admin/subcategories/${subId}`, {
+                method: 'DELETE',
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                toast.error(data.error || 'Gagal menghapus sub-kategori')
+                return
+            }
+
+            toast.success('Sub-kategori berhasil dihapus!')
+            fetchSubcategories()
+            fetchCategories()
+        } catch {
+            toast.error('Terjadi kesalahan')
+        } finally {
+            setSubDeletingId(null)
+        }
+    }
+
+
     const openEdit = (cat: Category) => {
         setEditingCategory(cat)
         setCategoryName(cat.name)
@@ -229,6 +349,20 @@ export default function AdminCategoriesPage() {
             header: 'Aksi',
             cell: (item) => (
                 <div className="flex items-center gap-2">
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-brand-muted hover:text-brand-text hover:bg-brand-surface dark:hover:bg-dark-surface/50"
+                        title="Kelola Sub-Kategori"
+                        onClick={() => {
+                            setActiveSubCategoryCategory(item)
+                            setSubName('')
+                            setSubDescription('')
+                            setEditingSubCategory(null)
+                        }}
+                    >
+                        <FolderTree className="h-4 w-4 text-brand-primary" />
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => openEdit(item)}>
                         <Pencil className="h-4 w-4" />
                     </Button>
@@ -242,7 +376,7 @@ export default function AdminCategoriesPage() {
                     </Button>
                 </div>
             ),
-            className: 'w-[100px]',
+            className: 'w-[150px]',
         },
     ]
 
@@ -388,6 +522,179 @@ export default function AdminCategoriesPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Manage Subcategories Sheet */}
+            <Sheet
+                open={!!activeSubCategoryCategory}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setActiveSubCategoryCategory(null)
+                        setSubName('')
+                        setSubDescription('')
+                        setEditingSubCategory(null)
+                    }
+                }}
+            >
+                <SheetContent className="sm:max-w-md md:max-w-lg overflow-y-auto space-y-6">
+                    <SheetHeader>
+                        <SheetTitle className="text-xl font-bold text-brand-text dark:text-dark-text">
+                            Kelola Sub-Kategori
+                        </SheetTitle>
+                        <SheetDescription className="text-brand-muted dark:text-dark-muted">
+                            Kategori Utama: <span className="font-semibold text-brand-text dark:text-dark-text">{activeSubCategoryCategory?.name}</span>
+                        </SheetDescription>
+                    </SheetHeader>
+
+                    {/* Subcategory Form */}
+                    <div className="bg-brand-surface dark:bg-dark-surface p-4 rounded-lg border border-brand-border dark:border-dark-border space-y-4">
+                        <h3 className="font-semibold text-sm text-brand-text dark:text-dark-text">
+                            {editingSubCategory ? '🖋️ Edit Sub-Kategori' : '✨ Tambah Sub-Kategori Baru'}
+                        </h3>
+                        <div className="space-y-2">
+                            <Label htmlFor="subName">Nama Sub-Kategori</Label>
+                            <Input
+                                id="subName"
+                                value={subName}
+                                onChange={(e) => setSubName(e.target.value)}
+                                placeholder="Contoh: Gantungan Kunci Manik-Manik"
+                            />
+                            {subName && (
+                                <p className="text-xs text-brand-muted dark:text-dark-muted">
+                                    Slug:{' '}
+                                    <code className="bg-white dark:bg-black/20 px-1.5 py-0.5 rounded">
+                                        {slugify(subName, { lower: true, locale: 'id', strict: true })}
+                                    </code>
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="subDescription">Deskripsi (Opsional)</Label>
+                            <textarea
+                                id="subDescription"
+                                value={subDescription}
+                                onChange={(e) => setSubDescription(e.target.value)}
+                                placeholder="Deskripsi singkat untuk sub-kategori ini..."
+                                rows={2}
+                                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            />
+                        </div>
+
+                        <div className="flex gap-2">
+                            <Button
+                                onClick={handleSaveSubcategory}
+                                disabled={subSaving}
+                                className="flex-1 bg-brand-primary hover:bg-brand-primary/90 text-white"
+                            >
+                                {subSaving ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Menyimpan...
+                                    </>
+                                ) : editingSubCategory ? (
+                                    'Simpan Perubahan'
+                                ) : (
+                                    'Tambah Sub-Kategori'
+                                )}
+                            </Button>
+                            {editingSubCategory && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setEditingSubCategory(null)
+                                        setSubName('')
+                                        setSubDescription('')
+                                    }}
+                                >
+                                    Batal
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Subcategories List */}
+                    <div className="space-y-3">
+                        <h3 className="font-semibold text-sm text-brand-text dark:text-dark-text flex items-center justify-between">
+                            <span>Daftar Sub-Kategori</span>
+                            <span className="text-xs font-normal text-brand-muted dark:text-dark-muted">
+                                {allSubcategories.filter((sub) => sub.categoryId === activeSubCategoryCategory?.id).length} sub-kategori
+                            </span>
+                        </h3>
+
+                        {subLoading ? (
+                            <div className="flex justify-center py-6">
+                                <Loader2 className="h-6 w-6 animate-spin text-brand-muted" />
+                            </div>
+                        ) : allSubcategories.filter((sub) => sub.categoryId === activeSubCategoryCategory?.id).length === 0 ? (
+                            <div className="text-center py-8 border border-dashed rounded-lg border-brand-border dark:border-dark-border text-brand-muted dark:text-dark-muted text-sm">
+                                Belum ada sub-kategori untuk kategori ini.
+                            </div>
+                        ) : (
+                            <div className="border border-brand-border dark:border-dark-border rounded-lg overflow-hidden">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-brand-surface dark:bg-dark-surface border-b border-brand-border dark:border-dark-border text-brand-text dark:text-dark-text font-medium text-xs">
+                                        <tr>
+                                            <th className="px-3 py-2">Nama</th>
+                                            <th className="px-3 py-2 w-[80px] text-center">Produk</th>
+                                            <th className="px-3 py-2 w-[80px] text-right">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-brand-border dark:divide-dark-border">
+                                        {allSubcategories
+                                            .filter((sub) => sub.categoryId === activeSubCategoryCategory?.id)
+                                            .map((sub) => (
+                                                <tr key={sub.id} className="hover:bg-brand-surface/30 dark:hover:bg-dark-surface/10">
+                                                    <td className="px-3 py-2">
+                                                        <span className="font-medium text-brand-text dark:text-dark-text block">
+                                                            {sub.name}
+                                                        </span>
+                                                        {sub.description && (
+                                                            <span className="text-xs text-brand-muted dark:text-dark-muted block mt-0.5 line-clamp-1">
+                                                                {sub.description}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-3 py-2 text-center text-brand-muted dark:text-dark-muted text-xs">
+                                                        {sub._count?.products || 0}
+                                                    </td>
+                                                    <td className="px-3 py-2 text-right">
+                                                        <div className="flex items-center justify-end gap-1">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="h-7 w-7 p-0"
+                                                                onClick={() => {
+                                                                    setEditingSubCategory(sub)
+                                                                    setSubName(sub.name)
+                                                                    setSubDescription(sub.description || '')
+                                                                }}
+                                                            >
+                                                                <Pencil className="h-3 w-3" />
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                                disabled={subDeletingId === sub.id}
+                                                                onClick={() => handleDeleteSubcategory(sub.id)}
+                                                            >
+                                                                {subDeletingId === sub.id ? (
+                                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                                ) : (
+                                                                    <Trash2 className="h-3 w-3" />
+                                                                )}
+                                                            </Button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </SheetContent>
+            </Sheet>
         </div>
     )
 }
