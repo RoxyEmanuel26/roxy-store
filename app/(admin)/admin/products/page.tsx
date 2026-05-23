@@ -678,17 +678,25 @@ export default function AdminProductsPage() {
                         >
                             Sebelumnya
                         </Button>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                            <Button
-                                key={p}
-                                variant={p === page ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => setPage(p)}
-                                className={p === page ? 'bg-brand-primary text-white' : ''}
-                            >
-                                {p}
-                            </Button>
-                        ))}
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter((p) => Math.abs(p - page) < 2 || p === 1 || p === totalPages)
+                            .map((p, idx, arr) => (
+                                <span key={p} className="flex items-center gap-2">
+                                    {idx > 0 && arr[idx - 1] !== p - 1 && (
+                                        <span className="px-1 text-brand-muted dark:text-dark-muted select-none">
+                                            &hellip;
+                                        </span>
+                                    )}
+                                    <Button
+                                        variant={p === page ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => setPage(p)}
+                                        className={p === page ? 'bg-brand-primary text-white font-medium' : ''}
+                                    >
+                                        {p}
+                                    </Button>
+                                </span>
+                            ))}
                         <Button
                             variant="outline"
                             size="sm"
