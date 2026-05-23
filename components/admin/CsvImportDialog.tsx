@@ -142,6 +142,16 @@ function parseStringWithMultipliers(val: unknown): number {
     return isNaN(parsed) ? 0 : parsed * multiplier
 }
 
+function parseCommissionRate(val: unknown): number {
+    if (val === '' || val === undefined || val === null) return 0
+    let str = String(val).trim().toLowerCase()
+    str = str.replace(/%/g, '')
+    str = str.replace(/,/g, '.')
+    str = str.replace(/[^\d.-]/g, '')
+    const parsed = parseFloat(str)
+    return isNaN(parsed) ? 0 : parsed
+}
+
 export default function CsvImportDialog({
     open,
     onOpenChange,
@@ -282,7 +292,7 @@ export default function CsvImportDialog({
                     'link komisi ekstra': 'shopeeUrl',
                     'id produk': '_ignore',
                     'nama toko': '_ignore',
-                    'komisi hingga': '_ignore',
+                    'komisi hingga': 'commissionRate',
                     'komisi': '_ignore',
                     'link produk': '_ignore',
                 }
@@ -298,13 +308,24 @@ export default function CsvImportDialog({
                     return normalized
                 })
 
-                // Filter duplicates within the CSV itself by URL or Title
+                // Filter duplicates and products with commission rate < 7%
                 const seenUrls = new Set<string>()
                 const seenTitles = new Set<string>()
                 const uniqueData: Record<string, any>[] = []
                 let duplicateCsvCount = 0
+                let lowCommissionCount = 0
 
                 for (const row of normalizedData) {
+                    // Filter commission rate < 7% (e.g. 1%, 6%)
+                    const commissionRaw = row.commissionRate
+                    if (commissionRaw !== undefined && commissionRaw !== '') {
+                        const commissionVal = parseCommissionRate(commissionRaw)
+                        if (commissionVal < 7) {
+                            lowCommissionCount++
+                            continue
+                        }
+                    }
+
                     const url = row.shopeeUrl ? String(row.shopeeUrl).trim().toLowerCase() : ''
                     const title = row.title ? String(row.title).trim().toLowerCase() : ''
                     
@@ -331,8 +352,11 @@ export default function CsvImportDialog({
                     return
                 }
 
-                if (duplicateCsvCount > 0) {
-                    toast.info(`Berhasil menyaring ${duplicateCsvCount} baris duplikat di dalam file CSV.`)
+                if (duplicateCsvCount > 0 || lowCommissionCount > 0) {
+                    let msg = 'Berhasil menyaring data CSV:'
+                    if (duplicateCsvCount > 0) msg += ` ${duplicateCsvCount} duplikat`
+                    if (lowCommissionCount > 0) msg += `${duplicateCsvCount > 0 ? ',' : ''} ${lowCommissionCount} produk komisi < 7%`
+                    toast.info(msg)
                 }
 
                 setParsedData(uniqueData)
@@ -603,6 +627,9 @@ export default function CsvImportDialog({
                                             Harga
                                         </th>
                                         <th className="px-3 py-2 text-left font-medium text-brand-muted dark:text-dark-muted">
+                                            Komisi
+                                        </th>
+                                        <th className="px-3 py-2 text-left font-medium text-brand-muted dark:text-dark-muted">
                                             Kategori
                                         </th>
                                         <th className="px-3 py-2 text-left font-medium text-brand-muted dark:text-dark-muted">
@@ -654,6 +681,9 @@ export default function CsvImportDialog({
                                                 </td>
                                                 <td className="px-3 py-2 text-brand-text dark:text-dark-text">
                                                     {parsedPrice > 0 ? `Rp${parsedPrice.toLocaleString('id-ID')}` : 'Rp0'}
+                                                </td>
+                                                <td className="px-3 py-2 text-green-600 dark:text-green-400 font-semibold">
+                                                    {row.commissionRate || '-'}
                                                 </td>
                                                 <td className="px-3 py-2">
                                                     <span className="inline-block bg-brand-surface dark:bg-dark-surface px-2 py-0.5 rounded text-[10px]">
