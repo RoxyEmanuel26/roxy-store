@@ -155,6 +155,7 @@ export default function CsvImportDialog({
     const [summary, setSummary] = useState<ImportSummary | null>(null)
     const [results, setResults] = useState<ImportResult[]>([])
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [autoScrape, setAutoScrape] = useState(true)
 
     const resetState = () => {
         setStep('upload')
@@ -164,6 +165,7 @@ export default function CsvImportDialog({
         setProgress(0)
         setSummary(null)
         setResults([])
+        setAutoScrape(true)
         if (fileInputRef.current) {
             fileInputRef.current.value = ''
         }
@@ -296,14 +298,44 @@ export default function CsvImportDialog({
                     return normalized
                 })
 
+                // Filter duplicates within the CSV itself by URL or Title
+                const seenUrls = new Set<string>()
+                const seenTitles = new Set<string>()
+                const uniqueData: Record<string, any>[] = []
+                let duplicateCsvCount = 0
+
+                for (const row of normalizedData) {
+                    const url = row.shopeeUrl ? String(row.shopeeUrl).trim().toLowerCase() : ''
+                    const title = row.title ? String(row.title).trim().toLowerCase() : ''
+                    
+                    let isDuplicate = false
+                    if (url && seenUrls.has(url)) {
+                        isDuplicate = true
+                    } else if (title && seenTitles.has(title)) {
+                        isDuplicate = true
+                    }
+
+                    if (isDuplicate) {
+                        duplicateCsvCount++
+                    } else {
+                        if (url) seenUrls.add(url)
+                        if (title) seenTitles.add(title)
+                        uniqueData.push(row)
+                    }
+                }
+
                 // Validate title/judul exists in normalized keys
-                const firstRow = normalizedData[0]
+                const firstRow = uniqueData[0]
                 if (!firstRow || firstRow.title === undefined) {
                     toast.error('File CSV harus memiliki kolom "title", "judul", atau "nama"')
                     return
                 }
 
-                setParsedData(normalizedData)
+                if (duplicateCsvCount > 0) {
+                    toast.info(`Berhasil menyaring ${duplicateCsvCount} baris duplikat di dalam file CSV.`)
+                }
+
+                setParsedData(uniqueData)
                 setStep('preview')
             },
             error: (error) => {
@@ -317,7 +349,7 @@ export default function CsvImportDialog({
         setStep('importing')
         setProgress(0)
 
-        const CHUNK_SIZE = 3
+        const CHUNK_SIZE = 1
         const totalProducts = parsedData.length
         let created = 0
         let updated = 0
@@ -325,7 +357,7 @@ export default function CsvImportDialog({
         const allResults: ImportResult[] = []
 
         try {
-            // Split parsedData into chunks of size 3 to avoid gateway timeouts
+            // Split parsedData into chunks of size 1 to avoid Vercel serverless 10s execution timeouts
             const chunks: Record<string, any>[][] = []
             for (let i = 0; i < totalProducts; i += CHUNK_SIZE) {
                 chunks.push(parsedData.slice(i, i + CHUNK_SIZE))
@@ -338,8 +370,17 @@ export default function CsvImportDialog({
                     const res = await fetch('/api/admin/products/import', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ products: chunk }),
+                        body: JSON.stringify({ products: chunk, autoScrape }),
                     })
+
+                    if (!res.ok) {
+                        const errorText = await res.text()
+                        const isHtml = errorText.trim().startsWith('<') || errorText.includes('server error') || errorText.includes('504')
+                        const displayError = isHtml 
+                            ? 'Serverless timeout (Vercel limit 10s). Silakan coba lagi.' 
+                            : errorText || 'Gagal mengimport produk ini'
+                        throw new Error(displayError)
+                    }
 
                     const data = await res.json()
 
@@ -518,8 +559,33 @@ export default function CsvImportDialog({
                             </p>
                             <p>
                                 Beberapa kolom seperti <strong>Kategori</strong> dan <strong>Gambar</strong> terlihat kosong (&ldquo;Other&rdquo; / &ldquo;0 foto&rdquo;) karena tidak ada di file CSV. 
-                                Sistem akan otomatis mengambil (scrape) kategori, deskripsi, dan galeri foto lengkap dari Shopee saat proses import berlangsung.
+                                Sistem akan otomatis mengambil (scrape) kategori, deskripsi, dan galeri foto lengkap dari Shopee saat proses import berlangsung jika opsi di bawah ini dicentang.
                             </p>
+                        </div>
+
+                        {/* Auto-Scrape Toggle Checkbox */}
+                        <div className="flex items-center gap-2 rounded-lg border border-brand-border dark:border-dark-border p-3 bg-brand-surface/30 dark:bg-dark-surface/30">
+                            <input
+                                id="auto-scrape-checkbox"
+                                type="checkbox"
+                                checked={autoScrape}
+                                onChange={(e) => setAutoScrape(e.target.checked)}
+                                className="h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary cursor-pointer"
+                            />
+                            <div className="grid gap-0.5">
+                                <label
+                                    htmlFor="auto-scrape-checkbox"
+                                    className="text-xs font-semibold text-brand-text dark:text-dark-text cursor-pointer select-none"
+                                >
+                                    Ambil Gambar & Info dari Shopee secara Otomatis
+                                </label>
+                                <p className="text-[10px] text-brand-muted dark:text-dark-muted">
+                                    {autoScrape 
+                                        ? "Direkomendasikan. Mengambil gambar, kategori, dan deskripsi produk asli dari Shopee (butuh ~2-3 detik per produk)."
+                                        : "Sangat Cepat. Hanya mengimport data dasar dari file CSV (kategori akan diset ke 'Other', tanpa gambar)."
+                                    }
+                                </p>
+                            </div>
                         </div>
 
                         {/* Preview Table */}

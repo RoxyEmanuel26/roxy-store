@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
 
     try {
         const body = await request.json()
-        const { products } = body
+        const { products, autoScrape = true } = body
 
         if (!Array.isArray(products) || products.length === 0) {
             return NextResponse.json(
@@ -209,6 +209,8 @@ export async function POST(request: NextRequest) {
                 let description = sanitizeDescription(data.description || '')
                 let imageUrl = data.image || ''
 
+                let slug = slugify(title, { lower: true, locale: 'id', strict: true })
+
                 // Check if shopeeUrl already exists in database (for UPDATE instead of duplicate skip)
                 let existingByShopeeUrl: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; } | null = null
                 if (data.shopeeUrl) {
@@ -218,11 +220,27 @@ export async function POST(request: NextRequest) {
                     })
                 }
 
-                // ALWAYS scrape Shopee when URL exists to get images, description, category, etc.
+                // If not found by Shopee URL, check if found by Slug to detect database duplicates
+                let existingBySlug: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; } | null = null
+                if (!existingByShopeeUrl) {
+                    existingBySlug = await prisma.product.findUnique({
+                        where: { slug },
+                        select: { id: true, slug: true, image: true, images: true, description: true, shopeeRating: true, shopeeSold: true, shopeeRatingCountStr: true, shopeeSoldStr: true, badge: true }
+                    })
+                }
+
+                const matchedProduct = existingByShopeeUrl || existingBySlug
+                const alreadyExists = !!matchedProduct
+                const hasImage = !!(matchedProduct && matchedProduct.image)
+
+                // ALWAYS scrape Shopee when URL exists to get images, description, category, etc. (unless skipped or already exists with images)
                 let scrapedCategory = ''
                 let scrapedSubcategory = ''
                 let scrapedImages: string[] = []
-                if (data.shopeeUrl) {
+                
+                const shouldScrape = autoScrape && data.shopeeUrl && (!alreadyExists || !hasImage)
+
+                if (shouldScrape) {
                     try {
                         const scraped = await scrapeShopeeProduct(data.shopeeUrl)
                         if (!title && scraped.title) {
@@ -258,7 +276,7 @@ export async function POST(request: NextRequest) {
                     description = `Dapatkan ${title} original berkualitas terbaik hanya di Roxy Store! Produk pilihan ini dirancang dengan desain modern dan material berkualitas untuk memberikan kenyamanan serta keandalan maksimal dalam penggunaan sehari-hari.`
                 }
 
-                const slug = slugify(title, { lower: true, locale: 'id', strict: true })
+                slug = slugify(title, { lower: true, locale: 'id', strict: true })
 
                 // Resolve kategori
                 const categoryName = scrapedCategory || data.category.trim() || 'Other'
