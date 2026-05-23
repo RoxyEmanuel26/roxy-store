@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Papa from 'papaparse'
 import {
     FileUp,
@@ -142,13 +142,12 @@ function parseStringWithMultipliers(val: unknown): number {
     return isNaN(parsed) ? 0 : parsed * multiplier
 }
 
-function parseCommissionRate(val: unknown): number {
+function parseCommissionAmount(val: unknown): number {
     if (val === '' || val === undefined || val === null) return 0
     let str = String(val).trim().toLowerCase()
-    str = str.replace(/%/g, '')
-    str = str.replace(/,/g, '.')
-    str = str.replace(/[^\d.-]/g, '')
-    const parsed = parseFloat(str)
+    str = str.replace(/^(rp|idr|usd|sgd)\.?\s*/i, '')
+    str = str.replace(/[^\d]/g, '')
+    const parsed = parseInt(str, 10)
     return isNaN(parsed) ? 0 : parsed
 }
 
@@ -166,10 +165,28 @@ export default function CsvImportDialog({
     const [results, setResults] = useState<ImportResult[]>([])
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [autoScrape, setAutoScrape] = useState(true)
+    const [rawParsedData, setRawParsedData] = useState<Record<string, any>[]>([])
+    
+    const [minCommission, setMinCommission] = useState<number>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('roxy_import_min_commission')
+            if (saved !== null) {
+                const parsed = parseInt(saved, 10)
+                return isNaN(parsed) ? 1000 : parsed
+            }
+        }
+        return 1000
+    })
+
+    const handleMinCommissionChange = (val: number) => {
+        setMinCommission(val)
+        localStorage.setItem('roxy_import_min_commission', String(val))
+    }
 
     const resetState = () => {
         setStep('upload')
         setParsedData([])
+        setRawParsedData([])
         setFileName('')
         setImporting(false)
         setProgress(0)
@@ -180,6 +197,44 @@ export default function CsvImportDialog({
             fileInputRef.current.value = ''
         }
     }
+
+    // Dynamic real-time filter when rawParsedData or minCommission changes
+    useEffect(() => {
+        if (rawParsedData.length === 0) return
+
+        const seenUrls = new Set<string>()
+        const seenTitles = new Set<string>()
+        const uniqueData: Record<string, any>[] = []
+
+        for (const row of rawParsedData) {
+            // Filter commission amount < minCommission
+            const commissionRaw = row.commissionAmount
+            if (commissionRaw !== undefined && commissionRaw !== '') {
+                const commissionVal = parseCommissionAmount(commissionRaw)
+                if (commissionVal < minCommission) {
+                    continue
+                }
+            }
+
+            const url = row.shopeeUrl ? String(row.shopeeUrl).trim().toLowerCase() : ''
+            const title = row.title ? String(row.title).trim().toLowerCase() : ''
+            
+            let isDuplicate = false
+            if (url && seenUrls.has(url)) {
+                isDuplicate = true
+            } else if (title && seenTitles.has(title)) {
+                isDuplicate = true
+            }
+
+            if (!isDuplicate) {
+                if (url) seenUrls.add(url)
+                if (title) seenTitles.add(title)
+                uniqueData.push(row)
+            }
+        }
+
+        setParsedData(uniqueData)
+    }, [rawParsedData, minCommission])
 
     const handleClose = () => {
         resetState()
@@ -292,8 +347,8 @@ export default function CsvImportDialog({
                     'link komisi ekstra': 'shopeeUrl',
                     'id produk': '_ignore',
                     'nama toko': '_ignore',
-                    'komisi hingga': 'commissionRate',
-                    'komisi': '_ignore',
+                    'komisi hingga': '_ignore',
+                    'komisi': 'commissionAmount',
                     'link produk': '_ignore',
                 }
 
@@ -308,19 +363,18 @@ export default function CsvImportDialog({
                     return normalized
                 })
 
-                // Filter duplicates and products with commission rate < 7%
+                // Filter duplicates and low-commission products to get count for toast
                 const seenUrls = new Set<string>()
                 const seenTitles = new Set<string>()
-                const uniqueData: Record<string, any>[] = []
                 let duplicateCsvCount = 0
                 let lowCommissionCount = 0
 
                 for (const row of normalizedData) {
-                    // Filter commission rate < 7% (e.g. 1%, 6%)
-                    const commissionRaw = row.commissionRate
+                    // Filter commission amount < minCommission
+                    const commissionRaw = row.commissionAmount
                     if (commissionRaw !== undefined && commissionRaw !== '') {
-                        const commissionVal = parseCommissionRate(commissionRaw)
-                        if (commissionVal < 7) {
+                        const commissionVal = parseCommissionAmount(commissionRaw)
+                        if (commissionVal < minCommission) {
                             lowCommissionCount++
                             continue
                         }
@@ -341,12 +395,11 @@ export default function CsvImportDialog({
                     } else {
                         if (url) seenUrls.add(url)
                         if (title) seenTitles.add(title)
-                        uniqueData.push(row)
                     }
                 }
 
                 // Validate title/judul exists in normalized keys
-                const firstRow = uniqueData[0]
+                const firstRow = normalizedData[0]
                 if (!firstRow || firstRow.title === undefined) {
                     toast.error('File CSV harus memiliki kolom "title", "judul", atau "nama"')
                     return
@@ -355,11 +408,11 @@ export default function CsvImportDialog({
                 if (duplicateCsvCount > 0 || lowCommissionCount > 0) {
                     let msg = 'Berhasil menyaring data CSV:'
                     if (duplicateCsvCount > 0) msg += ` ${duplicateCsvCount} duplikat`
-                    if (lowCommissionCount > 0) msg += `${duplicateCsvCount > 0 ? ',' : ''} ${lowCommissionCount} produk komisi < 7%`
+                    if (lowCommissionCount > 0) msg += `${duplicateCsvCount > 0 ? ',' : ''} ${lowCommissionCount} produk komisi < Rp${minCommission.toLocaleString('id-ID')}`
                     toast.info(msg)
                 }
 
-                setParsedData(uniqueData)
+                setRawParsedData(normalizedData)
                 setStep('preview')
             },
             error: (error) => {
@@ -587,27 +640,57 @@ export default function CsvImportDialog({
                             </p>
                         </div>
 
-                        {/* Auto-Scrape Toggle Checkbox */}
-                        <div className="flex items-center gap-2 rounded-lg border border-brand-border dark:border-dark-border p-3 bg-brand-surface/30 dark:bg-dark-surface/30">
-                            <input
-                                id="auto-scrape-checkbox"
-                                type="checkbox"
-                                checked={autoScrape}
-                                onChange={(e) => setAutoScrape(e.target.checked)}
-                                className="h-4 w-4 rounded border-brand-border text-brand-primary focus:ring-brand-primary cursor-pointer"
-                            />
-                            <div className="grid gap-0.5">
+                        {/* Auto-Scrape Toggle & Min Commission Input */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 rounded-lg border border-brand-border dark:border-dark-border bg-brand-surface/30 dark:bg-dark-surface/30">
+                            {/* Checkbox Auto-Scrape */}
+                            <div className="flex items-start gap-2">
+                                <input
+                                    id="auto-scrape-checkbox"
+                                    type="checkbox"
+                                    checked={autoScrape}
+                                    onChange={(e) => setAutoScrape(e.target.checked)}
+                                    className="h-4 w-4 mt-0.5 rounded border-brand-border text-brand-primary focus:ring-brand-primary cursor-pointer"
+                                />
+                                <div className="grid gap-0.5">
+                                    <label
+                                        htmlFor="auto-scrape-checkbox"
+                                        className="text-xs font-semibold text-brand-text dark:text-dark-text cursor-pointer select-none"
+                                    >
+                                        Ambil Gambar & Info dari Shopee secara Otomatis
+                                    </label>
+                                    <p className="text-[10px] text-brand-muted dark:text-dark-muted">
+                                        {autoScrape 
+                                            ? "Direkomendasikan. Mengambil gambar, kategori, dan deskripsi produk asli dari Shopee."
+                                            : "Sangat Cepat. Hanya mengimport data dasar dari file CSV."
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Input Min Commission */}
+                            <div className="flex flex-col gap-1 border-t md:border-t-0 md:border-l border-brand-border dark:border-dark-border pt-3 md:pt-0 md:pl-4">
                                 <label
-                                    htmlFor="auto-scrape-checkbox"
-                                    className="text-xs font-semibold text-brand-text dark:text-dark-text cursor-pointer select-none"
+                                    htmlFor="min-commission-input"
+                                    className="text-xs font-semibold text-brand-text dark:text-dark-text select-none"
                                 >
-                                    Ambil Gambar & Info dari Shopee secara Otomatis
+                                    Minimal Komisi Produk (Rupiah)
                                 </label>
+                                <div className="relative mt-1">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 text-xs text-brand-muted dark:text-dark-muted font-medium">
+                                        Rp
+                                    </span>
+                                    <input
+                                        id="min-commission-input"
+                                        type="number"
+                                        min="0"
+                                        step="100"
+                                        value={minCommission}
+                                        onChange={(e) => handleMinCommissionChange(parseInt(e.target.value, 10) || 0)}
+                                        className="w-full h-8 pl-8 pr-3 rounded border border-brand-border dark:border-dark-border bg-white dark:bg-dark-surface text-xs focus:ring-1 focus:ring-brand-primary outline-none"
+                                    />
+                                </div>
                                 <p className="text-[10px] text-brand-muted dark:text-dark-muted">
-                                    {autoScrape 
-                                        ? "Direkomendasikan. Mengambil gambar, kategori, dan deskripsi produk asli dari Shopee (butuh ~2-3 detik per produk)."
-                                        : "Sangat Cepat. Hanya mengimport data dasar dari file CSV (kategori akan diset ke 'Other', tanpa gambar)."
-                                    }
+                                    Saring otomatis produk dengan komisi di bawah **Rp{minCommission.toLocaleString('id-ID')}**.
                                 </p>
                             </div>
                         </div>
@@ -683,7 +766,7 @@ export default function CsvImportDialog({
                                                     {parsedPrice > 0 ? `Rp${parsedPrice.toLocaleString('id-ID')}` : 'Rp0'}
                                                 </td>
                                                 <td className="px-3 py-2 text-green-600 dark:text-green-400 font-semibold">
-                                                    {row.commissionRate || '-'}
+                                                    {row.commissionAmount || '-'}
                                                 </td>
                                                 <td className="px-3 py-2">
                                                     <span className="inline-block bg-brand-surface dark:bg-dark-surface px-2 py-0.5 rounded text-[10px]">
