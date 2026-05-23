@@ -1,7 +1,7 @@
 'use client'
 
 const RECENTLY_VIEWED_KEY = 'Roxy-lay-recently-viewed'
-const MAX_ITEMS = 10
+const MAX_ITEMS = 12
 
 export function useRecentlyViewed() {
     const getIds = (): string[] => {

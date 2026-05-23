@@ -65,11 +65,6 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
             where.badge = 'HOT'
         } else if (badge === 'BEST SELLER') {
             where.viewCount = { gt: 0 }
-            where.OR = [
-                { badge: null },
-                { badge: 'NEW', createdAt: { lt: threeDaysAgo } },
-                { badge: { notIn: ['NEW', 'HOT'] } }
-            ]
         } else {
             where.badge = badge
         }
