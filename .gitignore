@@ -82,3 +82,4 @@ test-*.js
 scratch/
 test program/
 csv_produk
+.vercel
