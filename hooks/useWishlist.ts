@@ -88,6 +88,7 @@ export function useWishlist() {
         toggleWishlist,
         isInWishlist,
         clearWishlist,
+        updateWishlist: saveToStorage,
         mounted,
     }
 }

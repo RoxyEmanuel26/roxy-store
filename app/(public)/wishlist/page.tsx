@@ -12,7 +12,7 @@ import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerCo
 import type { ProductType } from '@/types'
 
 export default function WishlistPage() {
-    const { wishlistIds, clearWishlist, mounted } = useWishlist()
+    const { wishlistIds, clearWishlist, updateWishlist, mounted } = useWishlist()
     const [products, setProducts] = useState<ProductType[]>([])
     const [loading, setLoading] = useState(true)
 
@@ -33,15 +33,24 @@ export default function WishlistPage() {
         })
             .then((r) => r.json())
             .then((data) => {
+                // Filter out and sync if any products were deleted from the database
+                const validProducts = data || []
+                const validIds = validProducts.map((p: any) => p.id)
+                
+                if (validIds.length !== wishlistIds.length) {
+                    // Update localStorage to remove stale deleted product IDs
+                    updateWishlist(validIds)
+                }
+
                 // Preserve wishlist order
                 const sorted = wishlistIds
-                    .map((id) => data.find((p: any) => p.id === id))
+                    .map((id) => validProducts.find((p: any) => p.id === id))
                     .filter(Boolean) as ProductType[]
                 setProducts(sorted)
             })
             .catch(() => setProducts([]))
             .finally(() => setLoading(false))
-    }, [wishlistIds, mounted])
+    }, [wishlistIds, mounted, updateWishlist])
 
     if (!mounted || loading) {
         return (
