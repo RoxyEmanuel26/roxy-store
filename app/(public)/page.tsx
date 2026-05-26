@@ -24,7 +24,7 @@ import {
     getCachedProductCount
 } from '@/lib/cached-queries'
 
-export const revalidate = 60
+export const revalidate = 600 // 10 menit — hemat Vercel Origin Transfer (admin update tetap instant via revalidateTag)
 
 export const metadata = generatePageMetadata({
     title: 'Beranda',

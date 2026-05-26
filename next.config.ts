@@ -113,6 +113,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
   images: {
+    // Custom Cloudinary loader — bypass Vercel Image Optimization for Cloudinary URLs
+    // Saves ~90% of the 5K/month transformation limit on Hobby plan
+    loader: 'custom',
+    loaderFile: './lib/cloudinary-loader.ts',
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: '**.cloudinary.com' },
@@ -122,8 +126,9 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**.img.susercontent.com' }, // [SECURITY FIX] Safe Shopee CDN subdomain wildcard
     ],
     formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Reduced from 6→3 device sizes and 8→2 image sizes to minimize transformations
+    deviceSizes: [640, 1080, 1920],
+    imageSizes: [64, 256],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
 

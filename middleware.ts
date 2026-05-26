@@ -135,7 +135,9 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        // Public routes + admin
-        '/((?!_next/static|_next/image|favicon.ico|icons|fonts|manifest.json).*)',
+        // Only run middleware on routes that actually need auth/rate-limiting
+        // Public pages skip middleware entirely — saves Edge CPU & Edge Requests
+        '/admin/:path*',
+        '/api/:path*',
     ],
 }

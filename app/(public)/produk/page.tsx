@@ -10,7 +10,7 @@ import ProductToolbar from '@/components/public/ProductToolbar'
 import ProductListClient from '@/components/public/ProductListClient'
 import { FadeIn } from '@/components/animations/FadeIn'
 
-export const revalidate = 30
+export const revalidate = 300 // 5 menit — hemat Vercel Origin Transfer (admin update tetap instant via revalidateTag)
 
 import { generatePageMetadata } from '@/lib/metadata'
 import type { Metadata } from 'next'

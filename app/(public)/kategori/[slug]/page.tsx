@@ -16,7 +16,7 @@ import { getBreadcrumbSchema } from '@/lib/structured-data'
 import { getCachedCategoryBySlug, getCachedCategoryPriceRange } from '@/lib/cached-queries'
 
 
-export const revalidate = 30
+export const revalidate = 300 // 5 menit — hemat Vercel Origin Transfer (admin update tetap instant via revalidateTag)
 const ITEMS_PER_PAGE = 15
 
 interface PageProps {
