@@ -13,6 +13,7 @@ import {
     LogOut,
     ChevronDown,
     Sparkles,
+    HardDrive,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -53,6 +54,11 @@ const menuItems: MenuItem[] = [
         href: '/admin/analytics',
         label: 'Analitik',
         icon: BarChart3,
+    },
+    {
+        href: '/admin/quota',
+        label: 'Kuota & Sistem',
+        icon: HardDrive,
     },
 ]
 
