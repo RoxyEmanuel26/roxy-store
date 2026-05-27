@@ -6,8 +6,8 @@ import { determineProductBadge } from '@/lib/badge'
  * Cache product by slug — dipakai di generateMetadata & ProductDetailPage
  * Dideklarasikan secara statis untuk menghindari memory leak.
  */
-export const getCachedProductBySlug = unstable_cache(
-    async (slug: string) => {
+export const getCachedProductBySlug = (slug: string) => unstable_cache(
+    async () => {
         const product = await prisma.product.findUnique({
             where: { slug, isActive: true },
             select: {
@@ -38,17 +38,17 @@ export const getCachedProductBySlug = unstable_cache(
             badge: determineProductBadge(product)
         }
     },
-    ['product-slug'],
+    ['product-slug', slug],
     { revalidate: 60, tags: ['products'] }
-)
+)()
 
-export const getCachedCategoryBySlug = unstable_cache(
-    async (slug: string) => {
+export const getCachedCategoryBySlug = (slug: string) => unstable_cache(
+    async () => {
         return prisma.category.findUnique({ where: { slug } })
     },
-    ['category-by-slug'],
+    ['category-by-slug', slug],
     { revalidate: 3600, tags: ['categories'] }
-)
+)()
 
 export const getCachedCategories = unstable_cache(
     async () => {
@@ -163,20 +163,20 @@ export const getCachedPriceRange = unstable_cache(
     { revalidate: 300, tags: ['products'] }
 )
 
-export const getCachedCategoryPriceRange = unstable_cache(
-    async (categoryId: string) => {
+export const getCachedCategoryPriceRange = (categoryId: string) => unstable_cache(
+    async () => {
         return prisma.product.aggregate({
             _min: { price: true },
             _max: { price: true },
             where: { isActive: true, categoryId },
         })
     },
-    ['category-price-range-agg'],
+    ['category-price-range-agg', categoryId],
     { revalidate: 300, tags: ['products'] }
-)
+)()
 
-export const getCachedRelatedProducts = unstable_cache(
-    async (categoryId: string, productId: string) => {
+export const getCachedRelatedProducts = (categoryId: string, productId: string) => unstable_cache(
+    async () => {
         const products = await prisma.product.findMany({
             where: {
                 categoryId,
@@ -205,6 +205,6 @@ export const getCachedRelatedProducts = unstable_cache(
             badge: determineProductBadge(product)
         }))
     },
-    ['related-products'],
+    ['related-products', categoryId, productId],
     { revalidate: 300, tags: ['products'] }
-)
+)()

@@ -26,6 +26,15 @@ interface PageProps {
 
 import { generatePageMetadata } from '@/lib/metadata'
 
+export async function generateStaticParams() {
+    const categories = await prisma.category.findMany({
+        select: { slug: true },
+    })
+    return categories.map((category) => ({
+        slug: category.slug,
+    }))
+}
+
 export async function generateMetadata({ params }: PageProps) {
     const { slug } = await params
     const category = await getCachedCategoryBySlug(slug)

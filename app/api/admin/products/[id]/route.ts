@@ -13,7 +13,7 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     const session = await auth()
-    if (!session) {
+    if (!session || (session.user as any)?.role !== 'admin') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -37,7 +37,7 @@ export async function PUT(
     }
 
     const session = await auth()
-    if (!session) {
+    if (!session || (session.user as any)?.role !== 'admin') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -103,7 +103,7 @@ export async function DELETE(
     }
 
     const session = await auth()
-    if (!session) {
+    if (!session || (session.user as any)?.role !== 'admin') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

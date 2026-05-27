@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Redis } from '@upstash/redis'
 import { v2 as cloudinary } from 'cloudinary'
+import { auth } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,6 +24,11 @@ function toNumber(val: unknown): number {
 }
 
 export async function GET() {
+  const session = await auth()
+  if (!session || (session.user as any)?.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     // 1. NEON POSTGRESQL USAGE
     let dbSize = 0

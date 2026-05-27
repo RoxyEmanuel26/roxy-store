@@ -26,6 +26,16 @@ import { JsonLd } from '@/components/public/JsonLd'
 import { MetaViewContent } from '@/components/analytics/MetaViewContent'
 import { getCachedProductBySlug, getCachedRelatedProducts } from '@/lib/cached-queries'
 
+export async function generateStaticParams() {
+    const products = await prisma.product.findMany({
+        where: { isActive: true },
+        select: { slug: true },
+    })
+    return products.map((product) => ({
+        slug: product.slug,
+    }))
+}
+
 export async function generateMetadata({ params }: PageProps) {
     const { slug } = await params
     // Pakai cached query — tidak double query ke DB
