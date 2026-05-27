@@ -142,6 +142,7 @@ export default async function HomePage() {
             {/* === SECTION 2: STATS (Moved to bottom) === */}
             <section className="py-8 bg-brand-primary dark:bg-dark-surface">
                 <div className="container mx-auto px-4">
+                    <h2 className="sr-only">Statistik Roxy Store</h2>
                     <div className="grid grid-cols-3 gap-4 text-center text-white dark:text-dark-text">
                         <FadeIn delay={0}>
                             <div>

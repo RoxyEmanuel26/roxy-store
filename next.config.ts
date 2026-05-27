@@ -163,6 +163,21 @@ const nextConfig: NextConfig = {
         destination: '/kategori/:slug',
         permanent: true,
       },
+      {
+        source: '/categories/:slug',
+        destination: '/kategori/:slug',
+        permanent: true,
+      },
+      {
+        source: '/about',
+        destination: '/tentang',
+        permanent: true,
+      },
+      {
+        source: '/contact',
+        destination: '/kontak',
+        permanent: true,
+      },
     ]
   },
 

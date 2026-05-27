@@ -89,7 +89,7 @@ export function getBreadcrumbSchema(items: { name: string; url: string }[]) {
             '@type': 'ListItem',
             position: index + 1,
             name: item.name,
-            item: item.url,
+            item: item.url.startsWith('http') ? item.url : `${BASE_URL}${item.url}`,
         })),
     }
 }
@@ -107,6 +107,78 @@ export function getWebsiteSchema() {
                 urlTemplate: `${BASE_URL}/produk?q={search_term_string}`,
             },
             'query-input': 'required name=search_term_string',
+        },
+    }
+}
+
+export function getItemListSchema(products: {
+    title: string
+    slug: string
+    image: string
+    price: number
+}[]) {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        itemListElement: products.slice(0, 10).map((product, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            url: `${BASE_URL}/produk/${product.slug}`,
+            name: product.title,
+            image: product.image,
+        })),
+    }
+}
+
+export function getCollectionPageSchema(category: {
+    name: string
+    slug: string
+    description?: string | null
+}, totalProducts: number) {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: category.name,
+        description: category.description || `Koleksi produk ${category.name} di Roxy Store`,
+        url: `${BASE_URL}/kategori/${category.slug}`,
+        isPartOf: { '@type': 'WebSite', name: 'Roxy Store', url: BASE_URL },
+        numberOfItems: totalProducts,
+    }
+}
+
+export function getFAQPageSchema(faqs: { question: string; answer: string }[]) {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: faqs.map((faq) => ({
+            '@type': 'Question',
+            name: faq.question,
+            acceptedAnswer: {
+                '@type': 'Answer',
+                text: faq.answer,
+            },
+        })),
+    }
+}
+
+export function getContactPointSchema(waNumber: string) {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Store',
+        name: 'Roxy Store',
+        url: BASE_URL,
+        contactPoint: {
+            '@type': 'ContactPoint',
+            telephone: waNumber ? `+${waNumber}` : undefined,
+            contactType: 'customer service',
+            availableLanguage: 'Indonesian',
+            areaServed: 'ID',
+            hoursAvailable: {
+                '@type': 'OpeningHoursSpecification',
+                dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                opens: '09:00',
+                closes: '21:00',
+            },
         },
     }
 }

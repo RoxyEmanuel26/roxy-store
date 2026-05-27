@@ -13,6 +13,8 @@ import { FadeIn } from '@/components/animations/FadeIn'
 export const revalidate = 300 // 5 menit — hemat Vercel Origin Transfer (admin update tetap instant via revalidateTag)
 
 import { generatePageMetadata } from '@/lib/metadata'
+import { getItemListSchema, getBreadcrumbSchema } from '@/lib/structured-data'
+import { JsonLd } from '@/components/public/JsonLd'
 import type { Metadata } from 'next'
 
 const ITEMS_PER_PAGE = 15
@@ -149,6 +151,11 @@ export default async function ProductsPage({ searchParams }: PageProps) {
 
     return (
         <div className="container mx-auto px-4 py-6 md:py-8">
+            <JsonLd data={getItemListSchema(productsMapped as any)} />
+            <JsonLd data={getBreadcrumbSchema([
+                { name: 'Beranda', url: '/' },
+                { name: 'Semua Produk', url: '/produk' },
+            ])} />
             {/* Header */}
             <FadeIn>
                 <div className="mb-6 md:mb-8">

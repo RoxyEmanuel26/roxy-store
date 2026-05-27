@@ -2,11 +2,13 @@ import { getSiteSettings } from '@/lib/site-settings'
 import ContactForm from './ContactForm'
 
 import { generatePageMetadata } from '@/lib/metadata'
+import { getContactPointSchema, getBreadcrumbSchema } from '@/lib/structured-data'
+import { JsonLd } from '@/components/public/JsonLd'
 
 export const metadata = generatePageMetadata({
     title: 'Kontak',
     description: 'Punya pertanyaan atau ingin komplain? Hubungi Roxy Store melalui WhatsApp untuk bantuan secepatnya.',
-    path: '/contact',
+    path: '/kontak',
 })
 
 function formatWaNumber(wa: string): string {
@@ -20,6 +22,11 @@ export default async function ContactPage() {
 
     return (
         <div className="container mx-auto px-4 py-12">
+            <JsonLd data={getContactPointSchema(settings.wa_number)} />
+            <JsonLd data={getBreadcrumbSchema([
+                { name: 'Beranda', url: '/' },
+                { name: 'Kontak', url: '/kontak' },
+            ])} />
             {/* Header */}
             <div className="text-center mb-12">
                 <h1 className="text-3xl md:text-4xl font-bold text-brand-text dark:text-dark-text">

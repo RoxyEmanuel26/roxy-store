@@ -1,8 +1,14 @@
-'use client'
-
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Home, ShoppingBag } from 'lucide-react'
+
+export const metadata = {
+    title: 'Halaman Tidak Ditemukan - Roxy Store',
+    robots: {
+        index: false,
+        follow: false,
+    },
+}
 
 export default function NotFound() {
     return (

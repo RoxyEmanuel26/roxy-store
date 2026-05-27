@@ -12,7 +12,7 @@ import ProductToolbar from '@/components/public/ProductToolbar'
 import { Button } from '@/components/ui/button'
 import { Search as SearchIcon } from 'lucide-react'
 import { JsonLd } from '@/components/public/JsonLd'
-import { getBreadcrumbSchema } from '@/lib/structured-data'
+import { getBreadcrumbSchema, getCollectionPageSchema } from '@/lib/structured-data'
 import { getCachedCategoryBySlug, getCachedCategoryPriceRange } from '@/lib/cached-queries'
 
 
@@ -134,6 +134,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
                 { name: 'Produk', url: '/produk' },
                 { name: category.name, url: `/kategori/${category.slug}` },
             ])} />
+            <JsonLd data={getCollectionPageSchema(category, total)} />
 
             <Breadcrumb className="mb-6">
                 <BreadcrumbList>

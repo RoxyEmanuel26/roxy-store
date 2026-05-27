@@ -3,18 +3,27 @@ import { Button } from '@/components/ui/button'
 import { getSiteSettings } from '@/lib/site-settings'
 
 import { generatePageMetadata } from '@/lib/metadata'
+import { getFAQPageSchema, getBreadcrumbSchema } from '@/lib/structured-data'
+import { JsonLd } from '@/components/public/JsonLd'
 
 export const metadata = generatePageMetadata({
     title: 'Tentang Kami',
     description: 'Kenali lebih dekat Roxy Store, tempat mencari barang berkualitas dan terpercaya.',
-    path: '/about',
+    path: '/tentang',
 })
+
+const aboutFAQs = [
+    { question: 'Apakah produk di Roxy Store terpercaya?', answer: 'Ya, setiap produk diolah oleh perusahaan terpercaya dan telah dikurasi langsung oleh tim kami.' },
+    { question: 'Bagaimana cara membeli produk?', answer: 'Anda bisa membeli produk melalui Shopee. Klik tombol "Beli di Shopee" pada halaman produk.' },
+    { question: 'Apakah ada garansi kualitas?', answer: 'Ya, kami hanya memilih material terbaik untuk kenyamanan dan ketahanan maksimal.' },
+]
 
 export default async function AboutPage() {
     const settings = await getSiteSettings()
 
     return (
         <>
+            <JsonLd data={getFAQPageSchema(aboutFAQs)} />
             {/* Hero */}
             <section className="relative py-20 bg-gradient-to-br from-brand-primary/5 via-brand-surface to-brand-secondary/10 dark:from-dark-surface dark:via-dark-bg dark:to-dark-surface">
                 <div className="container mx-auto px-4 text-center">
