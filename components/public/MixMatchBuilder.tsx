@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -24,6 +24,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatRupiah } from '@/lib/utils'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 // ─────────────────────────────────────────────
 // Tipe Data
@@ -109,6 +117,7 @@ const ITEMS_PER_PAGE = 9
 // ─────────────────────────────────────────────
 function MixMatchBuilderInner() {
   const searchParams = useSearchParams()
+  const lastRequestId = useRef(0)
 
   // State untuk melacak item terpilih di setiap slot
   const [selectedItems, setSelectedItems] = useState<Record<SlotType, Product | null>>({
@@ -132,6 +141,13 @@ function MixMatchBuilderInner() {
   // State notifikasi & toast
   const [shared, setShared] = useState(false)
   const [equipToast, setEquipToast] = useState<string | null>(null)
+
+  // State untuk dialog checkout wizard
+  const [isOpenCheckoutDialog, setIsOpenCheckoutDialog] = useState(false)
+  const [openedItems, setOpenedItems] = useState<Record<string, boolean>>({})
+
+  const activeCheckoutItems = SLOT_ORDER.map(slot => selectedItems[slot]).filter(Boolean) as Product[]
+  const currentStepIndex = activeCheckoutItems.findIndex(item => !openedItems[item.id])
 
   const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE) || 1
 
@@ -182,6 +198,7 @@ function MixMatchBuilderInner() {
   // 2. Fetch produk dari API
   // ─────────────────────────────────────────────
   const fetchProducts = useCallback(async (categorySlug: string, q: string, pageNum: number) => {
+    const reqId = ++lastRequestId.current
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -193,14 +210,20 @@ function MixMatchBuilderInner() {
       const res = await fetch(`/api/products/list?${params.toString()}`)
       if (!res.ok) throw new Error('Fetch failed')
       const data = await res.json()
-      setProducts(data.products || [])
-      setTotalProducts(data.total || 0)
+      if (reqId === lastRequestId.current) {
+        setProducts(data.products || [])
+        setTotalProducts(data.total || 0)
+      }
     } catch (err) {
       console.error('Gagal memuat produk:', err)
-      setProducts([])
-      setTotalProducts(0)
+      if (reqId === lastRequestId.current) {
+        setProducts([])
+        setTotalProducts(0)
+      }
     } finally {
-      setLoading(false)
+      if (reqId === lastRequestId.current) {
+        setLoading(false)
+      }
     }
   }, [])
 
@@ -217,13 +240,6 @@ function MixMatchBuilderInner() {
     return () => clearTimeout(delayDebounce)
   }, [activeSlot, selectedSubIndex, searchQuery, page, fetchProducts])
 
-  // Reset halaman dan pencarian saat mengganti slot atau sub-kategori
-  useEffect(() => {
-    setPage(1)
-    setSearchQuery('')
-    setSelectedSubIndex(0)
-  }, [activeSlot])
-
   useEffect(() => {
     setPage(1)
   }, [selectedSubIndex])
@@ -231,6 +247,14 @@ function MixMatchBuilderInner() {
   // ─────────────────────────────────────────────
   // 3. Event Handlers
   // ─────────────────────────────────────────────
+
+  // Mengubah slot aktif dan mereset filter
+  const handleSelectSlot = useCallback((slotKey: SlotType) => {
+    setActiveSlot(slotKey)
+    setSelectedSubIndex(0)
+    setSearchQuery('')
+    setPage(1)
+  }, [])
 
   // Pasang produk ke slot aktif
   const handleEquipProduct = useCallback((product: Product) => {
@@ -265,6 +289,31 @@ function MixMatchBuilderInner() {
     }
   }, [])
 
+  // Buka link Shopee & catat di tracking & set opened
+  const openShopeeLink = useCallback((product: Product) => {
+    trackClick(product.id)
+    const link = product.shopeeUrl || `https://shopee.co.id/search?keyword=${encodeURIComponent(product.title)}`
+    window.open(link, '_blank')
+    setOpenedItems(prev => ({ ...prev, [product.id]: true }))
+  }, [trackClick])
+
+  // Lanjutkan membuka item berikutnya atau tutup modal
+  const handleNextCheckout = useCallback(() => {
+    const items = SLOT_ORDER.map(slot => selectedItems[slot]).filter(Boolean) as Product[]
+    const stepIdx = items.findIndex(item => !openedItems[item.id])
+    if (stepIdx !== -1) {
+      openShopeeLink(items[stepIdx])
+    } else {
+      setIsOpenCheckoutDialog(false)
+    }
+  }, [selectedItems, openedItems, openShopeeLink])
+
+  // Buka Dialog Checkout
+  const handleOpenCheckoutDialog = useCallback(() => {
+    setOpenedItems({})
+    setIsOpenCheckoutDialog(true)
+  }, [])
+
   // Bagikan outfit set (copy URL)
   const handleShare = useCallback(() => {
     const params = new URLSearchParams()
@@ -295,11 +344,11 @@ function MixMatchBuilderInner() {
     for (let i = 1; i < SLOT_ORDER.length; i++) {
       const nextSlot = SLOT_ORDER[(currentIdx + i) % SLOT_ORDER.length]
       if (!selectedItems[nextSlot]) {
-        setTimeout(() => setActiveSlot(nextSlot), 600)
+        setTimeout(() => handleSelectSlot(nextSlot), 600)
         return
       }
     }
-  }, [activeSlot, selectedItems, handleEquipProduct])
+  }, [activeSlot, selectedItems, handleEquipProduct, handleSelectSlot])
 
   // ─────────────────────────────────────────────
   // Hitung total outfit
@@ -359,7 +408,7 @@ function MixMatchBuilderInner() {
                 <button
                   type="button"
                   key={slotKey}
-                  onClick={() => setActiveSlot(slotKey)}
+                  onClick={() => handleSelectSlot(slotKey)}
                   aria-pressed={isActive}
                   aria-label={`Slot ${config.label}${item ? `: ${item.title}` : ' (kosong)'}`}
                   className={`w-full h-[90px] md:h-[100px] rounded-2xl cursor-pointer transition-all duration-200 flex items-center p-3 relative text-left ${
@@ -511,16 +560,7 @@ function MixMatchBuilderInner() {
                 {/* Tombol Beli Semua */}
                 {totalItems >= 2 && (
                   <button
-                    onClick={() => {
-                      SLOT_ORDER.forEach((slot) => {
-                        const item = selectedItems[slot]
-                        if (item) {
-                          trackClick(item.id)
-                          const link = item.shopeeUrl || `https://shopee.co.id/search?keyword=${encodeURIComponent(item.title)}`
-                          window.open(link, '_blank')
-                        }
-                      })
-                    }}
+                    onClick={handleOpenCheckoutDialog}
                     className="w-full mt-1 h-10 text-xs font-bold bg-gradient-to-r from-[#EE4D2D] to-[#FF6742] text-white rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-md shadow-[#EE4D2D]/20"
                   >
                     <ShoppingCart className="h-4 w-4" />
@@ -772,6 +812,141 @@ function MixMatchBuilderInner() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Dialog Checkout Set (Wizard) */}
+      <Dialog open={isOpenCheckoutDialog} onOpenChange={setIsOpenCheckoutDialog}>
+        <DialogContent className="w-[92vw] max-w-[480px] rounded-3xl p-5 md:p-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl">
+          <DialogHeader className="space-y-1.5 text-left">
+            <DialogTitle className="text-base md:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+              🛍️ Beli Outfit Set di Shopee
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
+              Karena kebijakan browser, tautan Shopee harus dibuka satu per satu. Silakan klik tombol di bawah untuk membuka halaman produk Shopee secara berurutan.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Progress Bar */}
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden my-1">
+            <div 
+              className="bg-gradient-to-r from-[#EE4D2D] to-[#FF6742] h-full transition-all duration-300"
+              style={{ 
+                width: `${(activeCheckoutItems.filter(item => openedItems[item.id]).length / Math.max(1, activeCheckoutItems.length)) * 100}%` 
+              }}
+            />
+          </div>
+
+          {/* Item List */}
+          <div className="flex flex-col gap-2.5 my-3 max-h-[220px] overflow-y-auto pr-1">
+            {activeCheckoutItems.map((item, index) => {
+              const isOpened = !!openedItems[item.id]
+              const isCurrent = index === activeCheckoutItems.findIndex(x => !openedItems[x.id])
+              const slotKey = SLOT_ORDER.find(s => selectedItems[s]?.id === item.id)
+              const categoryLabel = slotKey ? SLOT_CONFIGS[slotKey].label : 'Produk'
+              
+              return (
+                <div 
+                  key={item.id}
+                  className={`flex items-center justify-between p-3 rounded-2xl border transition-all gap-3 ${
+                    isCurrent 
+                      ? 'bg-purple-50/50 dark:bg-purple-950/15 border-purple-300 dark:border-purple-800 shadow-sm ring-1 ring-purple-200/50 dark:ring-purple-900/30'
+                      : isOpened
+                        ? 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800/80 opacity-75'
+                        : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    {/* Status Indicator */}
+                    <div className="flex-shrink-0">
+                      {isOpened ? (
+                        <div className="h-5 w-5 rounded-full bg-green-100 dark:bg-green-950/50 flex items-center justify-center text-green-600 dark:text-green-400">
+                          <Check className="h-3 w-3 stroke-[3]" />
+                        </div>
+                      ) : isCurrent ? (
+                        <div className="relative flex h-5 w-5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-5 w-5 bg-purple-500 text-[10px] font-bold text-white items-center justify-center">
+                            {index + 1}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="h-5 w-5 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700">
+                          {index + 1}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Product Image & Info */}
+                    <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800 flex-shrink-0">
+                      <Image src={item.image} alt={item.title} fill className="object-cover" sizes="40px" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[9px] uppercase font-bold text-purple-500 dark:text-purple-400 tracking-wider">
+                        {categoryLabel}
+                      </span>
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate leading-tight">
+                        {item.title}
+                      </h4>
+                      <p className="text-[11px] font-extrabold text-slate-900 dark:text-white mt-0.5">
+                        {formatRupiah(item.price)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Individual Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openShopeeLink(item)}
+                    className={`h-8 rounded-xl text-[11px] font-bold border-[#EE4D2D] hover:bg-[#EE4D2D]/5 transition-all flex items-center gap-1 px-2.5 ${
+                      isOpened 
+                        ? 'text-slate-400 border-slate-200 dark:border-slate-800 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900' 
+                        : 'text-[#EE4D2D] bg-[#EE4D2D]/5'
+                    }`}
+                  >
+                    {isOpened ? 'Buka Lagi' : 'Buka'} <ExternalLink className="h-3 w-3" />
+                  </Button>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Dialog Footer with main wizard button */}
+          <DialogFooter className="mt-4 sm:flex-col gap-2">
+            <Button
+              onClick={handleNextCheckout}
+              className={`w-full h-11 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-all ${
+                currentStepIndex !== -1
+                  ? 'bg-gradient-to-r from-[#EE4D2D] to-[#FF6742] text-white hover:opacity-90 shadow-md shadow-[#EE4D2D]/20'
+                  : 'bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-600/20'
+              }`}
+            >
+              {currentStepIndex !== -1 ? (
+                <>
+                  <ShoppingCart className="h-4 w-4" />
+                  Buka Item {currentStepIndex + 1}: {
+                    (() => {
+                      const item = activeCheckoutItems[currentStepIndex]
+                      const slotKey = SLOT_ORDER.find(s => selectedItems[s]?.id === item.id)
+                      return slotKey ? SLOT_CONFIGS[slotKey].label : 'Produk'
+                    })()
+                  }
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  Selesai! Tutup Jendela
+                </>
+              )}
+            </Button>
+
+            {currentStepIndex !== -1 && (
+              <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 mt-1">
+                💡 Tips: Klik tombol utama di atas berulang kali untuk membuka semua item satu per satu.
+              </p>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
