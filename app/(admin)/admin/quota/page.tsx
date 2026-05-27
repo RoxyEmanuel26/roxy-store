@@ -30,9 +30,15 @@ interface TableInfo {
   rowCount: number
 }
 
-interface UsageMetric {
+interface CreditMetric {
   usage: number
   limit: number
+  used_percent: number
+}
+
+interface CloudinaryMetric {
+  usage: number
+  credits_usage: number
   used_percent: number
 }
 
@@ -44,10 +50,10 @@ interface QuotaData {
   }
   cloudinary: {
     plan?: string
-    credits?: UsageMetric | null
-    transformations?: UsageMetric | null
-    storage?: UsageMetric | null
-    bandwidth?: UsageMetric | null
+    credits?: CreditMetric | null
+    transformations?: CloudinaryMetric | null
+    storage?: CloudinaryMetric | null
+    bandwidth?: CloudinaryMetric | null
     resources?: number
   } | null
   redis: {
@@ -381,9 +387,29 @@ export default function QuotaUsagePage() {
 
           {data?.cloudinary ? (
             <div className="space-y-4">
+              {/* Overall Credits Gauge */}
+              {data.cloudinary.credits && (
+                <div className="space-y-1.5 pb-3 border-b border-brand-border/50 dark:border-dark-border">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-semibold text-brand-text dark:text-dark-text">
+                      Total Kredit ({data.cloudinary.plan || 'Free'})
+                    </span>
+                    <span className={getPercentageTextColor(data.cloudinary.credits.used_percent)}>
+                      {data.cloudinary.credits.usage.toFixed(2)} / {formatNum(data.cloudinary.credits.limit)} credits ({Math.round(data.cloudinary.credits.used_percent)}%)
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-gray-100 dark:bg-dark-border rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${getPercentageColor(data.cloudinary.credits.used_percent)}`}
+                      style={{ width: `${Math.min(data.cloudinary.credits.used_percent, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Transformations */}
               {data.cloudinary.transformations && (
-                <MetricBar
+                <CloudinaryMetricBar
                   label="Transformasi Gambar"
                   metric={data.cloudinary.transformations}
                 />
@@ -391,7 +417,7 @@ export default function QuotaUsagePage() {
 
               {/* Storage */}
               {data.cloudinary.storage && (
-                <MetricBar
+                <CloudinaryMetricBar
                   label="Ruang Penyimpanan (Storage)"
                   metric={data.cloudinary.storage}
                   formatAsBytes
@@ -400,7 +426,7 @@ export default function QuotaUsagePage() {
 
               {/* Bandwidth */}
               {data.cloudinary.bandwidth && (
-                <MetricBar
+                <CloudinaryMetricBar
                   label="Bandwidth Gambar"
                   metric={data.cloudinary.bandwidth}
                   formatAsBytes
@@ -490,19 +516,17 @@ export default function QuotaUsagePage() {
 
 // ==== SUB-COMPONENTS ====
 
-function MetricBar({
+function CloudinaryMetricBar({
   label,
   metric,
   formatAsBytes = false,
 }: {
   label: string
-  metric: { usage: number; limit: number; used_percent: number }
+  metric: { usage: number; credits_usage: number; used_percent: number }
   formatAsBytes?: boolean
 }) {
   const usageStr = formatAsBytes ? formatBytes(metric.usage) : formatNum(metric.usage)
-  const limitStr = metric.limit > 0
-    ? formatAsBytes ? formatBytes(metric.limit) : formatNum(metric.limit)
-    : null
+  const creditsStr = metric.credits_usage > 0 ? metric.credits_usage.toFixed(2) : '0'
   const percent = metric.used_percent || 0
 
   return (
@@ -510,7 +534,7 @@ function MetricBar({
       <div className="flex justify-between text-xs">
         <span className="font-medium text-brand-text dark:text-dark-text">{label}</span>
         <span className="text-brand-muted dark:text-dark-muted">
-          {usageStr}{limitStr ? ` / ${limitStr}` : ''} ({Math.round(percent)}%)
+          {usageStr}
         </span>
       </div>
       <div className="w-full h-1.5 bg-gray-100 dark:bg-dark-border rounded-full overflow-hidden">
@@ -518,6 +542,10 @@ function MetricBar({
           className={`h-full rounded-full ${getPercentageColor(percent)}`}
           style={{ width: `${Math.min(percent, 100)}%` }}
         />
+      </div>
+      <div className="flex justify-between text-[10px] text-brand-muted/70 dark:text-dark-muted/70">
+        <span>Kredit terpakai: {creditsStr} credits</span>
+        <span className={getPercentageTextColor(percent)}>{percent}% dari total</span>
       </div>
     </div>
   )

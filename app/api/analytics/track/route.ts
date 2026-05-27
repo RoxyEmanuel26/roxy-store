@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { analyticsService } from '@/services/analytics.service'
 import { captureError } from '@/lib/sentry-helpers'
-import { bufferShopeeClick, bufferWaClick } from '@/lib/redis-buffer'
 
 export async function POST(request: NextRequest) {
     try {
@@ -14,19 +13,10 @@ export async function POST(request: NextRequest) {
 
         const userAgent = request.headers.get('user-agent') || null
 
-        // Buffer click events in Upstash Redis to prevent Postgres transaction pool saturation
-        if (eventType === 'shopee_click') {
-            await bufferShopeeClick(productId, userAgent)
-        } else if (eventType === 'wa_click') {
-            await bufferWaClick(productId, userAgent)
-        } else {
-            // Await tracking completion for any unhandled events
-            await analyticsService.trackEvent(
-                eventType,
-                productId,
-                userAgent
-            )
-        }
+        // Write ALL events (view, shopee_click, wa_click) to the analytics table
+        // immediately so they appear in the Admin Panel "Aktivitas Live" feed.
+        // For shopee_click, this also increments product.shopeeClicks directly.
+        await analyticsService.trackEvent(eventType, productId, userAgent)
 
         return NextResponse.json({ success: true })
     } catch (error) {

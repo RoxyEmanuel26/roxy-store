@@ -69,16 +69,16 @@ export async function GET() {
     let cloudinaryData: {
       plan: string
       credits: { usage: number; limit: number; used_percent: number } | null
-      transformations: { usage: number; limit: number; used_percent: number } | null
-      storage: { usage: number; limit: number; used_percent: number } | null
-      bandwidth: { usage: number; limit: number; used_percent: number } | null
+      transformations: { usage: number; credits_usage: number; used_percent: number } | null
+      storage: { usage: number; credits_usage: number; used_percent: number } | null
+      bandwidth: { usage: number; credits_usage: number; used_percent: number } | null
       resources: number
     } | null = null
 
     try {
       const raw: any = await cloudinary.api.usage()
 
-      // Safely extract credits
+      // Safely extract credits (this is the MAIN quota gauge)
       const credits = raw?.credits
         ? {
             usage: toNumber(raw.credits.usage),
@@ -87,12 +87,22 @@ export async function GET() {
           }
         : null
 
+      const creditsLimit = credits?.limit || 25 // Free plan default: 25 credits
+
+      // Cloudinary Credit System:
+      // 1 credit = 1,000 transformations OR 1 GB storage OR 1 GB bandwidth
+      // Individual metrics DON'T have limit/used_percent — those only exist on credits.
+      // We calculate per-metric percentage based on credits_usage / total credits limit.
+
       // Safely extract transformations
       const transformations = raw?.transformations
         ? {
             usage: toNumber(raw.transformations.usage),
-            limit: toNumber(raw.transformations.limit || raw.transformations.credits_usage || 0),
-            used_percent: toNumber(raw.transformations.used_percent || 0),
+            credits_usage: toNumber(raw.transformations.credits_usage),
+            // Calculate: what % of total credits does this metric consume?
+            used_percent: creditsLimit > 0
+              ? Math.round((toNumber(raw.transformations.credits_usage) / creditsLimit) * 100)
+              : 0,
           }
         : null
 
@@ -100,8 +110,10 @@ export async function GET() {
       const storage = raw?.storage
         ? {
             usage: toNumber(raw.storage.usage),
-            limit: toNumber(raw.storage.limit || 0),
-            used_percent: toNumber(raw.storage.used_percent || 0),
+            credits_usage: toNumber(raw.storage.credits_usage),
+            used_percent: creditsLimit > 0
+              ? Math.round((toNumber(raw.storage.credits_usage) / creditsLimit) * 100)
+              : 0,
           }
         : null
 
@@ -109,8 +121,10 @@ export async function GET() {
       const bandwidth = raw?.bandwidth
         ? {
             usage: toNumber(raw.bandwidth.usage),
-            limit: toNumber(raw.bandwidth.limit || 0),
-            used_percent: toNumber(raw.bandwidth.used_percent || 0),
+            credits_usage: toNumber(raw.bandwidth.credits_usage),
+            used_percent: creditsLimit > 0
+              ? Math.round((toNumber(raw.bandwidth.credits_usage) / creditsLimit) * 100)
+              : 0,
           }
         : null
 

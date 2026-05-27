@@ -55,19 +55,14 @@ export async function bufferProductView(productId: string) {
 }
 
 /**
- * Buffers a Shopee click event in Upstash Redis.
+ * Buffers a Shopee click aggregate counter in Upstash Redis.
+ * The analytics event itself is already written to Postgres by the track API route.
+ * This only buffers the product.shopeeClicks increment for batch processing.
  * Falls back to direct SQL write if Redis is not configured.
  */
 export async function bufferShopeeClick(productId: string, userAgent?: string | null) {
     if (!redis) {
-        // Safe fallback to direct Postgres writes
-        await prisma.analytics.create({
-            data: {
-                eventType: 'shopee_click',
-                productId,
-                userAgent: userAgent || null,
-            },
-        })
+        // No Redis: increment product counter directly in Postgres
         await prisma.product.update({
             where: { id: productId },
             data: { shopeeClicks: { increment: 1 } },
@@ -76,28 +71,13 @@ export async function bufferShopeeClick(productId: string, userAgent?: string | 
     }
 
     try {
-        // Increment product shopee clicks hash map
+        // Only buffer the aggregate counter — the analytics event
+        // is already written to Postgres by analyticsService.trackEvent()
         await redis.hincrby('roxy:product:clicks', productId, 1)
-
-        // Queue individual event for detailed Analytics log
-        const event: BufferedEvent = {
-            eventType: 'shopee_click',
-            productId,
-            userAgent: userAgent || null,
-            createdAt: new Date().toISOString(),
-        }
-        await redis.rpush('roxy:analytics:queue', JSON.stringify(event))
         return true
     } catch (error) {
-        console.error('Failed to buffer shopee click, writing to DB directly:', error)
-        // Fallback on error
-        await prisma.analytics.create({
-            data: {
-                eventType: 'shopee_click',
-                productId,
-                userAgent: userAgent || null,
-            },
-        })
+        console.error('Failed to buffer shopee click counter:', error)
+        // Fallback: increment directly in Postgres
         await prisma.product.update({
             where: { id: productId },
             data: { shopeeClicks: { increment: 1 } },
@@ -107,42 +87,17 @@ export async function bufferShopeeClick(productId: string, userAgent?: string | 
 }
 
 /**
- * Buffers a Whatsapp click event in Upstash Redis.
- * Falls back to direct SQL write if Redis is not configured.
+ * Buffers a WhatsApp click event.
+ * The analytics event itself is already written to Postgres by the track API route.
+ * WA clicks don't have an aggregate counter on the product model,
+ * so this function is now a no-op when Redis is configured.
+ * Kept for API compatibility.
  */
 export async function bufferWaClick(productId?: string | null, userAgent?: string | null) {
-    if (!redis) {
-        // Safe fallback
-        await prisma.analytics.create({
-            data: {
-                eventType: 'wa_click',
-                productId: productId || null,
-                userAgent: userAgent || null,
-            },
-        })
-        return false
-    }
-
-    try {
-        const event: BufferedEvent = {
-            eventType: 'wa_click',
-            productId: productId || null,
-            userAgent: userAgent || null,
-            createdAt: new Date().toISOString(),
-        }
-        await redis.rpush('roxy:analytics:queue', JSON.stringify(event))
-        return true
-    } catch (error) {
-        console.error('Failed to buffer WA click, writing to DB directly:', error)
-        await prisma.analytics.create({
-            data: {
-                eventType: 'wa_click',
-                productId: productId || null,
-                userAgent: userAgent || null,
-            },
-        })
-        return false
-    }
+    // WA clicks don't have an aggregate counter on the product model.
+    // The analytics event is already written by analyticsService.trackEvent(),
+    // so there's nothing extra to buffer here.
+    return true
 }
 
 /**
