@@ -15,6 +15,7 @@ import type { SiteSettingsType } from '@/types'
 const navLinks = [
     { label: 'Beranda', href: '/' },
     { label: 'Produk', href: '/produk' },
+    { label: 'Mix & Match', href: '/mix-and-match' },
     { label: 'Tentang Kami', href: '/tentang' },
 ]
 

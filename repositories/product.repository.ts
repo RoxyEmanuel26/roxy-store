@@ -107,6 +107,7 @@ export class ProductRepository {
                     createdAt: true,
                     shopeeRating: true,
                     shopeeSold: true,
+                    shopeeUrl: true,
                     category: { select: { name: true, slug: true } }
                 },
                 orderBy: orderByMap[resolvedSort] || orderByMap.newest,
