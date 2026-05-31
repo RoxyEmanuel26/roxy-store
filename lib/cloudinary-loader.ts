@@ -53,12 +53,17 @@ interface ImageLoaderParams {
 }
 
 export default function cloudinaryLoader({ src, width, quality }: ImageLoaderParams): string {
+  // If it's a Shopee CDN URL, return it directly to bypass Vercel/Cloudinary optimization completely
+  if (src.includes('susercontent.com') || src.includes('shopee.co.id')) {
+    return src
+  }
+
   // Only transform Cloudinary URLs
   const match = src.match(CLOUDINARY_REGEX)
 
   if (!match) {
     // Non-Cloudinary URLs: return as-is (Next.js will handle them normally)
-    // This covers unsplash, google avatars, shopee CDN, etc.
+    // This covers unsplash, google avatars, etc.
     return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality || 75}`
   }
 

@@ -320,17 +320,20 @@ export async function scrapeShopeeProduct(url: string): Promise<{
     const uniqueImagesSet = Array.from(new Set(finalUniqueImages))
 
     // Concurrent upload to Cloudinary using Promise.all
-    const uploadedImages = await Promise.all(
-        uniqueImagesSet.map(async (imgUrl) => {
-            try {
-                const uploadRes = await uploadImage(imgUrl, 'Roxy-lay/products')
-                return uploadRes.url
-            } catch (err) {
-                console.error(`Failed to upload image to Cloudinary: ${imgUrl}`, err)
-                return imgUrl // Fallback to raw Shopee CDN URL
-            }
-        })
-    )
+    const bypassCloudinary = process.env.BYPASS_CLOUDINARY === 'true'
+    const uploadedImages = bypassCloudinary 
+        ? uniqueImagesSet 
+        : await Promise.all(
+            uniqueImagesSet.map(async (imgUrl) => {
+                try {
+                    const uploadRes = await uploadImage(imgUrl, 'Roxy-lay/products')
+                    return uploadRes.url
+                } catch (err) {
+                    console.error(`Failed to upload image to Cloudinary: ${imgUrl}`, err)
+                    return imgUrl // Fallback to raw Shopee CDN URL
+                }
+            })
+        )
 
     const imageUrl = uploadedImages[0] || ''
 
