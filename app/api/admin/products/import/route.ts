@@ -212,20 +212,20 @@ export async function POST(request: NextRequest) {
                 let slug = slugify(title, { lower: true, locale: 'id', strict: true })
 
                 // Check if shopeeUrl already exists in database (for UPDATE instead of duplicate skip)
-                let existingByShopeeUrl: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; } | null = null
+                let existingByShopeeUrl: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; categoryId: string; } | null = null
                 if (data.shopeeUrl) {
                     existingByShopeeUrl = await prisma.product.findFirst({
                         where: { shopeeUrl: data.shopeeUrl },
-                        select: { id: true, slug: true, image: true, images: true, description: true, shopeeRating: true, shopeeSold: true, shopeeRatingCountStr: true, shopeeSoldStr: true, badge: true }
+                        select: { id: true, slug: true, image: true, images: true, description: true, shopeeRating: true, shopeeSold: true, shopeeRatingCountStr: true, shopeeSoldStr: true, badge: true, categoryId: true }
                     })
                 }
 
                 // If not found by Shopee URL, check if found by Slug to detect database duplicates
-                let existingBySlug: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; } | null = null
+                let existingBySlug: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; categoryId: string; } | null = null
                 if (!existingByShopeeUrl) {
                     existingBySlug = await prisma.product.findUnique({
                         where: { slug },
-                        select: { id: true, slug: true, image: true, images: true, description: true, shopeeRating: true, shopeeSold: true, shopeeRatingCountStr: true, shopeeSoldStr: true, badge: true }
+                        select: { id: true, slug: true, image: true, images: true, description: true, shopeeRating: true, shopeeSold: true, shopeeRatingCountStr: true, shopeeSoldStr: true, badge: true, categoryId: true }
                     })
                 }
 
@@ -233,12 +233,16 @@ export async function POST(request: NextRequest) {
                 const alreadyExists = !!matchedProduct
                 const hasImage = !!(matchedProduct && matchedProduct.image)
 
+                // If product exists but is in the "Other" category, force scrape to classify it properly
+                const otherCategory = existingCategories.find(c => c.slug === 'other' || c.name.toLowerCase() === 'other')
+                const isOtherCategory = !!(matchedProduct && otherCategory && matchedProduct.categoryId === otherCategory.id)
+
                 // ALWAYS scrape Shopee when URL exists to get images, description, category, etc. (unless skipped or already exists with images)
                 let scrapedCategory = ''
                 let scrapedSubcategory = ''
                 let scrapedImages: string[] = []
                 
-                const shouldScrape = autoScrape && data.shopeeUrl && (!alreadyExists || !hasImage)
+                const shouldScrape = autoScrape && data.shopeeUrl && (!alreadyExists || !hasImage || isOtherCategory)
 
                 if (shouldScrape) {
                     try {

@@ -143,7 +143,11 @@ export async function GET(request: NextRequest) {
                 // Selalu tambahkan utm_source=pinterest untuk tracking
                 // Untuk multi-image, tambahkan juga utm_content=pin{index} agar link unik
                 let link = shopeeLink
-                const separator = link.includes('?') ? '&' : (link.endsWith('/') ? '?' : '/?')
+                // Hapus trailing slash jika ada untuk mencegah kegagalan redirect Shopee short link
+                if (link.endsWith('/')) {
+                    link = link.slice(0, -1)
+                }
+                const separator = link.includes('?') ? '&' : '?'
                 if (hasMultipleImages) {
                     link = `${link}${separator}utm_source=pinterest&utm_content=pin${idx + 1}`
                 } else {

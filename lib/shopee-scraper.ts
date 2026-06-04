@@ -337,6 +337,15 @@ export async function scrapeShopeeProduct(url: string): Promise<{
 
     const imageUrl = uploadedImages[0] || ''
 
+    // Apply title-based classifier fallback if category is empty or 'Other'
+    if ((!category || category.toLowerCase() === 'other') && title) {
+        const classified = classifyCategoryFromTitle(title)
+        if (classified) {
+            category = classified.category
+            subcategory = classified.subcategory
+        }
+    }
+
     return {
         title,
         description,
@@ -347,4 +356,129 @@ export async function scrapeShopeeProduct(url: string): Promise<{
         images: uploadedImages
     }
 }
+
+export function classifyCategoryFromTitle(title: string): { category: string; subcategory: string } | null {
+    const t = title.toLowerCase()
+
+    // 1. Makanan & Minuman
+    if (t.includes('minyak') || t.includes('gula') || t.includes('beras') || t.includes('tepung') || t.includes('garam') || t.includes('mentega') || t.includes('margarin') || t.includes('sunco') || t.includes('filma') || t.includes('fortune') || t.includes('bimoli') || t.includes('sania') || t.includes('minyak goreng')) {
+        return { category: 'Makanan & Minuman', subcategory: 'Bahan Pokok' }
+    }
+    if (t.includes('keripik') || t.includes('snack') || t.includes('chiki') || t.includes('biskuit') || t.includes('kue kering') || t.includes('wafer') || t.includes('cokelat') || t.includes('permen') || t.includes('kacang')) {
+        return { category: 'Makanan & Minuman', subcategory: 'Makanan Ringan' }
+    }
+    if (t.includes('kopi') || t.includes('teh') || t.includes('susu') || t.includes('jus') || t.includes('sirup')) {
+        return { category: 'Makanan & Minuman', subcategory: 'Minuman' }
+    }
+
+    // 2. Fashion Muslim
+    if (t.includes('gamis') || t.includes('abaya') || t.includes('kaftan') || t.includes('dress muslim')) {
+        return { category: 'Fashion Muslim', subcategory: 'Dress Muslim' }
+    }
+    if (t.includes('hijab') || t.includes('jilbab') || t.includes('bergo') || t.includes('pashmina') || t.includes('khimar') || t.includes('kerudung') || t.includes('ciput') || t.includes('dagu')) {
+        return { category: 'Fashion Muslim', subcategory: 'Hijab' }
+    }
+    if (t.includes('koko') || t.includes('kurta') || t.includes('sarung') || t.includes('peci')) {
+        return { category: 'Fashion Muslim', subcategory: 'Pakaian Muslim Pria' }
+    }
+    if (t.includes('mukena') || t.includes('sajadah')) {
+        return { category: 'Fashion Muslim', subcategory: 'Mukena & Perlengkapan Sholat' }
+    }
+
+    // 3. Sepatu Pria
+    if (t.includes('sepatu pria') || t.includes('sandal pria') || t.includes('sendal pria') || t.includes('sepatu kets pria') || t.includes('sneakers pria')) {
+        if (t.includes('slip-on') || t.includes('slip on') || t.includes('selop') || t.includes('mules')) {
+            return { category: 'Sepatu Pria', subcategory: 'Slip-On & Mules' }
+        }
+        if (t.includes('sneakers') || t.includes('sneaker') || t.includes('kets')) {
+            return { category: 'Sepatu Pria', subcategory: 'Sneakers' }
+        }
+        if (t.includes('boot') || t.includes('boots')) {
+            return { category: 'Sepatu Pria', subcategory: 'Boot' }
+        }
+        if (t.includes('sandal') || t.includes('sendal') || t.includes('jepit') || t.includes('slop')) {
+            return { category: 'Sepatu Pria', subcategory: 'Sandal' }
+        }
+        if (t.includes('semir') || t.includes('pembersih sepatu') || t.includes('cat sepatu') || t.includes('tali sepatu') || t.includes('leather paint')) {
+            return { category: 'Sepatu Pria', subcategory: 'Aksesoris & Perawatan Sepatu' }
+        }
+        return { category: 'Sepatu Pria', subcategory: 'Sepatu Pria Lainnya' }
+    }
+
+    // 4. Sepatu Wanita
+    if (t.includes('sepatu wanita') || t.includes('sandal wanita') || t.includes('sendal wanita') || t.includes('sneakers wanita') || t.includes('sneaker wanita') || t.includes('heels') || t.includes('flatshoes') || t.includes('flat shoes')) {
+        if (t.includes('sneakers') || t.includes('sneaker') || t.includes('kets')) {
+            return { category: 'Sepatu Wanita', subcategory: 'Sneakers' }
+        }
+        if (t.includes('sandal') || t.includes('sendal') || t.includes('jepit') || t.includes('slop')) {
+            return { category: 'Sepatu Wanita', subcategory: 'Sandal' }
+        }
+        if (t.includes('flat') || t.includes('flatshoes') || t.includes('flat shoes')) {
+            return { category: 'Sepatu Wanita', subcategory: 'Sepatu Flat' }
+        }
+        if (t.includes('heels')) {
+            return { category: 'Sepatu Wanita', subcategory: 'Heels' }
+        }
+        return { category: 'Sepatu Wanita', subcategory: 'Sepatu Wanita Lainnya' }
+    }
+
+    // Generic Shoe / Sandal Care or products containing "sepatu" or "sandal"
+    if (t.includes('sepatu') || t.includes('sandal') || t.includes('sendal')) {
+        // Look for care products
+        if (t.includes('semir') || t.includes('pembersih') || t.includes('sikat') || t.includes('cat') || t.includes('tali') || t.includes('leather paint') || t.includes('cleaner') || t.includes('balsam') || t.includes('biopolish') || t.includes('lem')) {
+            return { category: 'Sepatu Pria', subcategory: 'Aksesoris & Perawatan Sepatu' }
+        }
+        // General footwear defaults
+        if (t.includes('slip-on') || t.includes('slip on') || t.includes('selop') || t.includes('mules')) {
+            return { category: 'Sepatu Pria', subcategory: 'Slip-On & Mules' }
+        }
+        if (t.includes('sneakers') || t.includes('sneaker') || t.includes('kets')) {
+            return { category: 'Sepatu Pria', subcategory: 'Sneakers' }
+        }
+        if (t.includes('sandal') || t.includes('sendal') || t.includes('jepit') || t.includes('slop')) {
+            return { category: 'Sepatu Pria', subcategory: 'Sandal' }
+        }
+    }
+
+    // 5. Perawatan & Kecantikan
+    if (t.includes('sabun') || t.includes('body wash') || t.includes('shower gel') || t.includes('scrub')) {
+        return { category: 'Perawatan & Kecantikan', subcategory: 'Perawatan Tubuh' }
+    }
+    if (t.includes('shampoo') || t.includes('sampo') || t.includes('conditioner') || t.includes('kondisioner') || t.includes('hair tonic') || t.includes('vitamin rambut')) {
+        return { category: 'Perawatan & Kecantikan', subcategory: 'Perawatan Rambut' }
+    }
+    if (t.includes('lip cream') || t.includes('lipstick') || t.includes('lipstik') || t.includes('lip tint') || t.includes('liptint') || t.includes('lip balm') || t.includes('lipbalm') || t.includes('lip gloss') || t.includes('lip serum')) {
+        return { category: 'Perawatan & Kecantikan', subcategory: 'Kosmetik Bibir' }
+    }
+
+    // 6. Pakaian Wanita
+    if (t.includes('celana panjang wanita') || t.includes('kulot') || t.includes('legging') || t.includes('jeans wanita') || t.includes('loose jeans') || t.includes('sweatpants wanita')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Celana Panjang & Legging' }
+    }
+    if (t.includes('rok') || t.includes('skirt') || t.includes('rok panjang')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Rok' }
+    }
+    if (t.includes('piyama') || t.includes('daster') || t.includes('baju tidur')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Pakaian Tidur & Piyama' }
+    }
+
+    // 7. Pakaian Pria
+    if (t.includes('chino') || t.includes('celana panjang pria') || t.includes('jeans pria') || t.includes('sweatpants pria')) {
+        return { category: 'Pakaian Pria', subcategory: 'Celana Panjang' }
+    }
+
+    // 8. Fashion Bayi & Anak
+    if (t.includes('anak perempuan') || t.includes('setelan anak cewek') || t.includes('oneset anak perempuan')) {
+        return { category: 'Fashion Bayi & Anak', subcategory: 'Pakaian Anak Perempuan' }
+    }
+    if (t.includes('anak laki-laki') || t.includes('setelan anak cowok') || t.includes('oneset anak laki-laki')) {
+        return { category: 'Fashion Bayi & Anak', subcategory: 'Pakaian Anak Laki-Laki' }
+    }
+    if (t.includes('setelan anak') || t.includes('oneset anak') || t.includes('kaos anak') || t.includes('jilbab anak') || t.includes('hijab anak')) {
+        return { category: 'Fashion Bayi & Anak', subcategory: 'Pakaian Anak Perempuan' }
+    }
+
+    return null
+}
+
 
