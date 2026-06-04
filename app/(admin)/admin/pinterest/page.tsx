@@ -42,13 +42,20 @@ interface PinterestRow {
     Keywords: string
 }
 
+interface SkippedProduct {
+    id: string
+    title: string
+    reason: string
+}
+
 interface PreviewData {
     totalProducts: number
+    totalRows: number
     batchSize: number
     totalPages: number
     currentBatch: number
-    productsCount: number
     skippedCount: number
+    skippedProducts?: SkippedProduct[]
     rowsCount: number
     previewRows: PinterestRow[]
 }
@@ -67,6 +74,9 @@ export default function PinterestExportPage() {
     const [loadingMetadata, setLoadingMetadata] = useState(true)
     const [loadingPreview, setLoadingPreview] = useState(false)
     const [downloading, setDownloading] = useState(false)
+    
+    // Toggle for detailed skipped list
+    const [showSkippedList, setShowSkippedList] = useState(false)
 
     // Fetch initial categories & subcategories
     const fetchMetadata = useCallback(async () => {
@@ -267,17 +277,17 @@ export default function PinterestExportPage() {
                         </div>
                     </div>
 
-                    {/* Batch Paginator (Maksimal 200 Produk per CSV) */}
+                    {/* Batch Paginator (Maksimal 200 Baris per CSV) */}
                     {previewData && previewData.totalPages > 1 && (
                         <div className="space-y-2 pt-2">
                             <label className="text-xs font-semibold text-brand-text dark:text-dark-text">
-                                Pilih Batch Download (Maksimal 200 Produk per Batch)
+                                Pilih Batch Download (Maksimal 200 Baris per Batch)
                             </label>
                             <div className="flex flex-wrap gap-2">
                                 {Array.from({ length: previewData.totalPages }).map((_, idx) => {
                                     const batchNum = idx + 1
                                     const skipN = idx * 200
-                                    const limit = Math.min(skipN + 200, previewData.totalProducts)
+                                    const limit = Math.min(skipN + 200, previewData.totalRows)
                                     const isActive = selectedBatch === batchNum
                                     
                                     return (
@@ -290,7 +300,7 @@ export default function PinterestExportPage() {
                                                     : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700'
                                             }`}
                                         >
-                                            Batch {batchNum} ({skipN + 1} - {limit})
+                                            Batch {batchNum} (Baris {skipN + 1} - {limit})
                                         </button>
                                     )
                                 })}
@@ -318,33 +328,31 @@ export default function PinterestExportPage() {
                                     <span className="font-bold text-slate-800 dark:text-slate-200">{previewData.totalProducts}</span>
                                 </div>
                                 <div className="flex justify-between text-xs border-b border-brand-border dark:border-dark-border pb-2">
-                                    <span className="text-slate-500">Produk di Batch Ini:</span>
-                                    <span className="font-bold text-slate-800 dark:text-slate-200">{previewData.productsCount}</span>
+                                    <span className="text-slate-500">Total Seluruh Baris Pin:</span>
+                                    <span className="font-bold text-slate-800 dark:text-slate-200">{previewData.totalRows}</span>
                                 </div>
                                 {previewData.skippedCount > 0 && (
                                     <div className="flex justify-between text-xs border-b border-brand-border dark:border-dark-border pb-2">
                                         <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
                                             <AlertTriangle className="h-3 w-3" />
-                                            Dilewati (Tanpa Link):
+                                            Dilewati (Tanpa Link/Foto):
                                         </span>
                                         <span className="font-bold text-amber-600 dark:text-amber-400">{previewData.skippedCount}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-xs border-b border-brand-border dark:border-dark-border pb-2">
-                                    <span className="text-slate-500">Maks. Produk/Batch:</span>
-                                    <span className="font-bold text-slate-800 dark:text-slate-200">200 produk</span>
+                                    <span className="text-slate-500">Maks. Baris/Batch:</span>
+                                    <span className="font-bold text-slate-800 dark:text-slate-200">200 baris</span>
                                 </div>
                                 <div className="flex justify-between text-xs pb-1">
-                                    <span className="text-slate-500">Baris Pin CSV:</span>
+                                    <span className="text-slate-500">Baris Pin di Batch Ini:</span>
                                     <span className="font-bold text-green-600 dark:text-green-400 text-sm">
                                         {previewData.rowsCount} Baris
                                     </span>
                                 </div>
-                                {previewData.rowsCount > previewData.productsCount - previewData.skippedCount && (
-                                    <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-snug">
-                                        ℹ️ Jumlah baris lebih banyak dari produk karena produk dengan multi-foto menghasilkan beberapa Pin terpisah.
-                                    </p>
-                                )}
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-snug">
+                                    ℹ️ Satu produk dengan beberapa foto akan menghasilkan beberapa baris Pin unik di file ekspor.
+                                </p>
                             </div>
                         ) : null}
                     </div>
@@ -438,6 +446,55 @@ export default function PinterestExportPage() {
                     </div>
                 )}
             </div>
+
+            {/* Skipped Products Details */}
+            {previewData && previewData.skippedCount > 0 && previewData.skippedProducts && previewData.skippedProducts.length > 0 && (
+                <div className="p-5 md:p-6 border border-amber-200 dark:border-amber-900/50 bg-amber-50/20 dark:bg-amber-950/10 rounded-2xl space-y-4 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-amber-100 dark:border-amber-900/30 pb-3">
+                        <h2 className="text-sm font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4" />
+                            Detail Produk yang Dilewati ({previewData.skippedCount})
+                        </h2>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowSkippedList(!showSkippedList)}
+                            className="h-7 text-xs font-semibold border-amber-200 hover:bg-amber-50 dark:border-amber-800/30 dark:hover:bg-amber-900/20 text-amber-800 dark:text-amber-400 rounded-full px-3"
+                        >
+                            {showSkippedList ? 'Sembunyikan' : 'Tampilkan Daftar'}
+                        </Button>
+                    </div>
+
+                    {showSkippedList && (
+                        <div className="overflow-x-auto rounded-xl border border-amber-100 dark:border-amber-900/30">
+                            <table className="min-w-full divide-y divide-amber-100 dark:divide-amber-900/30 text-left text-xs text-brand-text dark:text-dark-text">
+                                <thead className="bg-amber-50/50 dark:bg-amber-950/30 text-[10px] font-bold uppercase text-amber-800 dark:text-amber-400 tracking-wider">
+                                    <tr>
+                                        <th className="px-4 py-3">Nama Produk</th>
+                                        <th className="px-4 py-3">ID Produk</th>
+                                        <th className="px-4 py-3">Alasan Dilewati</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-amber-100 dark:divide-amber-900/30 bg-white/50 dark:bg-dark-surface/50">
+                                    {previewData.skippedProducts.map((prod) => (
+                                        <tr key={prod.id} className="hover:bg-amber-50/20 dark:hover:bg-amber-950/10 transition-colors">
+                                            <td className="px-4 py-3 font-semibold">
+                                                {prod.title}
+                                            </td>
+                                            <td className="px-4 py-3 text-slate-400 font-mono text-[10px]">
+                                                {prod.id}
+                                            </td>
+                                            <td className="px-4 py-3 text-amber-700 dark:text-amber-500 font-medium">
+                                                ⚠️ {prod.reason}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     )
 }

@@ -73,7 +73,6 @@ export async function GET(request: NextRequest) {
 
     const batch = batchStr ? parseInt(batchStr, 10) : 1
     const batchSize = 200
-    const skip = (batch - 1) * batchSize
 
     try {
         // Build where filter
@@ -89,10 +88,7 @@ export async function GET(request: NextRequest) {
             where.subcategoryId = subcategoryId
         }
 
-        // Count total matching products
-        const totalCount = await prisma.product.count({ where })
-
-        // Fetch products for current batch
+        // Fetch all matching products to build the complete rows
         const products = await prisma.product.findMany({
             where,
             include: {
@@ -102,19 +98,21 @@ export async function GET(request: NextRequest) {
             orderBy: {
                 createdAt: 'desc',
             },
-            skip,
-            take: batchSize,
         })
 
         // Map to Pinterest bulk upload rows
-        const csvRows: any[] = []
-        let skippedCount = 0
+        const allCsvRows: any[] = []
+        const skippedProducts: { id: string; title: string; reason: string }[] = []
 
         for (const product of products) {
-            // [FIX Bug #3] Skip produk tanpa link Shopee yang valid
+            // Check Shopee Link
             const shopeeLink = (product.shopeeUrl || '').trim()
             if (!shopeeLink || shopeeLink.length < 5) {
-                skippedCount++
+                skippedProducts.push({
+                    id: product.id,
+                    title: product.title,
+                    reason: 'Tidak memiliki link Shopee yang valid atau kosong'
+                })
                 continue
             }
 
@@ -124,13 +122,17 @@ export async function GET(request: NextRequest) {
 
             // Skip produk tanpa gambar valid
             if (validImages.length === 0) {
-                skippedCount++
+                skippedProducts.push({
+                    id: product.id,
+                    title: product.title,
+                    reason: 'Tidak memiliki gambar produk yang valid'
+                })
                 continue
             }
 
             const hasMultipleImages = validImages.length > 1
 
-            // [FIX Bug #6] Bersihkan deskripsi HTML sekali saja per produk
+            // Bersihkan deskripsi HTML sekali saja per produk
             const cleanDesc = cleanDescription(product.description)
 
             const board = product.subcategory?.name || product.category.name || 'Other'
@@ -138,7 +140,7 @@ export async function GET(request: NextRequest) {
             validImages.forEach((imgUrl, idx) => {
                 const title = hasMultipleImages ? `${product.title} - ${idx + 1}` : product.title
 
-                // [FIX Bug #4] Selalu tambahkan utm_source=pinterest untuk tracking
+                // Selalu tambahkan utm_source=pinterest untuk tracking
                 // Untuk multi-image, tambahkan juga utm_content=pin{index} agar link unik
                 let link = shopeeLink
                 const separator = link.includes('?') ? '&' : (link.endsWith('/') ? '?' : '/?')
@@ -148,7 +150,7 @@ export async function GET(request: NextRequest) {
                     link = `${link}${separator}utm_source=pinterest`
                 }
 
-                csvRows.push({
+                allCsvRows.push({
                     Title: title,
                     'Media URL': imgUrl,
                     'Pinterest board': board,
@@ -161,10 +163,18 @@ export async function GET(request: NextRequest) {
             })
         }
 
+        const totalRows = allCsvRows.length
+        const totalPages = Math.ceil(totalRows / batchSize) || 1
+        const currentBatch = Math.min(Math.max(1, batch), totalPages)
+        
+        const startIdx = (currentBatch - 1) * batchSize
+        const endIdx = startIdx + batchSize
+        const batchRows = allCsvRows.slice(startIdx, endIdx)
+
         // Handle CSV download request
         if (format === 'csv') {
-            const csvContent = Papa.unparse(csvRows)
-            const filename = `pinterest-export-batch-${batch}.csv`
+            const csvContent = Papa.unparse(batchRows)
+            const filename = `pinterest-export-batch-${currentBatch}.csv`
             
             return new Response(csvContent, {
                 headers: {
@@ -176,14 +186,15 @@ export async function GET(request: NextRequest) {
 
         // Handle JSON preview request
         return NextResponse.json({
-            totalProducts: totalCount,
+            totalProducts: products.length,
+            totalRows,
             batchSize,
-            totalPages: Math.ceil(totalCount / batchSize) || 1,
-            currentBatch: batch,
-            productsCount: products.length,
-            skippedCount,
-            rowsCount: csvRows.length,
-            previewRows: csvRows.slice(0, 10), // First 10 rows
+            totalPages,
+            currentBatch,
+            rowsCount: batchRows.length,
+            skippedCount: skippedProducts.length,
+            skippedProducts,
+            previewRows: batchRows.slice(0, 10), // First 10 rows of current batch
         })
 
     } catch (error: any) {
