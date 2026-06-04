@@ -14,6 +14,7 @@ import {
     ChevronDown,
     Sparkles,
     HardDrive,
+    Share2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -44,6 +45,11 @@ const menuItems: MenuItem[] = [
         href: '/admin/categories',
         label: 'Kategori',
         icon: Tag,
+    },
+    {
+        href: '/admin/pinterest',
+        label: 'Pinterest CSV',
+        icon: Share2,
     },
     {
         href: '/admin/settings',
