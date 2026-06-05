@@ -76,7 +76,7 @@ export default function PinterestExportPage() {
     const [downloading, setDownloading] = useState(false)
     
     // Toggle for detailed skipped list
-    const [showSkippedList, setShowSkippedList] = useState(false)
+    const [showSkippedList, setShowSkippedList] = useState(true)
 
     // Fetch initial categories & subcategories
     const fetchMetadata = useCallback(async () => {
@@ -463,6 +463,13 @@ export default function PinterestExportPage() {
                         >
                             {showSkippedList ? 'Sembunyikan' : 'Tampilkan Daftar'}
                         </Button>
+                    </div>
+
+                    <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-200/50 dark:border-amber-900/30 text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
+                        <p className="font-semibold flex items-center gap-1.5 mb-1">
+                            <Info className="h-3.5 w-3.5" /> Kenapa produk di bawah ini dilewati?
+                        </p>
+                        Pinterest mewajibkan setiap Pin memiliki <strong>Media URL (Foto Produk)</strong> dan <strong>Link Target (Redirection URL)</strong> yang valid. Produk-produk berikut tidak diekspor karena tidak memiliki tautan Shopee atau tidak memiliki gambar produk terpasang. Silakan lengkapi data produk tersebut di menu kelola produk agar dapat diekspor.
                     </div>
 
                     {showSkippedList && (

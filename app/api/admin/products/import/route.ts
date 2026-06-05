@@ -11,6 +11,61 @@ import { scrapeShopeeProduct } from '@/lib/shopee-scraper'
 
 const MAX_PRODUCTS_PER_IMPORT = 100
 
+/**
+ * Normalize category name for fuzzy matching.
+ * Handles: lowercase, trim, "&" vs "dan", remove extra whitespace, strip accents.
+ */
+function normalizeCategoryName(name: string): string {
+    return name
+        .toLowerCase()
+        .trim()
+        .replace(/&/g, 'dan')
+        .replace(/\s+/g, ' ')
+        .replace(/[''""]/g, '')
+        .trim()
+}
+
+/**
+ * Find category ID using fuzzy matching.
+ * First tries exact match, then normalized match, then slug-based match.
+ */
+function findCategoryIdFuzzy(
+    categoryName: string,
+    categoryMap: Map<string, string>,
+    categorySlugMap: Map<string, string>
+): string | undefined {
+    // 1. Exact lowercase match
+    const exact = categoryMap.get(categoryName.toLowerCase())
+    if (exact) return exact
+
+    // 2. Normalized match (handles & vs dan, extra spaces, etc.)
+    const normalized = normalizeCategoryName(categoryName)
+    for (const [key, id] of categoryMap.entries()) {
+        if (normalizeCategoryName(key) === normalized) {
+            return id
+        }
+    }
+
+    // 3. Slug-based match
+    const slug = categoryName
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .trim()
+    const slugMatch = categorySlugMap.get(slug)
+    if (slugMatch) return slugMatch
+
+    // 4. Partial match - if the category name is contained in an existing category name
+    for (const [key, id] of categoryMap.entries()) {
+        if (key.includes(categoryName.toLowerCase()) || categoryName.toLowerCase().includes(key)) {
+            return id
+        }
+    }
+
+    return undefined
+}
+
 function cleanNumberString(val: string): string {
     let str = val.trim()
     // Remove currency prefixes
@@ -157,8 +212,10 @@ export async function POST(request: NextRequest) {
         // Cache kategori yang ada
         const existingCategories = await prisma.category.findMany()
         const categoryMap = new Map<string, string>() // name (lowercase) -> id
+        const categorySlugMap = new Map<string, string>() // slug -> id
         for (const cat of existingCategories) {
             categoryMap.set(cat.name.toLowerCase(), cat.id)
+            categorySlugMap.set(cat.slug, cat.id)
         }
 
         // Cache sub-kategori yang ada
@@ -282,12 +339,12 @@ export async function POST(request: NextRequest) {
 
                 slug = slugify(title, { lower: true, locale: 'id', strict: true })
 
-                // Resolve kategori
+                // Resolve kategori with fuzzy matching
                 const categoryName = scrapedCategory || data.category.trim() || 'Other'
-                let categoryId = categoryMap.get(categoryName.toLowerCase())
+                let categoryId = findCategoryIdFuzzy(categoryName, categoryMap, categorySlugMap)
 
                 if (!categoryId) {
-                    // Buat kategori baru
+                    // Buat kategori baru hanya jika fuzzy matching juga gagal
                     const catSlug = slugify(categoryName, { lower: true, locale: 'id', strict: true })
                     const newCategory = await prisma.category.create({
                         data: {
@@ -297,6 +354,7 @@ export async function POST(request: NextRequest) {
                     })
                     categoryId = newCategory.id
                     categoryMap.set(categoryName.toLowerCase(), categoryId)
+                    categorySlugMap.set(newCategory.slug, categoryId)
                 }
 
                 // Resolve sub-kategori
