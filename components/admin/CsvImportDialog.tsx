@@ -180,11 +180,6 @@ export default function CsvImportDialog({
     const isQueueActiveRef = useRef(false)
     const currentQueueIndexRef = useRef(-1)
 
-    // Sync refs for the async loop access
-    useEffect(() => {
-        isQueueActiveRef.current = isQueueActive
-    }, [isQueueActive])
-
     useEffect(() => {
         currentQueueIndexRef.current = currentQueueIndex
     }, [currentQueueIndex])
@@ -209,6 +204,7 @@ export default function CsvImportDialog({
         setStep('upload')
         setQueueItems([])
         setCurrentQueueIndex(-1)
+        isQueueActiveRef.current = false
         setIsQueueActive(false)
         if (fileInputRef.current) {
             fileInputRef.current.value = ''
@@ -392,7 +388,7 @@ export default function CsvImportDialog({
                     const normalizedData = data.map((row, index) => {
                         const normalized: Record<string, any> = {}
                         for (const [key, value] of Object.entries(row)) {
-                            const cleanKey = key.trim()
+                            const cleanKey = key.trim().replace(/^\uFEFF/, '')
                             const mappedKey = fieldMap[cleanKey] || fieldMap[cleanKey.toLowerCase()] || cleanKey
                             normalized[mappedKey] = value
                         }
@@ -563,6 +559,7 @@ export default function CsvImportDialog({
             }
         }
 
+        isQueueActiveRef.current = false
         setIsQueueActive(false)
         setStep('result')
         onImportComplete()
