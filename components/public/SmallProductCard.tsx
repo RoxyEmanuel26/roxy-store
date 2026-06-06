@@ -33,6 +33,7 @@ export default function SmallProductCard({ product }: SmallProductCardProps) {
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                         sizes="(max-width: 640px) 50vw, 25vw"
+                        referrerPolicy="no-referrer"
                     />
                     {/* Badge */}
                     {product.badge && (

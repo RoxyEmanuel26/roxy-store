@@ -59,6 +59,7 @@ export function TopProductsTable({ products }: { products: TopProduct[] }) {
                                             alt={p.title}
                                             fill
                                             className="object-cover"
+                                            referrerPolicy="no-referrer"
                                         />
                                     </div>
                                     <div>

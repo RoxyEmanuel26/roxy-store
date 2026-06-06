@@ -429,6 +429,7 @@ export default function PinterestExportPage() {
                                                     src={row['Media URL']} 
                                                     alt="Media" 
                                                     className="h-full w-full object-cover" 
+                                                    referrerPolicy="no-referrer"
                                                 />
                                             </div>
                                         </td>

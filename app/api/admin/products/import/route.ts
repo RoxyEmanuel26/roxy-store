@@ -7,7 +7,7 @@ import { sanitizeText, sanitizeDescription } from '@/lib/sanitize'
 import slugify from 'slugify'
 import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
-import { scrapeShopeeProduct } from '@/lib/shopee-scraper'
+import { scrapeShopeeProduct, classifyCategoryFromTitle } from '@/lib/shopee-scraper'
 
 const MAX_PRODUCTS_PER_IMPORT = 100
 
@@ -64,6 +64,13 @@ function findCategoryIdFuzzy(
     }
 
     return undefined
+}
+
+function isValidProductImage(url: string | null | undefined): boolean {
+    if (!url) return false
+    if (url.includes('unsplash.com')) return false
+    if (url.includes('placeholder')) return false
+    return true
 }
 
 function cleanNumberString(val: string): string {
@@ -263,55 +270,69 @@ export async function POST(request: NextRequest) {
 
                 const data = parsed.data
                 let title = sanitizeText(data.title)
-                let description = sanitizeDescription(data.description || '')
-                let imageUrl = data.image || ''
-
-                let slug = slugify(title, { lower: true, locale: 'id', strict: true })
 
                 // Check if shopeeUrl already exists in database (for UPDATE instead of duplicate skip)
-                let existingByShopeeUrl: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; categoryId: string; } | null = null
+                let existingByShopeeUrl: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; categoryId: string; subcategoryId: string | null; price: number; originalPrice: number | null; } | null = null
                 if (data.shopeeUrl) {
                     existingByShopeeUrl = await prisma.product.findFirst({
                         where: { shopeeUrl: data.shopeeUrl },
-                        select: { id: true, slug: true, image: true, images: true, description: true, shopeeRating: true, shopeeSold: true, shopeeRatingCountStr: true, shopeeSoldStr: true, badge: true, categoryId: true }
+                        select: { id: true, slug: true, image: true, images: true, description: true, shopeeRating: true, shopeeSold: true, shopeeRatingCountStr: true, shopeeSoldStr: true, badge: true, categoryId: true, subcategoryId: true, price: true, originalPrice: true }
                     })
                 }
 
+                let slug = slugify(title, { lower: true, locale: 'id', strict: true })
+
                 // If not found by Shopee URL, check if found by Slug to detect database duplicates
-                let existingBySlug: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; categoryId: string; } | null = null
+                let existingBySlug: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; categoryId: string; subcategoryId: string | null; price: number; originalPrice: number | null; } | null = null
                 if (!existingByShopeeUrl) {
                     existingBySlug = await prisma.product.findUnique({
                         where: { slug },
-                        select: { id: true, slug: true, image: true, images: true, description: true, shopeeRating: true, shopeeSold: true, shopeeRatingCountStr: true, shopeeSoldStr: true, badge: true, categoryId: true }
+                        select: { id: true, slug: true, image: true, images: true, description: true, shopeeRating: true, shopeeSold: true, shopeeRatingCountStr: true, shopeeSoldStr: true, badge: true, categoryId: true, subcategoryId: true, price: true, originalPrice: true }
                     })
                 }
 
                 const matchedProduct = existingByShopeeUrl || existingBySlug
                 const alreadyExists = !!matchedProduct
-                const hasImage = !!(matchedProduct && matchedProduct.image)
+                const hasImage = isValidProductImage(matchedProduct?.image)
+                const hasSubcategory = !!(matchedProduct && matchedProduct.subcategoryId)
+                const hasAdditionalImages = !!(matchedProduct && matchedProduct.images && matchedProduct.images.length > 0)
 
                 // If product exists but is in the "Other" category, force scrape to classify it properly
                 const otherCategory = existingCategories.find(c => c.slug === 'other' || c.name.toLowerCase() === 'other')
                 const isOtherCategory = !!(matchedProduct && otherCategory && matchedProduct.categoryId === otherCategory.id)
 
-                // ALWAYS scrape Shopee when URL exists to get images, description, category, etc. (unless skipped or already exists with images)
+                // Scrape Shopee when URL exists to get images, description, category, etc.
                 let scrapedCategory = ''
                 let scrapedSubcategory = ''
                 let scrapedImages: string[] = []
+                let scrapedPrice: number | null = null
+                let scrapedSuccess = false
                 
-                const shouldScrape = autoScrape && data.shopeeUrl && (!alreadyExists || !hasImage || isOtherCategory)
+                const shouldScrape = autoScrape && data.shopeeUrl && (
+                    !alreadyExists || 
+                    !hasImage || 
+                    !hasSubcategory || 
+                    !hasAdditionalImages || 
+                    isOtherCategory
+                )
+
+                let scrapedDescription = ''
+                let scrapedTitle = ''
+                let scrapedImageUrl = ''
 
                 if (shouldScrape) {
                     try {
                         const scraped = await scrapeShopeeProduct(data.shopeeUrl)
-                        if (!title && scraped.title) {
-                            title = sanitizeText(scraped.title)
+                        scrapedSuccess = true
+                        
+                        if (scraped.title) {
+                            scrapedTitle = scraped.title
                         }
-                        if (!description && scraped.description) {
-                            description = sanitizeDescription(scraped.description)
+                        if (scraped.description) {
+                            scrapedDescription = scraped.description
                         }
-                        if (!imageUrl && scraped.imageUrl) {
-                            imageUrl = scraped.imageUrl
+                        if (scraped.imageUrl) {
+                            scrapedImageUrl = scraped.imageUrl
                         }
                         if (scraped.category) {
                             scrapedCategory = scraped.category
@@ -319,12 +340,14 @@ export async function POST(request: NextRequest) {
                         if (scraped.subcategory) {
                             scrapedSubcategory = scraped.subcategory
                         }
+                        if (scraped.price && scraped.price > 0) {
+                            scrapedPrice = scraped.price
+                        }
                         // Capture ALL scraped images (carousel)
                         if (scraped.images && scraped.images.length > 0) {
                             scrapedImages = scraped.images
-                            // If main image wasn't set yet, use first scraped image
-                            if (!imageUrl && scrapedImages.length > 0) {
-                                imageUrl = scrapedImages[0]
+                            if (!scrapedImageUrl && scrapedImages.length > 0) {
+                                scrapedImageUrl = scrapedImages[0]
                             }
                         }
                     } catch (err) {
@@ -332,62 +355,141 @@ export async function POST(request: NextRequest) {
                     }
                 }
 
-                // Final check to make sure description has a fallback
-                if (!description) {
-                    description = `Dapatkan ${title} original berkualitas terbaik hanya di Roxy Store! Produk pilihan ini dirancang dengan desain modern dan material berkualitas untuk memberikan kenyamanan serta keandalan maksimal dalam penggunaan sehari-hari.`
+                // Fallback: use title-based keyword classifier when scraping failed or returned no category
+                // This ensures products get proper categories even when Shopee blocks server-side scraping
+                if (!scrapedCategory && title) {
+                    const classified = classifyCategoryFromTitle(title)
+                    if (classified) {
+                        scrapedCategory = classified.category
+                        scrapedSubcategory = classified.subcategory
+                    }
+                }
+
+                // Resolve product title
+                if (scrapedSuccess && scrapedTitle) {
+                    title = sanitizeText(scrapedTitle)
                 }
 
                 slug = slugify(title, { lower: true, locale: 'id', strict: true })
 
-                // Resolve kategori with fuzzy matching
-                const categoryName = scrapedCategory || data.category.trim() || 'Other'
-                let categoryId = findCategoryIdFuzzy(categoryName, categoryMap, categorySlugMap)
-
-                if (!categoryId) {
-                    // Buat kategori baru hanya jika fuzzy matching juga gagal
-                    const catSlug = slugify(categoryName, { lower: true, locale: 'id', strict: true })
-                    const newCategory = await prisma.category.create({
-                        data: {
-                            name: categoryName,
-                            slug: catSlug || `cat-${Date.now()}`,
-                        },
-                    })
-                    categoryId = newCategory.id
-                    categoryMap.set(categoryName.toLowerCase(), categoryId)
-                    categorySlugMap.set(newCategory.slug, categoryId)
+                // Resolve description
+                let description = data.description || ''
+                if (scrapedSuccess && scrapedDescription) {
+                    description = sanitizeDescription(scrapedDescription)
+                } else if (matchedProduct?.description) {
+                    description = matchedProduct.description
+                }
+                
+                if (!description) {
+                    description = `Dapatkan ${title} original berkualitas terbaik hanya di Roxy Store! Produk pilihan ini dirancang dengan desain modern dan material berkualitas untuk memberikan kenyamanan serta keandalan maksimal dalam penggunaan sehari-hari.`
                 }
 
-                // Resolve sub-kategori
-                const subcategoryName = scrapedSubcategory || data.subcategory || ''
-                let subcategoryId: string | null = null
-
-                if (subcategoryName) {
-                    const subMapKey = `${categoryId}:${subcategoryName.toLowerCase()}`
-                    let subId = subcategoryMap.get(subMapKey)
-
-                    if (!subId) {
-                        // Buat sub-kategori baru
-                        const subSlug = slugify(subcategoryName, { lower: true, locale: 'id', strict: true })
-                        const newSubcategory = await prisma.subcategory.create({
-                            data: {
-                                name: subcategoryName,
-                                slug: subSlug || `sub-${Date.now()}`,
-                                categoryId,
-                            },
-                        })
-                        subId = newSubcategory.id
-                        subcategoryMap.set(subMapKey, subId)
-                    }
-                    subcategoryId = subId
+                // Resolve main image
+                // Priority: scraped image > existing valid DB image > CSV image
+                let imageUrl = data.image || ''
+                if (scrapedSuccess && scrapedImageUrl) {
+                    imageUrl = scrapedImageUrl
+                } else if (matchedProduct?.image && isValidProductImage(matchedProduct.image)) {
+                    // Preserve existing valid product image when scraping fails
+                    imageUrl = matchedProduct.image
+                }
+                if ((!imageUrl || !isValidProductImage(imageUrl)) && scrapedImages.length > 0) {
+                    imageUrl = scrapedImages[0]
                 }
 
-                // Parse images: prefer scraped images (full carousel), fallback to CSV images
+                // Resolve gallery images
+                // Priority: scraped gallery > existing DB gallery > CSV gallery
                 let imageUrls: string[] = []
-                if (scrapedImages.length > 1) {
-                    // Use scraped carousel images (skip index 0 which is the main image)
+                if (scrapedSuccess && scrapedImages.length > 1) {
                     imageUrls = scrapedImages.slice(1)
+                } else if (matchedProduct?.images && matchedProduct.images.length > 0) {
+                    // Preserve existing gallery images when scraping fails
+                    imageUrls = matchedProduct.images
                 } else if (data.images) {
                     imageUrls = data.images.split(/[|,;]/).map(u => u.trim()).filter(Boolean)
+                }
+
+                // Resolve price
+                // Priority: scraped live price > existing DB price > CSV price
+                let price = data.price
+                if (scrapedSuccess && scrapedPrice && scrapedPrice > 0) {
+                    // Best: live price from Shopee page
+                    price = scrapedPrice
+                } else if (matchedProduct && matchedProduct.price > 0) {
+                    // Existing product: preserve DB price when scraping fails
+                    // CSV prices from Shopee Affiliate exports are often outdated
+                    price = matchedProduct.price
+                }
+
+                // Resolve category and subcategory
+                let finalCategoryName = ''
+                let finalSubcategoryName = ''
+
+                if (scrapedCategory) {
+                    finalCategoryName = scrapedCategory
+                    finalSubcategoryName = scrapedSubcategory
+                } else if (data.category && data.category !== 'Other') {
+                    finalCategoryName = data.category
+                    finalSubcategoryName = data.subcategory || ''
+                }
+
+                let categoryId = matchedProduct?.categoryId
+                let subcategoryId = matchedProduct?.subcategoryId
+
+                if (finalCategoryName) {
+                    let resolvedCatId = findCategoryIdFuzzy(finalCategoryName, categoryMap, categorySlugMap)
+                    if (!resolvedCatId) {
+                        const catSlug = slugify(finalCategoryName, { lower: true, locale: 'id', strict: true })
+                        const newCategory = await prisma.category.create({
+                            data: {
+                                name: finalCategoryName,
+                                slug: catSlug || `cat-${Date.now()}`,
+                            },
+                        })
+                        resolvedCatId = newCategory.id
+                        categoryMap.set(finalCategoryName.toLowerCase(), resolvedCatId)
+                        categorySlugMap.set(newCategory.slug, resolvedCatId)
+                    }
+                    categoryId = resolvedCatId
+
+                    if (finalSubcategoryName) {
+                        const subMapKey = `${categoryId}:${finalSubcategoryName.toLowerCase()}`
+                        let subId = subcategoryMap.get(subMapKey)
+                        if (!subId) {
+                            const subSlug = slugify(finalSubcategoryName, { lower: true, locale: 'id', strict: true })
+                            const newSubcategory = await prisma.subcategory.create({
+                                data: {
+                                    name: finalSubcategoryName,
+                                    slug: subSlug || `sub-${Date.now()}`,
+                                    categoryId,
+                                },
+                            })
+                            subId = newSubcategory.id
+                            subcategoryMap.set(subMapKey, subId)
+                        }
+                        subcategoryId = subId
+                    } else if (scrapedSuccess) {
+                        // If successfully scraped but no subcategory returned, clear subcategory
+                        subcategoryId = null
+                    }
+                } else if (!categoryId) {
+                    // Fallback for brand-new products if category is missing or default
+                    const categoryName = 'Other'
+                    let resolvedCatId = findCategoryIdFuzzy(categoryName, categoryMap, categorySlugMap)
+                    if (!resolvedCatId) {
+                        const catSlug = slugify(categoryName, { lower: true, locale: 'id', strict: true })
+                        const newCategory = await prisma.category.create({
+                            data: {
+                                name: categoryName,
+                                slug: catSlug || `cat-${Date.now()}`,
+                            },
+                        })
+                        resolvedCatId = newCategory.id
+                        categoryMap.set(categoryName.toLowerCase(), resolvedCatId)
+                        categorySlugMap.set(newCategory.slug, resolvedCatId)
+                    }
+                    categoryId = resolvedCatId
+                    subcategoryId = null
                 }
 
                 // Priority 1: Update existing product matched by shopeeUrl
@@ -396,11 +498,11 @@ export async function POST(request: NextRequest) {
                         where: { id: existingByShopeeUrl.id },
                         data: {
                             title,
-                            description: description || existingByShopeeUrl.description,
-                            price: data.price,
+                            description,
+                            price,
                             originalPrice: data.originalPrice ?? undefined,
-                            image: imageUrl || existingByShopeeUrl.image,
-                            images: imageUrls.length > 0 ? imageUrls : existingByShopeeUrl.images,
+                            image: imageUrl,
+                            images: imageUrls,
                             shopeeRating: data.shopeeRating ?? existingByShopeeUrl.shopeeRating,
                             shopeeSold: data.shopeeSold ?? existingByShopeeUrl.shopeeSold,
                             shopeeRatingCountStr: data.shopeeRatingCountStr || existingByShopeeUrl.shopeeRatingCountStr,
@@ -425,11 +527,11 @@ export async function POST(request: NextRequest) {
                             where: { id: existing.id },
                             data: {
                                 title,
-                                description: description || existing.description,
-                                price: data.price || existing.price,
+                                description,
+                                price,
                                 originalPrice: data.originalPrice ?? existing.originalPrice,
-                                image: imageUrl || existing.image,
-                                images: imageUrls.length > 0 ? imageUrls : existing.images,
+                                image: imageUrl,
+                                images: imageUrls,
                                 shopeeUrl: data.shopeeUrl || existing.shopeeUrl,
                                 shopeeRating: data.shopeeRating ?? existing.shopeeRating,
                                 shopeeSold: data.shopeeSold ?? existing.shopeeSold,
@@ -456,7 +558,7 @@ export async function POST(request: NextRequest) {
                                 title,
                                 slug: finalSlug,
                                 description,
-                                price: data.price,
+                                price,
                                 originalPrice: data.originalPrice ?? null,
                                 image: imageUrl,
                                 images: imageUrls,

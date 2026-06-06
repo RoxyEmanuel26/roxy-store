@@ -203,6 +203,7 @@ export async function scrapeShopeeProduct(url: string): Promise<{
     category: string
     subcategory: string
     images: string[]
+    price?: number | null
 }> {
     if (!url || !url.includes('shopee.co.id')) {
         throw new Error('URL harus berupa link Shopee Indonesia')
@@ -252,12 +253,14 @@ export async function scrapeShopeeProduct(url: string): Promise<{
         ids = extractShopeeIds(alWebUrl)
     }
 
+    let scrapedPrice: number | null = null
+
     if (ids) {
         const desktopUrl = `https://shopee.co.id/product/${ids.shopId}/${ids.itemId}`
         try {
             const desktopResponse = await fetch(desktopUrl, {
                 headers: {
-                    'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_codedoc.html)',
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36 (compatible; Google-Structured-Data-Testing-Tool +http://developers.google.com/search)',
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                     'Accept-Language': 'id-ID,id;q=0.9',
                     'Cache-Control': 'no-cache',
@@ -274,6 +277,28 @@ export async function scrapeShopeeProduct(url: string): Promise<{
                 }
                 if (!subcategory && desktopBreadcrumbs.subcategory) {
                     subcategory = desktopBreadcrumbs.subcategory
+                }
+                
+                // Parse JSON-LD Product schema for title, description, and price
+                const ldJsons = desktopHtml.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi) || []
+                for (const tag of ldJsons) {
+                    const cleanJson = tag.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '').trim()
+                    try {
+                        const obj = JSON.parse(cleanJson)
+                        if (obj['@type'] === 'Product') {
+                            if (obj.name && !title) {
+                                title = cleanShopeeTitle(obj.name)
+                            }
+                            if (obj.description && !description) {
+                                description = cleanShopeeDescription(obj.description)
+                            }
+                            if (obj.offers && obj.offers.price) {
+                                scrapedPrice = parseFloat(obj.offers.price)
+                            }
+                        }
+                    } catch {
+                        // Ignore parse errors
+                    }
                 }
                 
                 // If title was empty or not found, try to search the desktop page
@@ -353,7 +378,8 @@ export async function scrapeShopeeProduct(url: string): Promise<{
         rawImageUrl: cleanedRawImageUrl || rawImageUrl,
         category,
         subcategory,
-        images: uploadedImages
+        images: uploadedImages,
+        price: scrapedPrice
     }
 }
 
@@ -812,6 +838,98 @@ export function classifyCategoryFromTitle(title: string): { category: string; su
             return { category: 'Pakaian Pria', subcategory: 'Set Pakaian Pria' }
         }
         return { category: 'Pakaian Pria', subcategory: 'Pakaian Pria Lainnya' }
+    }
+
+    // 20. Gender-neutral Fashion Catch-all
+    // Products without explicit gender keywords but with clear clothing terms
+    // Default to Pakaian Wanita since Roxy Store is primarily women's fashion
+
+    // Underwear / innerwear (no gender specified)
+    if (t.includes('celana dalam') || t.includes('cd ') || t.includes('panty') || t.includes('pantie') || t.includes('g-string') || t.includes('thong') || t.includes('shaper') || t.includes('korset') || t.includes('pengangkat pantat') || t.includes('bokong')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Pakaian Dalam' }
+    }
+
+    // Maternity (no gender needed — always women)
+    if (t.includes('hamil') || t.includes('maternity') || t.includes('pregnant') || t.includes('menyusui')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Baju Hamil' }
+    }
+
+    // Jeans / denim (no gender specified)
+    if (t.includes('jeans') || t.includes('denim') || t.includes('baggy') || t.includes('highwaist') || t.includes('high waist')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Denim' }
+    }
+
+    // Kebaya / traditional
+    if (t.includes('kebaya') || t.includes('kutubaru') || t.includes('kutu baru')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Atasan' }
+    }
+
+    // Piyama / sleepwear (no gender)
+    if (t.includes('piyama') || t.includes('pyjama') || t.includes('pajama') || t.includes('baju tidur') || t.includes('sleepwear') || t.includes('nightgown') || t.includes('daster')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Pakaian Tidur & Piyama' }
+    }
+
+    // Kaos kaki / socks
+    if (t.includes('kaos kaki') || t.includes('kaus kaki') || t.includes('socks') || t.includes('ankle socks') || t.includes('jempol')) {
+        return { category: 'Aksesoris', subcategory: 'Aksesoris Lainnya' }
+    }
+
+    // Generic tops (crop top, t-shirt, bodysuit, kemeja, blouse, atasan, knit top)
+    if (t.includes('crop top') || t.includes('bodysuit') || t.includes('tube top') || t.includes('tank top') || t.includes('tanktop') || t.includes('knit top') || t.includes('plisket') || t.includes('pleats')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Atasan' }
+    }
+    if (t.includes('t-shirt') || t.includes('tshirt') || t.includes('t shirt') || t.includes('kaos') || t.includes('kaus')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Atasan' }
+    }
+    if (t.includes('kemeja') || t.includes('blouse') || t.includes('shirt') || t.includes('polo')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Atasan' }
+    }
+    if (t.includes('atasan') || t.includes('top') || t.includes('longsleeve') || t.includes('long sleeve')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Atasan' }
+    }
+
+    // Generic outerwear (jaket, blazer, cardigan, sweater, hoodie, coat)
+    if (t.includes('jaket') || t.includes('jacket') || t.includes('blazer') || t.includes('coat') || t.includes('bomber') || t.includes('parka') || t.includes('overcoat')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Jaket, Mantel, & Rompi' }
+    }
+    if (t.includes('cardigan') || t.includes('sweater') || t.includes('rajut') || t.includes('knit') || t.includes('knitwear')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Sweater & Cardigan' }
+    }
+    if (t.includes('hoodie') || t.includes('sweatshirt') || t.includes('oversized') || t.includes('oversize')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Hoodie & Sweatshirt' }
+    }
+
+    // Generic bottoms
+    if (t.includes('celana') || t.includes('pants') || t.includes('trousers')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Celana Panjang & Legging' }
+    }
+    if (t.includes('rok') || t.includes('skirt')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Rok' }
+    }
+
+    // Sets
+    if (t.includes('setelan') || t.includes('set ') || t.includes('oneset') || t.includes('one set') || t.includes('bundling') || t.includes('paket')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Set' }
+    }
+
+    // Jumpsuit / overall / romper
+    if (t.includes('jumpsuit') || t.includes('overall') || t.includes('romper') || t.includes('playsuit')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Dress' }
+    }
+
+    // Outer / rompi (vest/outerwear without specific gender)
+    if (t.includes('outer') || t.includes('rompi') || t.includes('vest')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Jaket, Mantel, & Rompi' }
+    }
+
+    // Baby tee / slimfit tee / basic tee
+    if (t.includes('baby tee') || t.includes('slim fit') || t.includes('slimfit') || t.includes('basic tee') || t.includes('outfit')) {
+        return { category: 'Pakaian Wanita', subcategory: 'Atasan' }
+    }
+
+    // Generic bag/backpack/ransel (without gender keyword)
+    if (t.includes('ransel') || t.includes('backpack') || t.includes('tas ') || t.includes('bag ') || t.includes('drawstring')) {
+        return { category: 'Tas Wanita', subcategory: 'Ransel Wanita' }
     }
 
     return null

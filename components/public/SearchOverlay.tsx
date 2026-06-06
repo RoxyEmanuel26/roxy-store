@@ -98,7 +98,7 @@ export function SearchOverlay({ isOpen, onClose }: SearchOverlayProps) {
                                                 className="w-full flex items-center gap-3 p-3 hover:bg-brand-surface dark:hover:bg-dark-bg transition-none text-left"
                                             >
                                                 <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                                                    <Image src={product.image} alt={product.title} fill className="object-cover" />
+                                                    <Image src={product.image} alt={product.title} fill className="object-cover" referrerPolicy="no-referrer" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-medium text-brand-text dark:text-dark-text truncate">{product.title}</p>

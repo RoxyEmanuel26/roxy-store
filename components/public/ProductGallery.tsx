@@ -113,6 +113,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
                             className="object-cover"
                             priority={selectedIndex === 0}
                             loading={selectedIndex === 0 ? 'eager' : 'lazy'}
+                            referrerPolicy="no-referrer"
                         />
                     </div>
                 </Zoom>
@@ -183,6 +184,7 @@ export default function ProductGallery({ product }: ProductGalleryProps) {
                                     sizes="64px"
                                     className="object-cover"
                                     loading="lazy"
+                                    referrerPolicy="no-referrer"
                                 />
                             </button>
                         ))}

@@ -30,6 +30,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
                             width={56} 
                             height={56} 
                             className="w-10 h-10 md:w-14 md:h-14 object-contain drop-shadow-sm"
+                            referrerPolicy="no-referrer"
                         />
                     ) : (
                         <span className="text-3xl md:text-4xl leading-none">{icon}</span>

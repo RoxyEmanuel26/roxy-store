@@ -601,6 +601,7 @@ export default function AdminProductsPage() {
                                                     fill
                                                     className="object-cover"
                                                     sizes="48px"
+                                                    referrerPolicy="no-referrer"
                                                 />
                                             ) : (
                                                 <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">

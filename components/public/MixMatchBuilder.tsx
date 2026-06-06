@@ -435,6 +435,7 @@ function MixMatchBuilderInner() {
                             fill 
                             className="object-cover"
                             sizes="80px"
+                            referrerPolicy="no-referrer"
                           />
                         </div>
                         {/* Detail Info */}
@@ -538,7 +539,7 @@ function MixMatchBuilderInner() {
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <div className="relative h-8 w-8 rounded-lg overflow-hidden bg-slate-50 dark:bg-slate-800 flex-shrink-0">
-                          <Image src={item.image} alt={item.title} fill className="object-cover" sizes="32px" />
+                          <Image src={item.image} alt={item.title} fill className="object-cover" sizes="32px" referrerPolicy="no-referrer" />
                         </div>
                         <span className="font-semibold truncate dark:text-slate-300">
                           {item.title}
@@ -675,6 +676,7 @@ function MixMatchBuilderInner() {
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
                           sizes="(max-width: 640px) 45vw, 150px"
+                          referrerPolicy="no-referrer"
                         />
                         
                         {/* Badge diskon */}
@@ -877,7 +879,7 @@ function MixMatchBuilderInner() {
 
                     {/* Product Image & Info */}
                     <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800 flex-shrink-0">
-                      <Image src={item.image} alt={item.title} fill className="object-cover" sizes="40px" />
+                      <Image src={item.image} alt={item.title} fill className="object-cover" sizes="40px" referrerPolicy="no-referrer" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <span className="text-[9px] uppercase font-bold text-purple-500 dark:text-purple-400 tracking-wider">
