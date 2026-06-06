@@ -26,5 +26,13 @@ export function getInitials(name: string): string {
     .slice(0, 2)
 }
 
+export function generateProductSlug(title: string): string {
+  let slug = slugifyLib(title, { lower: true, locale: 'id', strict: true })
+  if (slug.length > 100) {
+    slug = slug.substring(0, 100).replace(/-+$/, '')
+  }
+  return slug
+}
+
 export { determineProductBadge } from './badge'
 

@@ -137,7 +137,10 @@ export default function ProductForm({ initialData, isEdit = false }: ProductForm
     const image = watch('image')
     const badge = watch('badge')
     const isActive = watch('isActive')
-    const slug = slugify(title || '', { lower: true, locale: 'id', strict: true })
+    let slug = slugify(title || '', { lower: true, locale: 'id', strict: true })
+    if (slug.length > 100) {
+        slug = slug.substring(0, 100).replace(/-+$/, '')
+    }
 
     // Sync slug into form value so Zod validation passes
     useEffect(() => {

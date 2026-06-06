@@ -6,7 +6,7 @@ import { parseAndValidate } from '@/lib/api-helpers'
 import { sanitizeText, sanitizeDescription, sanitizeUrl } from '@/lib/sanitize'
 import { productRepository } from '@/repositories/product.repository'
 import { revalidateTag } from 'next/cache'
-import slugify from 'slugify'
+import { generateProductSlug } from '@/lib/utils'
 
 export async function GET(
     _request: NextRequest,
@@ -63,7 +63,7 @@ export async function PUT(
     const data = validation.data
 
     const title = sanitizeText(data.title)
-    let slug = slugify(title, { lower: true, locale: 'id', strict: true })
+    let slug = generateProductSlug(title)
 
     const existingSlug = await productRepository.findBySlug(slug, id)
     if (existingSlug) {

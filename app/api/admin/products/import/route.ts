@@ -8,6 +8,7 @@ import slugify from 'slugify'
 import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
 import { scrapeShopeeProduct, classifyCategoryFromTitle } from '@/lib/shopee-scraper'
+import { generateProductSlug } from '@/lib/utils'
 
 const MAX_PRODUCTS_PER_IMPORT = 100
 
@@ -47,12 +48,7 @@ function findCategoryIdFuzzy(
     }
 
     // 3. Slug-based match
-    const slug = categoryName
-        .toLowerCase()
-        .replace(/&/g, 'and')
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .trim()
+    const slug = slugify(categoryName, { lower: true, locale: 'id', strict: true })
     const slugMatch = categorySlugMap.get(slug)
     if (slugMatch) return slugMatch
 
@@ -60,6 +56,47 @@ function findCategoryIdFuzzy(
     for (const [key, id] of categoryMap.entries()) {
         if (key.includes(categoryName.toLowerCase()) || categoryName.toLowerCase().includes(key)) {
             return id
+        }
+    }
+
+    return undefined
+}
+
+function findSubcategoryIdFuzzy(
+    subName: string,
+    categoryId: string,
+    existingSubcategories: { id: string; name: string; slug: string; categoryId: string }[]
+): string | undefined {
+    const targetNormalized = normalizeCategoryName(subName)
+    const targetSlug = slugify(subName, { lower: true, locale: 'id', strict: true })
+
+    // Filter subcategories for this category first
+    const subs = existingSubcategories.filter(s => s.categoryId === categoryId)
+
+    // 1. Exact lowercase match
+    const exact = subs.find(s => s.name.toLowerCase() === subName.toLowerCase())
+    if (exact) return exact.id
+
+    // 2. Normalized match
+    for (const sub of subs) {
+        if (normalizeCategoryName(sub.name) === targetNormalized) {
+            return sub.id
+        }
+    }
+
+    // 3. Slug match
+    for (const sub of subs) {
+        if (sub.slug === targetSlug) {
+            return sub.id
+        }
+    }
+
+    // 4. Partial match
+    for (const sub of subs) {
+        const subLower = sub.name.toLowerCase()
+        const targetLower = subName.toLowerCase()
+        if (subLower.includes(targetLower) || targetLower.includes(subLower)) {
+            return sub.id
         }
     }
 
@@ -280,7 +317,7 @@ export async function POST(request: NextRequest) {
                     })
                 }
 
-                let slug = slugify(title, { lower: true, locale: 'id', strict: true })
+                let slug = generateProductSlug(title)
 
                 // If not found by Shopee URL, check if found by Slug to detect database duplicates
                 let existingBySlug: { id: string; slug: string; image: string; images: string[]; description: string; shopeeRating: number | null; shopeeSold: number | null; shopeeRatingCountStr: string | null; shopeeSoldStr: string | null; badge: string | null; categoryId: string; subcategoryId: string | null; price: number; originalPrice: number | null; } | null = null
@@ -370,7 +407,7 @@ export async function POST(request: NextRequest) {
                     title = sanitizeText(scrapedTitle)
                 }
 
-                slug = slugify(title, { lower: true, locale: 'id', strict: true })
+                slug = generateProductSlug(title)
 
                 // Resolve description
                 let description = data.description || ''
@@ -456,6 +493,9 @@ export async function POST(request: NextRequest) {
                         const subMapKey = `${categoryId}:${finalSubcategoryName.toLowerCase()}`
                         let subId = subcategoryMap.get(subMapKey)
                         if (!subId) {
+                            subId = findSubcategoryIdFuzzy(finalSubcategoryName, categoryId, existingSubcategories)
+                        }
+                        if (!subId) {
                             const subSlug = slugify(finalSubcategoryName, { lower: true, locale: 'id', strict: true })
                             const newSubcategory = await prisma.subcategory.create({
                                 data: {
@@ -466,6 +506,7 @@ export async function POST(request: NextRequest) {
                             })
                             subId = newSubcategory.id
                             subcategoryMap.set(subMapKey, subId)
+                            existingSubcategories.push(newSubcategory)
                         }
                         subcategoryId = subId
                     } else if (scrapedSuccess) {

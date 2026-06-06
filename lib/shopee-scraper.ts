@@ -218,7 +218,8 @@ export async function scrapeShopeeProduct(url: string): Promise<{
             'Cache-Control': 'no-cache',
             'Pragma': 'no-cache'
         },
-        redirect: 'follow'
+        redirect: 'follow',
+        signal: AbortSignal.timeout(3000)
     })
 
     if (!response.ok) {
@@ -266,7 +267,8 @@ export async function scrapeShopeeProduct(url: string): Promise<{
                     'Cache-Control': 'no-cache',
                     'Pragma': 'no-cache'
                 },
-                redirect: 'follow'
+                redirect: 'follow',
+                signal: AbortSignal.timeout(3000)
             })
             if (desktopResponse.ok) {
                 const desktopHtml = await desktopResponse.text()

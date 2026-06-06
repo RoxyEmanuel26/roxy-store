@@ -10,7 +10,7 @@ export const LoginSchema = z.object({
 export const ProductSchema = z.object({
     title: z.string()
         .min(3, 'Judul minimal 3 karakter')
-        .max(100, 'Judul maksimal 100 karakter')
+        .max(500, 'Judul maksimal 500 karakter')
         .trim(),
     slug: z.string()
         .min(3, 'Slug minimal 3 karakter')
@@ -94,7 +94,7 @@ export const SettingsSchema = z.object({
 export const CsvProductSchema = z.object({
     title: z.string()
         .min(3, 'Judul minimal 3 karakter')
-        .max(200, 'Judul maksimal 200 karakter')
+        .max(500, 'Judul maksimal 500 karakter')
         .trim(),
     description: z.string().default(''),
     price: z.number().min(0).default(0),
