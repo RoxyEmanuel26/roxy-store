@@ -450,6 +450,7 @@ export default function CsvImportDialog({
             return
         }
 
+        isQueueActiveRef.current = true
         setIsQueueActive(true)
         setStep('importing')
 
