@@ -44,11 +44,11 @@ async function main() {
         },
         {
             key: 'logo_url',
-            value: '',
+            value: '/logo.png',
         },
         {
             key: 'favicon_url',
-            value: '',
+            value: '/favicon.ico',
         },
         {
             key: 'hero_title',
