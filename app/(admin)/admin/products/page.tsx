@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet, Sparkles, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet, Sparkles, RefreshCw, ChevronDown, ChevronUp, Coins } from 'lucide-react'
 import CsvImportDialog from '@/components/admin/CsvImportDialog'
 import LinkImportDialog from '@/components/admin/LinkImportDialog'
 import { Button } from '@/components/ui/button'
@@ -83,6 +83,32 @@ export default function AdminProductsPage() {
     } | null>(null)
     const [showCheckLogs, setShowCheckLogs] = useState(false)
     const [isDismissed, setIsDismissed] = useState(false)
+
+    // Sync state
+    const [syncingState, setSyncingState] = useState<Record<string, 'price' | 'content' | null>>({})
+
+    const handleSync = async (productId: string, action: 'price' | 'content') => {
+        setSyncingState(prev => ({ ...prev, [productId]: action }))
+        try {
+            const res = await fetch(`/api/admin/products/${productId}/sync`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action })
+            })
+
+            const data = await res.json()
+            if (res.ok) {
+                toast.success(data.message || 'Sinkronisasi berhasil!')
+                setProducts(prev => prev.map(p => p.id === productId ? { ...p, ...data.product } : p))
+            } else {
+                toast.error(data.error || 'Gagal sinkronisasi dengan Shopee')
+            }
+        } catch {
+            toast.error('Terjadi kesalahan koneksi saat sinkronisasi')
+        } finally {
+            setSyncingState(prev => ({ ...prev, [productId]: null }))
+        }
+    }
 
     // Debounce search
     useEffect(() => {
@@ -642,6 +668,34 @@ export default function AdminProductsPage() {
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-1">
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                title="Perbarui Harga dari Shopee"
+                                                onClick={() => handleSync(product.id, 'price')}
+                                                disabled={!!syncingState[product.id]}
+                                                className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                                            >
+                                                {syncingState[product.id] === 'price' ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Coins className="h-4 w-4" />
+                                                )}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                title="Perbarui Deskripsi & Gambar"
+                                                onClick={() => handleSync(product.id, 'content')}
+                                                disabled={!!syncingState[product.id]}
+                                                className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                                            >
+                                                {syncingState[product.id] === 'content' ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Sparkles className="h-4 w-4" />
+                                                )}
+                                            </Button>
                                             <Link href={`/admin/products/${product.id}/edit`}>
                                                 <Button size="sm" variant="ghost">
                                                     <Pencil className="h-4 w-4" />
