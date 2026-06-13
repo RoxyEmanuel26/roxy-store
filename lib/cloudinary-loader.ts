@@ -62,8 +62,8 @@ export default function cloudinaryLoader({ src, width, quality }: ImageLoaderPar
   const match = CLOUD_NAME ? src.match(CLOUDINARY_REGEX) : null
 
   if (!match) {
-    // Non-Cloudinary URLs (or missing cloud name): pass through to Next.js optimization
-    return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality || 75}`
+    // Non-Cloudinary URLs: return as-is (loads direct static file / bypasses optimization)
+    return src
   }
 
   // Extract the path after /upload/
