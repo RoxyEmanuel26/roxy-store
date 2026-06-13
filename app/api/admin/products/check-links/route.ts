@@ -72,49 +72,31 @@ async function verifyShopeeLink(url: string): Promise<{ active: boolean; reason:
 
         const res = await fetch(url, {
             headers: {
-                'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_codedoc.html)',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'id-ID,id;q=0.9',
                 'Cache-Control': 'no-cache',
                 'Pragma': 'no-cache'
             },
-            redirect: 'follow',
+            redirect: 'manual',
             signal: AbortSignal.timeout(10000)
         })
 
-        if (!res.ok) {
+        if (!res.ok && res.status !== 301 && res.status !== 302 && res.status !== 307 && res.status !== 308) {
             return { active: false, reason: `HTTP Status ${res.status}` }
         }
 
-        const finalUrl = res.url
+        const location = res.headers.get('location')
         
-        // Check if redirect went to generic home/search/error page
-        const ids = extractShopeeIds(url) || extractShopeeIds(finalUrl)
+        // Cek ID produk dari URL awal (jika link panjang) atau dari URL redirect (jika link pendek s.shopee.co.id)
+        const ids = extractShopeeIds(url) || (location ? extractShopeeIds(location) : null)
+        
         if (!ids) {
-            if (finalUrl.match(/shopee\.co\.id\/?$/) || finalUrl.includes('/search') || finalUrl.includes('/error')) {
-                return { active: false, reason: `Dialihkan ke halaman non-produk (${finalUrl})` }
+            const finalPath = location || url
+            if (finalPath.match(/shopee\.co\.id\/?$/) || finalPath.includes('/search') || finalPath.includes('/error')) {
+                return { active: false, reason: `Dialihkan ke halaman non-produk (${finalPath})` }
             }
-            return { active: false, reason: `ID produk tidak ditemukan di tautan akhir (${finalUrl})` }
-        }
-
-        const html = await res.text()
-        const rawTitle = getMetaContent(html, 'og:title') || getMetaContent(html, 'twitter:title') || ''
-        const cleanTitle = cleanShopeeTitle(rawTitle)
-
-        if (!cleanTitle || cleanTitle.toLowerCase() === 'shopee indonesia') {
-            return { active: false, reason: 'Judul produk kosong atau halaman tidak aktif' }
-        }
-
-        const boilerplateTitles = [
-            'situs belanja online terlengkap',
-            'belanja online',
-            'produk tidak ditemukan',
-            'halaman tidak ditemukan',
-            'tidak aktif'
-        ]
-        
-        if (boilerplateTitles.some(term => cleanTitle.toLowerCase().includes(term))) {
-            return { active: false, reason: `Judul terdeteksi sebagai halaman eror/generic: "${cleanTitle}"` }
+            return { active: false, reason: `ID produk tidak ditemukan di tautan akhir (${finalPath})` }
         }
 
         return { active: true, reason: 'Tautan aktif' }
