@@ -26,7 +26,23 @@ export default function ImageUpload({
     const [isUploading, setIsUploading] = useState(false)
     const [progress, setProgress] = useState(0)
     const [dragActive, setDragActive] = useState(false)
+    const [urlValue, setUrlValue] = useState('')
     const inputRef = useRef<HTMLInputElement>(null)
+
+    const handleUrlSubmit = () => {
+        const val = urlValue.trim()
+        if (val) {
+            if (val.startsWith('http://') || val.startsWith('https://') || val.startsWith('/')) {
+                onChange(val)
+                toast.success('Link gambar berhasil digunakan!')
+                setUrlValue('')
+            } else {
+                toast.error('Tautan harus diawali dengan http://, https://, atau /')
+            }
+        } else {
+            toast.error('Silakan tempel tautan gambar terlebih dahulu')
+        }
+    }
 
     const aspectClass = {
         '1:1': 'aspect-square',
@@ -189,6 +205,31 @@ export default function ImageUpload({
                     </div>
                 )}
             </div>
+
+            {!isUploading && (
+                <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
+                    <input
+                        type="url"
+                        placeholder="Atau tempel link gambar (URL) di sini..."
+                        value={urlValue}
+                        onChange={(e) => setUrlValue(e.target.value)}
+                        className="flex h-9 w-full rounded-md border border-brand-border dark:border-dark-border bg-white dark:bg-dark-surface px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-brand-muted/70 dark:placeholder:text-dark-muted/70 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-primary"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleUrlSubmit();
+                            }
+                        }}
+                    />
+                    <button 
+                        type="button" 
+                        onClick={handleUrlSubmit}
+                        className="inline-flex items-center justify-center rounded-md bg-brand-primary px-3 text-xs font-medium text-white shadow-sm hover:bg-brand-primary/90 h-9 shrink-0"
+                    >
+                        Gunakan Link
+                    </button>
+                </div>
+            )}
         </div>
     )
 }

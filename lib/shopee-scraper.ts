@@ -347,7 +347,7 @@ export async function scrapeShopeeProduct(url: string): Promise<{
     const uniqueImagesSet = Array.from(new Set(finalUniqueImages))
 
     // Concurrent upload to Cloudinary using Promise.all
-    const bypassCloudinary = process.env.BYPASS_CLOUDINARY === 'true'
+    const bypassCloudinary = true
     const uploadedImages = bypassCloudinary 
         ? uniqueImagesSet 
         : await Promise.all(
