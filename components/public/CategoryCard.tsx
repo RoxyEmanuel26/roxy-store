@@ -14,7 +14,7 @@ interface CategoryCardProps {
 
 export default function CategoryCard({ category }: CategoryCardProps) {
     const icon = category.icon || '🛍️'
-    const isImage = icon.startsWith('http')
+    const isImage = icon.startsWith('http') || icon.startsWith('/')
 
     return (
         <Link 

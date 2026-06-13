@@ -302,7 +302,7 @@ export default function AdminCategoriesPage() {
             cell: (item) => (
                 <div className="flex items-center gap-3">
                     {item.icon && (
-                        item.icon.startsWith('http') ? (
+                        (item.icon.startsWith('http') || item.icon.startsWith('/')) ? (
                             <img src={item.icon} alt="" className="w-10 h-10 object-contain rounded-md bg-brand-surface/50 dark:bg-dark-surface/50 p-1" />
                         ) : (
                             <span className="text-2xl">{item.icon}</span>
@@ -433,7 +433,7 @@ export default function AdminCategoriesPage() {
                             <Label>Icon Kategori</Label>
                             <div className="space-y-4">
                                 <ImageUpload
-                                    value={categoryIcon.startsWith('http') ? categoryIcon : ''}
+                                    value={(categoryIcon.startsWith('http') || categoryIcon.startsWith('/')) ? categoryIcon : ''}
                                     onChange={(url) => setCategoryIcon(url)}
                                     folder="Roxy-lay/categories"
                                     aspectRatio="1:1"
@@ -445,7 +445,7 @@ export default function AdminCategoriesPage() {
                                     <div className="h-px flex-1 bg-brand-border dark:bg-dark-border" />
                                 </div>
                                 <Input
-                                    value={!categoryIcon.startsWith('http') ? categoryIcon : ''}
+                                    value={(!categoryIcon.startsWith('http') && !categoryIcon.startsWith('/')) ? categoryIcon : ''}
                                     onChange={(e) => setCategoryIcon(e.target.value)}
                                     placeholder="Contoh: 💄 👗"
                                     className="text-xl text-center"
