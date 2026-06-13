@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet, Sparkles, RefreshCw, ChevronDown, ChevronUp, Coins } from 'lucide-react'
+import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet, Sparkles, RefreshCw, ChevronDown, ChevronUp, Coins, ImageIcon } from 'lucide-react'
 import CsvImportDialog from '@/components/admin/CsvImportDialog'
 import LinkImportDialog from '@/components/admin/LinkImportDialog'
 import { Button } from '@/components/ui/button'
@@ -50,6 +50,7 @@ interface Category {
 
 export default function AdminProductsPage() {
     const isCancelledRef = useRef(false)
+    const isImageCancelledRef = useRef(false)
     const [products, setProducts] = useState<Product[]>([])
     const [categories, setCategories] = useState<Category[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -264,10 +265,130 @@ export default function AdminProductsPage() {
         }
     }
 
+    // Shopee Image Checker State & Handlers
+    const [imageCheckStatus, setImageCheckStatus] = useState<{
+        status: 'idle' | 'running' | 'completed' | 'cancelled'
+        checked: number
+        total: number
+        deactivated: number
+        logs: string[]
+        startedAt: string | null
+        completedAt: string | null
+    } | null>(null)
+    const [showImageCheckLogs, setShowImageCheckLogs] = useState(false)
+    const [isImageDismissed, setIsImageDismissed] = useState(false)
+
+    const fetchImageCheckStatus = useCallback(async () => {
+        try {
+            const res = await fetch('/api/admin/products/check-images')
+            if (res.ok) {
+                const data = await res.json()
+                setImageCheckStatus(data)
+                if (data.status === 'completed' || data.status === 'cancelled') {
+                    fetchProducts()
+                }
+            }
+        } catch { /* ignore */ }
+    }, [fetchProducts])
+
+    const handleStartImageCheck = async () => {
+        isImageCancelledRef.current = false
+        try {
+            const res = await fetch('/api/admin/products/check-images', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'start' }),
+            })
+            if (res.ok) {
+                const data = await res.json()
+                toast.success('Pengecekan gambar aktif dimulai!')
+                setIsImageDismissed(false)
+                setShowImageCheckLogs(true)
+                setImageCheckStatus(data.status)
+
+                const productsToCheck = data.products || []
+                for (let i = 0; i < productsToCheck.length; i++) {
+                    if (isImageCancelledRef.current) break
+
+                    const product = productsToCheck[i]
+                    try {
+                        const checkRes = await fetch('/api/admin/products/check-images', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'check-single', productId: product.id }),
+                        })
+                        if (checkRes.ok) {
+                            const checkData = await checkRes.json()
+                            setImageCheckStatus(checkData.status)
+                        }
+                    } catch (err) {
+                        console.error('Failed to check single image:', err)
+                    }
+
+                    await new Promise(resolve => setTimeout(resolve, 500))
+                }
+
+                if (isImageCancelledRef.current) {
+                    const cancelRes = await fetch('/api/admin/products/check-images', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'cancel' }),
+                    })
+                    if (cancelRes.ok) {
+                        const cancelData = await cancelRes.json()
+                        setImageCheckStatus(cancelData.status)
+                        toast.error('Verifikasi gambar dibatalkan!')
+                    }
+                } else {
+                    const completeRes = await fetch('/api/admin/products/check-images', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'complete' }),
+                    })
+                    if (completeRes.ok) {
+                        const completeData = await completeRes.json()
+                        setImageCheckStatus(completeData.status)
+                        toast.success('Verifikasi gambar selesai!')
+                    }
+                }
+                fetchProducts()
+            } else {
+                const data = await res.json()
+                toast.error(data.error || 'Gagal memulai pengecekan gambar')
+            }
+        } catch {
+            toast.error('Terjadi kesalahan koneksi')
+        }
+    }
+
+    const handleCancelImageCheck = async () => {
+        isImageCancelledRef.current = true
+        toast.info('Sedang menghentikan pengecekan gambar...')
+        try {
+            const res = await fetch('/api/admin/products/check-images', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'cancel' }),
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setImageCheckStatus(data.status)
+                toast.success('Pengecekan gambar dihentikan.')
+                fetchProducts()
+            } else {
+                const data = await res.json()
+                toast.error(data.error || 'Gagal membatalkan pengecekan gambar')
+            }
+        } catch {
+            toast.error('Terjadi kesalahan koneksi')
+        }
+    }
+
     // Cancel the client checker loop on page unmount to prevent leaked requests
     useEffect(() => {
         return () => {
             isCancelledRef.current = true
+            isImageCancelledRef.current = true
         }
     }, [])
 
@@ -284,6 +405,10 @@ export default function AdminProductsPage() {
     }, [fetchCheckStatus])
 
     useEffect(() => {
+        fetchImageCheckStatus()
+    }, [fetchImageCheckStatus])
+
+    useEffect(() => {
         if (!checkStatus || checkStatus.status !== 'running') return
 
         const interval = setInterval(() => {
@@ -292,6 +417,16 @@ export default function AdminProductsPage() {
 
         return () => clearInterval(interval)
     }, [checkStatus?.status, fetchCheckStatus])
+
+    useEffect(() => {
+        if (!imageCheckStatus || imageCheckStatus.status !== 'running') return
+
+        const interval = setInterval(() => {
+            fetchImageCheckStatus()
+        }, 3000)
+
+        return () => clearInterval(interval)
+    }, [imageCheckStatus?.status, fetchImageCheckStatus])
 
     // Reset page when filters change
     useEffect(() => {
@@ -375,6 +510,127 @@ export default function AdminProductsPage() {
 
     return (
         <div className="space-y-6">
+            {/* Progress Banner Gambar Aktif */}
+            {imageCheckStatus && imageCheckStatus.status !== 'idle' && !isImageDismissed && (
+                <div className={`p-5 rounded-2xl border transition-all duration-300 ${
+                    imageCheckStatus.status === 'running' 
+                        ? 'bg-blue-50/75 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40 backdrop-blur-md'
+                        : imageCheckStatus.status === 'completed'
+                        ? 'bg-emerald-50/75 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40 backdrop-blur-md'
+                        : 'bg-amber-50/75 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/40 backdrop-blur-md'
+                }`}>
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div className="space-y-1 flex-1 w-full">
+                            <div className="flex items-center gap-2">
+                                <span className={`h-2.5 w-2.5 rounded-full ${
+                                    imageCheckStatus.status === 'running' 
+                                        ? 'bg-blue-500 animate-ping'
+                                        : imageCheckStatus.status === 'completed'
+                                        ? 'bg-emerald-500'
+                                        : 'bg-amber-500'
+                                }`} />
+                                <h3 className="font-semibold text-brand-text dark:text-dark-text">
+                                    {imageCheckStatus.status === 'running' 
+                                        ? 'Sedang Memverifikasi Gambar Produk...' 
+                                        : imageCheckStatus.status === 'completed'
+                                        ? 'Verifikasi Gambar Produk Selesai!'
+                                        : 'Verifikasi Gambar Dibatalkan'}
+                                </h3>
+                                {imageCheckStatus.deactivated > 0 && (
+                                    <Badge variant="destructive" className="ml-2 animate-bounce">
+                                        {imageCheckStatus.deactivated} Produk Dinonaktifkan (Gambar Mati)
+                                    </Badge>
+                                )}
+                            </div>
+                            
+                            {imageCheckStatus.status === 'running' ? (
+                                <p className="text-sm text-brand-muted dark:text-dark-muted">
+                                    Memeriksa: <span className="font-medium text-brand-primary">{imageCheckStatus.checked}</span> dari <span className="font-medium">{imageCheckStatus.total}</span> produk ({Math.round((imageCheckStatus.checked / (imageCheckStatus.total || 1)) * 100)}%)
+                                </p>
+                            ) : (
+                                <p className="text-sm text-brand-muted dark:text-dark-muted">
+                                    Pemeriksaan gambar selesai pada {imageCheckStatus.completedAt ? new Date(imageCheckStatus.completedAt).toLocaleTimeString() : ''}. Total {imageCheckStatus.checked} diperiksa, {imageCheckStatus.deactivated} dinonaktifkan karena gambar mati.
+                                </p>
+                            )}
+
+                            {/* Progress Bar */}
+                            {imageCheckStatus.status === 'running' && (
+                                <div className="w-full bg-brand-border dark:bg-dark-border/40 h-2.5 rounded-full overflow-hidden mt-3">
+                                    <div 
+                                        className="bg-brand-primary h-full transition-all duration-500 ease-out"
+                                        style={{ width: `${(imageCheckStatus.checked / (imageCheckStatus.total || 1)) * 100}%` }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setShowImageCheckLogs(!showImageCheckLogs)}
+                                className="border-brand-primary/20 text-brand-primary hover:bg-brand-primary/5 dark:border-brand-primary/30 h-9"
+                            >
+                                {showImageCheckLogs ? (
+                                    <>
+                                        <ChevronUp className="h-4 w-4 mr-2" />
+                                        Sembunyikan Log
+                                    </>
+                                ) : (
+                                    <>
+                                        <ChevronDown className="h-4 w-4 mr-2" />
+                                        Lihat Log
+                                    </>
+                                )}
+                            </Button>
+
+                            {imageCheckStatus.status === 'running' ? (
+                                <Button 
+                                    variant="destructive" 
+                                    size="sm"
+                                    onClick={handleCancelImageCheck}
+                                    className="bg-red-600 hover:bg-red-700 text-white h-9"
+                                >
+                                    Batal
+                                </Button>
+                            ) : (
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => setIsImageDismissed(true)}
+                                    className="h-9"
+                                >
+                                    Tutup
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Console Logs Box */}
+                    {showImageCheckLogs && (
+                        <div className="mt-4 p-4 rounded-xl bg-gray-950 text-gray-200 dark:bg-black/40 border border-gray-800 font-mono text-xs max-h-48 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-gray-800">
+                            {imageCheckStatus.logs.length === 0 ? (
+                                <p className="text-gray-500 italic">Belum ada log...</p>
+                            ) : (
+                                imageCheckStatus.logs.map((log, index) => {
+                                    let textColor = 'text-gray-300'
+                                    if (log.includes('✅')) textColor = 'text-emerald-400 font-medium'
+                                    if (log.includes('⚠️')) textColor = 'text-rose-400 font-medium'
+                                    if (log.includes('❌') || log.includes('Error')) textColor = 'text-red-400 font-semibold'
+                                    if (log.includes('🎉')) textColor = 'text-brand-primary font-bold text-sm'
+                                    
+                                    return (
+                                        <p key={index} className={`${textColor} border-b border-gray-900/40 pb-0.5 last:border-0`}>
+                                            {log}
+                                        </p>
+                                    )
+                                })
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Progress Banner Tautan Shopee */}
             {checkStatus && checkStatus.status !== 'idle' && !isDismissed && (
                 <div className={`p-5 rounded-2xl border transition-all duration-300 ${
@@ -510,11 +766,20 @@ export default function AdminProductsPage() {
                     <Button
                         variant="outline"
                         onClick={handleStartCheck}
-                        disabled={checkStatus?.status === 'running'}
+                        disabled={checkStatus?.status === 'running' || imageCheckStatus?.status === 'running'}
                         className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 h-10 shrink-0"
                     >
                         <RefreshCw className={`h-4 w-4 mr-2 text-brand-primary ${checkStatus?.status === 'running' ? 'animate-spin' : ''}`} />
                         Cek Produk Aktif
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={handleStartImageCheck}
+                        disabled={checkStatus?.status === 'running' || imageCheckStatus?.status === 'running'}
+                        className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 h-10 shrink-0"
+                    >
+                        <ImageIcon className={`h-4 w-4 mr-2 text-brand-primary ${imageCheckStatus?.status === 'running' ? 'animate-spin' : ''}`} />
+                        Cek Gambar Aktif
                     </Button>
                     <Button
                         variant="outline"
