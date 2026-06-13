@@ -65,10 +65,10 @@ export const SubcategorySchema = z.object({
 // Settings
 export const SettingsSchema = z.object({
     tagline: z.string().max(200).optional(),
-    logo_url: z.string().url().optional().or(z.literal('')),
+    logo_url: z.string().max(1000, 'URL logo terlalu panjang').optional().or(z.literal('')),
     hero_title: z.string().max(100).optional(),
     hero_subtitle: z.string().max(200).optional(),
-    hero_image: z.string().url().optional().or(z.literal('')),
+    hero_image: z.string().max(1000, 'URL gambar hero terlalu panjang').optional().or(z.literal('')),
     about_text: z.string().max(5000).optional(),
     wa_number: z.string()
         .regex(/^628\d{8,12}$/, 'Format: 628xxxxxxxxxx (8-12 digit setelah 628)')
@@ -80,9 +80,9 @@ export const SettingsSchema = z.object({
         .or(z.literal('')),
     home_banners: z.array(
         z.union([
-            z.string().url(),
+            z.string().max(1000),
             z.object({
-                url: z.string().url('URL gambar tidak valid'),
+                url: z.string().min(1, 'URL gambar wajib diisi').max(1000, 'URL gambar terlalu panjang'),
                 link: z.string().max(500, 'Link redirection terlalu panjang').optional().nullable().or(z.literal('')),
             })
         ])
