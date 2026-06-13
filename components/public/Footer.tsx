@@ -27,7 +27,7 @@ export function Footer({ settings }: FooterProps) {
                     <div className="space-y-4">
                         <div className="flex items-center gap-2">
                             {settings.logo_url ? (
-                                <Image src={settings.logo_url} alt="Roxy Store" width={120} height={40} className="h-8 w-auto" />
+                                <Image src={settings.logo_url} alt="Roxy Store" width={160} height={48} className="h-10 md:h-12 w-auto object-contain" />
                             ) : (
                                 <>
                                     <Sparkles className="h-5 w-5 text-brand-primary" />

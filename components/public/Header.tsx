@@ -39,7 +39,7 @@ export function Header({ settings }: HeaderProps) {
                     {/* LEFT: Logo */}
                     <Link href="/" className="flex items-center gap-2">
                         {settings.logo_url ? (
-                            <Image src={settings.logo_url} alt="Roxy Store" width={120} height={40} className="h-8 w-auto" />
+                            <Image src={settings.logo_url} alt="Roxy Store" width={180} height={56} className="h-12 md:h-14 w-auto object-contain" />
                         ) : (
                             <>
                                 <Sparkles className="h-5 w-5 text-brand-primary" />
