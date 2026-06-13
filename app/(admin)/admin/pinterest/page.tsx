@@ -161,7 +161,23 @@ export default function PinterestExportPage() {
             const url = window.URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
-            a.download = `pinterest-export-batch-${selectedBatch}.csv`
+            
+            // Construct filename dynamically based on selected category and subcategory
+            const catObj = selectedCategoryId !== 'all' ? categories.find(c => c.id === selectedCategoryId) : null
+            const subcatObj = selectedSubcategoryId !== 'all' ? subcategories.find(s => s.id === selectedSubcategoryId) : null
+
+            const nameParts = ['pinterest-export']
+            if (catObj) {
+                nameParts.push(catObj.name.replace(/[\/\\:*?"<>|]/g, '').trim())
+            }
+            if (subcatObj) {
+                nameParts.push(subcatObj.name.replace(/[\/\\:*?"<>|]/g, '').trim())
+            }
+            nameParts.push(`batch-${selectedBatch}`)
+
+            const filename = `${nameParts.join('-')}.csv`
+            a.download = filename
+            
             document.body.appendChild(a)
             a.click()
             
@@ -169,7 +185,7 @@ export default function PinterestExportPage() {
             window.URL.revokeObjectURL(url)
             document.body.removeChild(a)
             
-            toast.success(`Berhasil mengunduh Pinterest CSV Batch ${selectedBatch}!`)
+            toast.success(`Berhasil mengunduh Pinterest CSV: ${filename}`)
         } catch (error) {
             console.error('Download error:', error)
             toast.error('Terjadi kesalahan saat mengunduh CSV')
