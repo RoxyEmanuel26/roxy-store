@@ -111,14 +111,13 @@ export const getCachedFeaturedProducts = unstable_cache(
 
 export const getCachedNewProducts = unstable_cache(
     async () => {
-        const threeDaysAgo = new Date()
-        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
         const products = await prisma.product.findMany({
             where: {
                 isActive: true,
-                badge: 'NEW',
-                createdAt: { gte: threeDaysAgo }
+                createdAt: { gte: sevenDaysAgo }
             },
             select: {
                 id: true,

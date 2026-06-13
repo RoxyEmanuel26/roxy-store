@@ -6,7 +6,13 @@ import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerCo
 import CategoryCard from './CategoryCard'
 
 interface CategoryCarouselProps {
-    categories: any[]
+    categories: {
+        id: string
+        name: string
+        slug: string
+        icon?: string | null
+        _count?: { products: number }
+    }[]
 }
 
 export default function CategoryCarousel({ categories }: CategoryCarouselProps) {

@@ -15,9 +15,7 @@ interface FooterProps {
 }
 
 export function Footer({ settings }: FooterProps) {
-    // Cast settings any if necessary to get telegram_channel_url and affiliate_disclaimer
-    const s = settings as any
-    const telegramUrl = s.telegram_channel_url || '#'
+    const telegramUrl = settings.telegram_channel_url || '#'
 
     return (
 
@@ -47,8 +45,8 @@ export function Footer({ settings }: FooterProps) {
                         )}
                         {/* Social Icons */}
                         <div className="flex items-center gap-3 pt-2">
-                            {(s.instagram_url) && (
-                                <a href={s.instagram_url} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-brand-primary/10 flex items-center justify-center hover:bg-brand-primary/20 transition-colors">
+                            {(settings.instagram_url) && (
+                                <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-brand-primary/10 flex items-center justify-center hover:bg-brand-primary/20 transition-colors">
                                     <Instagram className="h-4 w-4 text-brand-primary" />
                                 </a>
                             )}

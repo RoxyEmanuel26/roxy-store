@@ -5,7 +5,7 @@
     "start_url": "/",
     "display": "standalone",
     "background_color": "#FFFFFF",
-    "theme_color": "#FF6B9D",
+    "theme_color": "#38BDF8",
     "orientation": "portrait-primary",
     "categories": [
         "shopping",
@@ -55,7 +55,7 @@
     "shortcuts": [
         {
             "name": "Lihat Produk",
-            "url": "/products",
+            "url": "/produk",
             "icons": [
                 {
                     "src": "/icons/icon-96x96.png",

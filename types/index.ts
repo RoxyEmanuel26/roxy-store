@@ -49,7 +49,10 @@ export interface SiteSettingsType {
     about_text: string
     wa_number: string
     telegram_channel_url: string
+    instagram_url?: string
+    affiliate_disclaimer?: string
     home_banners: (string | HomeBannerType)[]
+    [key: string]: any // allow dynamic settings from DB
 }
 
 export interface AnalyticsEvent {

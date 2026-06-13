@@ -9,8 +9,8 @@
  * - If the URL is from other origins → passes through to Vercel's default optimization
  */
 
-// Cloudinary cloud name from environment
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dkfpvxu1h'
+// Cloudinary cloud name from environment — no hardcoded fallback to avoid broken images
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || ''
 
 // Regex to match Cloudinary URLs and extract the path after /upload/
 const CLOUDINARY_REGEX = /^https?:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/(.+)$/
@@ -58,12 +58,11 @@ export default function cloudinaryLoader({ src, width, quality }: ImageLoaderPar
     return src
   }
 
-  // Only transform Cloudinary URLs
-  const match = src.match(CLOUDINARY_REGEX)
+  // Only transform Cloudinary URLs when cloud name is configured
+  const match = CLOUD_NAME ? src.match(CLOUDINARY_REGEX) : null
 
   if (!match) {
-    // Non-Cloudinary URLs: return as-is (Next.js will handle them normally)
-    // This covers unsplash, google avatars, etc.
+    // Non-Cloudinary URLs (or missing cloud name): pass through to Next.js optimization
     return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality || 75}`
   }
 

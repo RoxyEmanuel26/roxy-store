@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -95,10 +96,14 @@ export default function HomeCarousel({ banners }: HomeCarouselProps) {
                 >
                     {normalizedBanners.map((banner, idx) => {
                         const content = (
-                            <img
+                            <Image
                                 src={banner.url}
                                 alt={`Banner Promosi ${idx + 1}`}
-                                className="w-full h-full object-cover select-none pointer-events-none"
+                                fill
+                                className="object-cover select-none pointer-events-none"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
+                                priority={idx === 0}
+                                referrerPolicy="no-referrer"
                             />
                         )
 
