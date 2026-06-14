@@ -48,6 +48,41 @@ export function getProductSchema(product: {
             availability: 'https://schema.org/InStock',
             url: product.shopeeUrl,
             seller: { '@type': 'Organization', name: 'Shopee' },
+            hasMerchantReturnPolicy: {
+                '@type': 'MerchantReturnPolicy',
+                applicableCountry: 'ID',
+                returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+                merchantReturnDays: 7,
+                returnMethod: 'https://schema.org/ReturnByMail',
+                returnFees: 'https://schema.org/FreeReturn'
+            },
+            shippingDetails: {
+                '@type': 'OfferShippingDetails',
+                shippingRate: {
+                    '@type': 'MonetaryAmount',
+                    value: 0,
+                    currency: 'IDR'
+                },
+                shippingDestination: {
+                    '@type': 'DefinedRegion',
+                    addressCountry: 'ID'
+                },
+                deliveryTime: {
+                    '@type': 'ShippingDeliveryTime',
+                    handlingTime: {
+                        '@type': 'QuantitativeValue',
+                        minValue: 0,
+                        maxValue: 2,
+                        unitCode: 'd'
+                    },
+                    transitTime: {
+                        '@type': 'QuantitativeValue',
+                        minValue: 1,
+                        maxValue: 5,
+                        unitCode: 'd'
+                    }
+                }
+            }
         })
     }
 
