@@ -10,7 +10,7 @@ import { StaggerContainer, StaggerItem } from '@/components/animations/StaggerCo
 import HomeCarousel from '@/components/public/HomeCarousel'
 
 import { generatePageMetadata } from '@/lib/metadata'
-import { getOrganizationSchema, getWebsiteSchema } from '@/lib/structured-data'
+import { getOrganizationSchema, getWebsiteSchema, getItemListSchema } from '@/lib/structured-data'
 import { JsonLd } from '@/components/public/JsonLd'
 
 import {
@@ -42,6 +42,9 @@ export default async function HomePage() {
         <>
             <JsonLd data={getOrganizationSchema(settings as any)} />
             <JsonLd data={getWebsiteSchema()} />
+            {featuredProducts.length > 0 && (
+                <JsonLd data={getItemListSchema(featuredProducts as Parameters<typeof getItemListSchema>[0])} />
+            )}
 
             {/* === BANNER HOME CAROUSEL === */}
             {settings.home_banners && settings.home_banners.length > 0 && (

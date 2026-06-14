@@ -5,6 +5,14 @@ import { getSiteSettings } from '@/lib/site-settings'
 import { generatePageMetadata } from '@/lib/metadata'
 import { getFAQPageSchema, getBreadcrumbSchema } from '@/lib/structured-data'
 import { JsonLd } from '@/components/public/JsonLd'
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 
 export const metadata = generatePageMetadata({
     title: 'Tentang Kami',
@@ -24,6 +32,22 @@ export default async function AboutPage() {
     return (
         <>
             <JsonLd data={getFAQPageSchema(aboutFAQs)} />
+            <JsonLd data={getBreadcrumbSchema([
+                { name: 'Beranda', url: '/' },
+                { name: 'Tentang Kami', url: '/tentang' },
+            ])} />
+
+            {/* Breadcrumb Navigation */}
+            <div className="container mx-auto px-4 pt-6">
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem><BreadcrumbLink href="/">Beranda</BreadcrumbLink></BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem><BreadcrumbPage>Tentang Kami</BreadcrumbPage></BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
+            </div>
+
             {/* Hero */}
             <section className="relative py-20 bg-gradient-to-br from-brand-primary/5 via-brand-surface to-brand-secondary/10 dark:from-dark-surface dark:via-dark-bg dark:to-dark-surface">
                 <div className="container mx-auto px-4 text-center">

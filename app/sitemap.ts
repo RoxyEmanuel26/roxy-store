@@ -29,6 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const routes = [
       { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 1.0 },
       { url: `${baseUrl}/produk`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.9 },
+      { url: `${baseUrl}/mix-and-match`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.7 },
       { url: `${baseUrl}/tentang`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
       { url: `${baseUrl}/kontak`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.4 },
       { url: `${baseUrl}/wishlist`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.3 },
