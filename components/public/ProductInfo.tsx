@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { ShoppingCart, TrendingUp } from 'lucide-react'
+import { ShoppingCart, TrendingUp, Star, ShieldCheck } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Separator } from '@/components/ui/separator'
 import { formatRupiah } from '@/lib/utils'
@@ -206,6 +206,18 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                     <div className="flex items-center gap-1.5 text-xs text-brand-muted dark:text-dark-muted">
                         <span className="font-medium">{product.viewCount} dilihat</span>
                     </div>
+
+                    {/* Shopee Rating */}
+                    {product.shopeeRating && product.shopeeRating > 0 && (
+                        <>
+                            <span className="hidden sm:block w-1 h-1 rounded-full bg-brand-muted/40 dark:bg-dark-muted/40" />
+                            <div className="flex items-center gap-1 text-xs">
+                                <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                                <span className="font-semibold text-brand-text dark:text-dark-text">{product.shopeeRating.toFixed(1)}</span>
+                                <span className="text-brand-muted dark:text-dark-muted">di Shopee</span>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Price block */}
@@ -245,7 +257,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                             className="w-full h-14 text-base font-bold bg-[#EE4D2D] hover:bg-[#D63E20] text-white rounded-xl shadow-lg shadow-[#EE4D2D]/30 flex items-center justify-center gap-2 transition-none"
                         >
                             <ShoppingCart className="h-5 w-5" />
-                            Beli di Shopee
+                            Lihat Harga di Shopee
                         </motion.button>
                     )}
                 </div>
@@ -254,10 +266,13 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
                 {/* Purchase Info */}
                 {product.shopeeUrl && (
-                    <div className="p-4 bg-brand-surface dark:bg-dark-surface rounded-xl">
-                        <p className="text-sm text-brand-muted dark:text-dark-muted">
-                            💡 <strong>Info Pembelian:</strong> Klik tombol di atas untuk membeli melalui Shopee. Transaksi dilakukan di platform marketplace tersebut.
-                        </p>
+                    <div className="p-4 bg-brand-surface dark:bg-dark-surface rounded-xl space-y-2">
+                        <div className="flex items-start gap-2">
+                            <ShieldCheck className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-brand-muted dark:text-dark-muted">
+                                <strong>Transaksi Aman:</strong> Klik tombol di atas untuk melihat dan membeli melalui Shopee. Pembayaran & pengiriman sepenuhnya dilindungi oleh Shopee Guarantee.
+                            </p>
+                        </div>
                     </div>
                 )}
             </div>
@@ -285,7 +300,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                                 className="flex-1 h-12 text-sm font-bold bg-[#EE4D2D] active:bg-[#D63E20] text-white rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-[#EE4D2D]/20"
                             >
                                 <ShoppingCart className="h-4 w-4" />
-                                Beli Shopee
+                                Cek Harga Shopee
                             </button>
                         )}
                     </div>

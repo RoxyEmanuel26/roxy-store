@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Search, Heart, Menu, Sparkles } from 'lucide-react'
+import { Search, Heart, Menu, Sparkles, BellRing, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import dynamic from 'next/dynamic'
@@ -29,12 +29,39 @@ export function Header({ settings }: HeaderProps) {
     const [searchOpen, setSearchOpen] = useState(false)
     const { wishlistCount, mounted } = useWishlist()
 
+    const [showBanner, setShowBanner] = useState(true)
+
     // Close mobile drawer on route change
     useEffect(() => { setMobileOpen(false) }, [pathname])
 
     return (
         <>
-            <header className="sticky top-0 z-50 w-full bg-white/90 dark:bg-dark-surface/90 backdrop-blur-md border-b border-brand-border dark:border-dark-border shadow-sm">
+            {/* Telegram Promo Banner (Phase 3.3) */}
+            {settings.telegram_channel_url && showBanner && (
+                <div className="bg-[#0088cc] text-white py-2 px-4 text-xs sm:text-sm font-medium flex items-center justify-between z-50 relative">
+                    <div className="flex items-center gap-2 justify-center flex-1">
+                        <BellRing className="h-4 w-4 animate-bounce" />
+                        <span>Dapatkan info diskon & Flash Sale Shopee setiap hari!</span>
+                        <a 
+                            href={settings.telegram_channel_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="underline font-bold hover:text-white/80 transition-colors hidden sm:inline"
+                        >
+                            Gabung Channel Telegram
+                        </a>
+                    </div>
+                    <button 
+                        onClick={() => setShowBanner(false)}
+                        className="text-white/80 hover:text-white"
+                        aria-label="Tutup banner"
+                    >
+                        <X className="h-4 w-4" />
+                    </button>
+                </div>
+            )}
+
+            <header className="sticky top-0 z-40 w-full bg-white/90 dark:bg-dark-surface/90 backdrop-blur-md border-b border-brand-border dark:border-dark-border shadow-sm">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     {/* LEFT: Logo */}
                     <Link href="/" className="flex items-center gap-2">

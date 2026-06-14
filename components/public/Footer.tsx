@@ -70,7 +70,10 @@ export function Footer({ settings }: FooterProps) {
                             {[
                                 { label: 'Beranda', href: '/' },
                                 { label: 'Semua Produk', href: '/produk' },
+                                { label: 'Mix & Match', href: '/mix-and-match' },
+                                { label: 'Wishlist', href: '/wishlist' },
                                 { label: 'Tentang Kami', href: '/tentang' },
+                                { label: 'Hubungi Kami', href: '/kontak' },
                             ].map((link) => (
                                 <li key={link.href}>
                                     <Link href={link.href} className="text-sm text-brand-muted dark:text-dark-muted hover:text-brand-primary transition-colors">

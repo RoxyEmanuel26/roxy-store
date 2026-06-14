@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { TrendingUp } from 'lucide-react'
+import { TrendingUp, Star } from 'lucide-react'
 import { formatRupiah } from '@/lib/utils'
 import { WishlistButton } from './WishlistButton'
 import { Button } from '@/components/ui/button'
@@ -110,6 +110,14 @@ export default function ProductCard({ product, priority = false }: ProductCardPr
                             </span>
                         )}
                     </div>
+
+                    {/* Shopee Rating */}
+                    {product.shopeeRating && product.shopeeRating > 0 && (
+                        <div className="flex items-center gap-1 mt-1 text-[11px] text-brand-muted dark:text-dark-muted">
+                            <Star className="h-3 w-3 text-amber-400 fill-amber-400 flex-shrink-0" />
+                            <span className="font-medium">{product.shopeeRating.toFixed(1)}</span>
+                        </div>
+                    )}
 
                     {/* Spacer — pushes button to bottom */}
                     <div className="flex-1" />

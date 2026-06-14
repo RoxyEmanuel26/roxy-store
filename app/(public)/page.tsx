@@ -24,7 +24,7 @@ export const revalidate = 600 // 10 menit — hemat Vercel Origin Transfer (admi
 
 export const metadata = generatePageMetadata({
     title: 'Beranda',
-    description: 'Selamat datang di Roxy Store! Temukan koleksi aksesori wanita colorful: gantungan kunci lucu, beads bracelet, beads HP, kalung, dan anting. Tersedia di Shopee.',
+    description: 'Roxy Store — Rekomendasi produk terlaris & terpercaya di Shopee 2026. Temukan produk skincare, fashion, elektronik, rumah tangga, dan lainnya yang sudah dikurasi berdasarkan rating & ulasan terbaik.',
     path: '/',
 })
 
@@ -62,7 +62,7 @@ export default async function HomePage() {
                         <div className="flex justify-between items-end mb-6">
                             <div>
                                 <h2 className="text-2xl md:text-3xl font-bold text-brand-text dark:text-dark-text">Baru Masuk 🆕</h2>
-                                <p className="text-sm md:text-base text-brand-muted dark:text-dark-muted mt-1">🆕 Baru Ditambahkan & dikurasi</p>
+                                <p className="text-sm md:text-base text-brand-muted dark:text-dark-muted mt-1">Produk terbaru yang baru saja dikurasi untuk kamu</p>
                             </div>
                             <Link href="/produk?sort=newest">
                                 <Button variant="outline" className="border-brand-primary text-brand-primary hidden sm:flex transition-none">
@@ -103,8 +103,8 @@ export default async function HomePage() {
                     <FadeIn>
                         <div className="flex justify-between items-end mb-10">
                             <div>
-                                <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text">Produk Pilihan</h2>
-                                <p className="text-brand-muted dark:text-dark-muted mt-1">🔥 Produk Pilihan Terlaris Shopee</p>
+                                <h2 className="text-3xl font-bold text-brand-text dark:text-dark-text">Produk Pilihan ⭐</h2>
+                                <p className="text-brand-muted dark:text-dark-muted mt-1">Dikurasi berdasarkan rating tertinggi & paling banyak terjual di Shopee</p>
                             </div>
                             <Link href="/produk">
                                 <Button variant="outline" className="border-brand-primary text-brand-primary hidden sm:flex transition-none">
@@ -138,7 +138,46 @@ export default async function HomePage() {
             {/* === SECTION 6: RECENTLY VIEWED === */}
             <RecentlyViewed />
 
-            {/* === SECTION 2: STATS (Moved to bottom) === */}
+            {/* === SECTION 7: VALUE PROPOSITION BANNER === */}
+            <section className="py-12 bg-gradient-to-br from-brand-primary/5 via-brand-surface to-brand-secondary/10 dark:from-dark-surface dark:via-dark-bg dark:to-dark-surface">
+                <div className="container mx-auto px-4">
+                    <FadeIn>
+                        <div className="text-center max-w-2xl mx-auto mb-8">
+                            <h2 className="text-2xl md:text-3xl font-bold text-brand-text dark:text-dark-text">
+                                Kenapa Belanja Lewat Roxy Store? 🤔
+                            </h2>
+                            <p className="text-brand-muted dark:text-dark-muted mt-2">
+                                Hemat waktu riset, langsung dapat produk terbaik
+                            </p>
+                        </div>
+                    </FadeIn>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <FadeIn delay={0}>
+                            <div className="text-center p-6 bg-white dark:bg-dark-surface rounded-2xl shadow-sm border border-brand-border/30 dark:border-dark-border">
+                                <span className="text-4xl mb-3 block">🔍</span>
+                                <h3 className="font-bold text-brand-text dark:text-dark-text mb-2">Sudah Dikurasi</h3>
+                                <p className="text-sm text-brand-muted dark:text-dark-muted">Setiap produk diseleksi berdasarkan rating ≥4.0, ulasan asli, dan jumlah terjual di Shopee</p>
+                            </div>
+                        </FadeIn>
+                        <FadeIn delay={0.1}>
+                            <div className="text-center p-6 bg-white dark:bg-dark-surface rounded-2xl shadow-sm border border-brand-border/30 dark:border-dark-border">
+                                <span className="text-4xl mb-3 block">💰</span>
+                                <h3 className="font-bold text-brand-text dark:text-dark-text mb-2">Harga Sama dengan Shopee</h3>
+                                <p className="text-sm text-brand-muted dark:text-dark-muted">Kami hanya merekomendasikan, bukan menjual. Harga & promo sama persis dengan Shopee</p>
+                            </div>
+                        </FadeIn>
+                        <FadeIn delay={0.2}>
+                            <div className="text-center p-6 bg-white dark:bg-dark-surface rounded-2xl shadow-sm border border-brand-border/30 dark:border-dark-border">
+                                <span className="text-4xl mb-3 block">⚡</span>
+                                <h3 className="font-bold text-brand-text dark:text-dark-text mb-2">Hemat Waktu Riset</h3>
+                                <p className="text-sm text-brand-muted dark:text-dark-muted">Nggak perlu scroll Shopee berjam-jam. Cukup buka Roxy Store dan temukan yang terbaik</p>
+                            </div>
+                        </FadeIn>
+                    </div>
+                </div>
+            </section>
+
+            {/* === SECTION 2: STATS === */}
             <section className="py-8 bg-brand-primary dark:bg-dark-surface">
                 <div className="container mx-auto px-4">
                     <h2 className="sr-only">Statistik Roxy Store</h2>
@@ -146,19 +185,19 @@ export default async function HomePage() {
                         <FadeIn delay={0}>
                             <div>
                                 <p className="text-2xl font-bold">{totalProducts}+</p>
-                                <p className="text-sm opacity-80">Produk Tersedia</p>
+                                <p className="text-sm opacity-80">Produk Terkurasi</p>
                             </div>
                         </FadeIn>
                         <FadeIn delay={0.1}>
                             <div>
                                 <p className="text-2xl font-bold">{categories.length}+</p>
-                                <p className="text-sm opacity-80">Kategori</p>
+                                <p className="text-sm opacity-80">Kategori Lengkap</p>
                             </div>
                         </FadeIn>
                         <FadeIn delay={0.2}>
                             <div>
-                                <p className="text-2xl font-bold">100%</p>
-                                <p className="text-sm opacity-80">Terpercaya</p>
+                                <p className="text-2xl font-bold">⭐ 4.0+</p>
+                                <p className="text-sm opacity-80">Rating Minimum</p>
                             </div>
                         </FadeIn>
                     </div>
