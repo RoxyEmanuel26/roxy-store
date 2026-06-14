@@ -1,11 +1,11 @@
 import { MetadataRoute } from 'next'
 import { prisma } from '@/lib/prisma'
+import { BASE_URL } from '@/lib/metadata'
 
 export const dynamic = 'force-dynamic'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const envUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'https://www.roxystore.web.id'
-  const baseUrl = envUrl.startsWith('http') ? envUrl : `https://${envUrl}`
+  const baseUrl = BASE_URL
 
   try {
     // 1. Ambil semua kategori aktif
