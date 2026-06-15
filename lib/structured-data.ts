@@ -91,7 +91,7 @@ export function getProductSchema(product: {
     const schema: Record<string, unknown> = {
         '@context': 'https://schema.org',
         '@type': 'Product',
-        name: product.title,
+        name: product.title.length > 150 ? `${product.title.slice(0, 147)}...` : product.title,
         description: product.description?.slice(0, 500),
         image: allImages,
         url: `${BASE_URL}/produk/${product.slug}`,
