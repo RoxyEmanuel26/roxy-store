@@ -241,13 +241,6 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
                 <Separator />
 
-                {/* Description */}
-                <div className="text-brand-muted dark:text-dark-muted leading-relaxed whitespace-pre-wrap text-sm">
-                    {product.description}
-                </div>
-
-                <Separator />
-
                 <div className="hidden lg:block space-y-3">
                     {product.shopeeUrl && (
                         <motion.button
@@ -262,8 +255,6 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                     )}
                 </div>
 
-
-
                 {/* Purchase Info */}
                 {product.shopeeUrl && (
                     <div className="p-4 bg-brand-surface dark:bg-dark-surface rounded-xl space-y-2">
@@ -275,6 +266,13 @@ export default function ProductInfo({ product }: ProductInfoProps) {
                         </div>
                     </div>
                 )}
+
+                <Separator />
+
+                {/* Description */}
+                <div className="text-brand-muted dark:text-dark-muted leading-relaxed whitespace-pre-wrap text-sm">
+                    {product.description}
+                </div>
             </div>
 
             {/* ===== STICKY MOBILE CTA — above the fold di bottom ===== */}

@@ -16,6 +16,8 @@ export interface ProductType {
     shopeeSoldStr?: string | null
     categoryId: string
     category: CategoryType
+    subcategoryId?: string | null
+    subcategory?: SubcategoryType | null
     badge: BadgeType
     isActive: boolean
     viewCount: number
@@ -31,6 +33,16 @@ export interface CategoryType {
     description?: string | null
     icon?: string | null
     _count?: { products: number }
+    createdAt: Date
+    updatedAt: Date
+}
+
+export interface SubcategoryType {
+    id: string
+    name: string
+    slug: string
+    description?: string | null
+    categoryId: string
     createdAt: Date
     updatedAt: Date
 }

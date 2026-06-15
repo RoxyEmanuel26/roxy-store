@@ -30,6 +30,8 @@ export const getCachedProductBySlug = (slug: string) => unstable_cache(
                 shopeeClicks: true,
                 categoryId: true,
                 category: { select: { id: true, name: true, slug: true } },
+                subcategoryId: true,
+                subcategory: { select: { id: true, name: true, slug: true } },
             },
         })
         if (!product) return null

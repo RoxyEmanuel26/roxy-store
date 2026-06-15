@@ -70,6 +70,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 { name: 'Beranda', url: '/' },
                 { name: 'Produk', url: '/produk' },
                 { name: product.category.name, url: `/kategori/${product.category.slug}` },
+                ...(product.subcategory ? [{ name: product.subcategory.name, url: `/produk?kategori=${product.category.slug}&subkategori=${product.subcategory.slug}` }] : []),
                 { name: product.title, url: `/produk/${product.slug}` }
             ])} />
 
@@ -97,6 +98,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
                             {product.category.name}
                         </BreadcrumbLink>
                     </BreadcrumbItem>
+                    {product.subcategory && (
+                        <>
+                            <BreadcrumbSeparator />
+                            <BreadcrumbItem>
+                                <BreadcrumbLink href={`/produk?kategori=${product.category.slug}&subkategori=${product.subcategory.slug}`}>
+                                    {product.subcategory.name}
+                                </BreadcrumbLink>
+                            </BreadcrumbItem>
+                        </>
+                    )}
                     <BreadcrumbSeparator />
                     <BreadcrumbItem>
                         <BreadcrumbPage className="line-clamp-1 max-w-[150px] md:max-w-none">
