@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet, Sparkles, RefreshCw, ChevronDown, ChevronUp, Coins, ImageIcon } from 'lucide-react'
+import { Plus, Search, X, Pencil, Trash2, Loader2, FileSpreadsheet, Sparkles, RefreshCw, ChevronDown, ChevronUp, Coins, ImageIcon, Database, AlignLeft, Settings } from 'lucide-react'
 import CsvImportDialog from '@/components/admin/CsvImportDialog'
 import LinkImportDialog from '@/components/admin/LinkImportDialog'
 import { Button } from '@/components/ui/button'
@@ -17,6 +17,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -51,6 +59,7 @@ interface Category {
 export default function AdminProductsPage() {
     const isCancelledRef = useRef(false)
     const isImageCancelledRef = useRef(false)
+    const isSyncBatchCancelledRef = useRef(false)
     const [products, setProducts] = useState<Product[]>([])
     const [categories, setCategories] = useState<Category[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -84,6 +93,20 @@ export default function AdminProductsPage() {
     } | null>(null)
     const [showCheckLogs, setShowCheckLogs] = useState(false)
     const [isDismissed, setIsDismissed] = useState(false)
+
+    // Shopee Sync Batch State & Handlers
+    const [syncBatchStatus, setSyncBatchStatus] = useState<{
+        status: 'idle' | 'running' | 'completed' | 'cancelled'
+        syncType: 'data' | 'image' | 'description' | null
+        checked: number
+        total: number
+        updated: number
+        logs: string[]
+        startedAt: string | null
+        completedAt: string | null
+    } | null>(null)
+    const [showSyncBatchLogs, setShowSyncBatchLogs] = useState(false)
+    const [isSyncBatchDismissed, setIsSyncBatchDismissed] = useState(false)
 
     // Sync state
     const [syncingState, setSyncingState] = useState<Record<string, 'price' | 'content' | null>>({})
@@ -384,11 +407,123 @@ export default function AdminProductsPage() {
         }
     }
 
+    const fetchSyncBatchStatus = useCallback(async () => {
+        try {
+            const res = await fetch('/api/admin/products/sync-batch')
+            if (res.ok) {
+                const data = await res.json()
+                setSyncBatchStatus(data)
+                if (data.status === 'completed' || data.status === 'cancelled') {
+                    fetchProducts()
+                }
+            }
+        } catch { /* ignore */ }
+    }, [fetchProducts])
+
+    const handleStartSyncBatch = async (syncType: 'data' | 'image' | 'description') => {
+        isSyncBatchCancelledRef.current = false
+        try {
+            const res = await fetch('/api/admin/products/sync-batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'start', syncType }),
+            })
+            if (res.ok) {
+                const data = await res.json()
+                let typeLabel = 'Data (Kategori/Harga)'
+                if (syncType === 'image') typeLabel = 'Gambar'
+                if (syncType === 'description') typeLabel = 'Deskripsi'
+                
+                toast.success(`Sinkronisasi Massal ${typeLabel} dimulai!`)
+                setIsSyncBatchDismissed(false)
+                setShowSyncBatchLogs(true)
+                setSyncBatchStatus(data.status)
+
+                const productsToSync = data.products || []
+                for (let i = 0; i < productsToSync.length; i++) {
+                    if (isSyncBatchCancelledRef.current) break
+
+                    const product = productsToSync[i]
+                    try {
+                        const checkRes = await fetch('/api/admin/products/sync-batch', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'sync-single', productId: product.id, syncType }),
+                        })
+                        if (checkRes.ok) {
+                            const checkData = await checkRes.json()
+                            setSyncBatchStatus(checkData.status)
+                        }
+                    } catch (err) {
+                        console.error('Failed to sync single product:', err)
+                    }
+
+                    // Throttled delay between checks
+                    await new Promise(resolve => setTimeout(resolve, 1500))
+                }
+
+                if (isSyncBatchCancelledRef.current) {
+                    const cancelRes = await fetch('/api/admin/products/sync-batch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'cancel' }),
+                    })
+                    if (cancelRes.ok) {
+                        const cancelData = await cancelRes.json()
+                        setSyncBatchStatus(cancelData.status)
+                        toast.error(`Sinkronisasi Massal ${typeLabel} dibatalkan!`)
+                    }
+                } else {
+                    const completeRes = await fetch('/api/admin/products/sync-batch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'complete' }),
+                    })
+                    if (completeRes.ok) {
+                        const completeData = await completeRes.json()
+                        setSyncBatchStatus(completeData.status)
+                        toast.success(`Sinkronisasi Massal ${typeLabel} selesai!`)
+                    }
+                }
+                fetchProducts()
+            } else {
+                const data = await res.json()
+                toast.error(data.error || 'Gagal memulai sinkronisasi massal')
+            }
+        } catch {
+            toast.error('Terjadi kesalahan koneksi')
+        }
+    }
+
+    const handleCancelSyncBatch = async () => {
+        isSyncBatchCancelledRef.current = true
+        toast.info('Sedang menghentikan sinkronisasi...')
+        try {
+            const res = await fetch('/api/admin/products/sync-batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'cancel' }),
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setSyncBatchStatus(data.status)
+                toast.success('Sinkronisasi dihentikan.')
+                fetchProducts()
+            } else {
+                const data = await res.json()
+                toast.error(data.error || 'Gagal membatalkan sinkronisasi')
+            }
+        } catch {
+            toast.error('Terjadi kesalahan koneksi')
+        }
+    }
+
     // Cancel the client checker loop on page unmount to prevent leaked requests
     useEffect(() => {
         return () => {
             isCancelledRef.current = true
             isImageCancelledRef.current = true
+            isSyncBatchCancelledRef.current = true
         }
     }, [])
 
@@ -409,6 +544,10 @@ export default function AdminProductsPage() {
     }, [fetchImageCheckStatus])
 
     useEffect(() => {
+        fetchSyncBatchStatus()
+    }, [fetchSyncBatchStatus])
+
+    useEffect(() => {
         if (!checkStatus || checkStatus.status !== 'running') return
 
         const interval = setInterval(() => {
@@ -427,6 +566,16 @@ export default function AdminProductsPage() {
 
         return () => clearInterval(interval)
     }, [imageCheckStatus?.status, fetchImageCheckStatus])
+
+    useEffect(() => {
+        if (!syncBatchStatus || syncBatchStatus.status !== 'running') return
+
+        const interval = setInterval(() => {
+            fetchSyncBatchStatus()
+        }, 3000)
+
+        return () => clearInterval(interval)
+    }, [syncBatchStatus?.status, fetchSyncBatchStatus])
 
     // Reset page when filters change
     useEffect(() => {
@@ -510,6 +659,127 @@ export default function AdminProductsPage() {
 
     return (
         <div className="space-y-6">
+            {/* Progress Banner Sync Massal */}
+            {syncBatchStatus && syncBatchStatus.status !== 'idle' && !isSyncBatchDismissed && (
+                <div className={`p-5 rounded-2xl border transition-all duration-300 ${
+                    syncBatchStatus.status === 'running' 
+                        ? 'bg-blue-50/75 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/40 backdrop-blur-md'
+                        : syncBatchStatus.status === 'completed'
+                        ? 'bg-emerald-50/75 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40 backdrop-blur-md'
+                        : 'bg-amber-50/75 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/40 backdrop-blur-md'
+                }`}>
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div className="space-y-1 flex-1 w-full">
+                            <div className="flex items-center gap-2">
+                                <span className={`h-2.5 w-2.5 rounded-full ${
+                                    syncBatchStatus.status === 'running' 
+                                        ? 'bg-blue-500 animate-ping'
+                                        : syncBatchStatus.status === 'completed'
+                                        ? 'bg-emerald-500'
+                                        : 'bg-amber-500'
+                                }`} />
+                                <h3 className="font-semibold text-brand-text dark:text-dark-text">
+                                    {syncBatchStatus.status === 'running' 
+                                        ? `Sedang Sinkronisasi Massal ${syncBatchStatus.syncType === 'image' ? 'Gambar' : syncBatchStatus.syncType === 'description' ? 'Deskripsi' : 'Data (Kategori/Harga)'}...` 
+                                        : syncBatchStatus.status === 'completed'
+                                        ? 'Sinkronisasi Massal Selesai!'
+                                        : 'Sinkronisasi Massal Dibatalkan'}
+                                </h3>
+                                {syncBatchStatus.updated > 0 && (
+                                    <Badge variant="default" className="ml-2 bg-brand-primary text-white">
+                                        {syncBatchStatus.updated} Produk Diperbarui
+                                    </Badge>
+                                )}
+                            </div>
+                            
+                            {syncBatchStatus.status === 'running' ? (
+                                <p className="text-sm text-brand-muted dark:text-dark-muted">
+                                    Memproses: <span className="font-medium text-brand-primary">{syncBatchStatus.checked}</span> dari <span className="font-medium">{syncBatchStatus.total}</span> produk ({Math.round((syncBatchStatus.checked / (syncBatchStatus.total || 1)) * 100)}%)
+                                </p>
+                            ) : (
+                                <p className="text-sm text-brand-muted dark:text-dark-muted">
+                                    Proses selesai pada {syncBatchStatus.completedAt ? new Date(syncBatchStatus.completedAt).toLocaleTimeString() : ''}. Total {syncBatchStatus.checked} diperiksa, {syncBatchStatus.updated} berhasil diperbarui.
+                                </p>
+                            )}
+
+                            {/* Progress Bar */}
+                            {syncBatchStatus.status === 'running' && (
+                                <div className="w-full bg-brand-border dark:bg-dark-border/40 h-2.5 rounded-full overflow-hidden mt-3">
+                                    <div 
+                                        className="bg-brand-primary h-full transition-all duration-500 ease-out"
+                                        style={{ width: `${(syncBatchStatus.checked / (syncBatchStatus.total || 1)) * 100}%` }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setShowSyncBatchLogs(!showSyncBatchLogs)}
+                                className="border-brand-primary/20 text-brand-primary hover:bg-brand-primary/5 dark:border-brand-primary/30 h-9"
+                            >
+                                {showSyncBatchLogs ? (
+                                    <>
+                                        <ChevronUp className="h-4 w-4 mr-2" />
+                                        Sembunyikan Log
+                                    </>
+                                ) : (
+                                    <>
+                                        <ChevronDown className="h-4 w-4 mr-2" />
+                                        Lihat Log
+                                    </>
+                                )}
+                            </Button>
+
+                            {syncBatchStatus.status === 'running' ? (
+                                <Button 
+                                    variant="destructive" 
+                                    size="sm"
+                                    onClick={handleCancelSyncBatch}
+                                    className="bg-red-600 hover:bg-red-700 text-white h-9"
+                                >
+                                    Batal
+                                </Button>
+                            ) : (
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => setIsSyncBatchDismissed(true)}
+                                    className="h-9"
+                                >
+                                    Tutup
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Console Logs Box */}
+                    {showSyncBatchLogs && (
+                        <div className="mt-4 p-4 rounded-xl bg-gray-950 text-gray-200 dark:bg-black/40 border border-gray-800 font-mono text-xs max-h-48 overflow-y-auto space-y-1.5 scrollbar-thin scrollbar-thumb-gray-800">
+                            {syncBatchStatus.logs.length === 0 ? (
+                                <p className="text-gray-500 italic">Belum ada log...</p>
+                            ) : (
+                                syncBatchStatus.logs.map((log, index) => {
+                                    let textColor = 'text-gray-300'
+                                    if (log.includes('✅')) textColor = 'text-emerald-400 font-medium'
+                                    if (log.includes('⚠️')) textColor = 'text-amber-400 font-medium'
+                                    if (log.includes('❌') || log.includes('Error')) textColor = 'text-red-400 font-semibold animate-pulse'
+                                    if (log.includes('🎉')) textColor = 'text-brand-primary font-bold text-sm'
+                                    
+                                    return (
+                                        <p key={index} className={`${textColor} border-b border-gray-900/40 pb-0.5 last:border-0`}>
+                                            {log}
+                                        </p>
+                                    )
+                                })
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Progress Banner Gambar Aktif */}
             {imageCheckStatus && imageCheckStatus.status !== 'idle' && !isImageDismissed && (
                 <div className={`p-5 rounded-2xl border transition-all duration-300 ${
@@ -763,24 +1033,44 @@ export default function AdminProductsPage() {
                     </Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                        variant="outline"
-                        onClick={handleStartCheck}
-                        disabled={checkStatus?.status === 'running' || imageCheckStatus?.status === 'running'}
-                        className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 h-10 shrink-0"
-                    >
-                        <RefreshCw className={`h-4 w-4 mr-2 text-brand-primary ${checkStatus?.status === 'running' ? 'animate-spin' : ''}`} />
-                        Cek Produk Aktif
-                    </Button>
-                    <Button
-                        variant="outline"
-                        onClick={handleStartImageCheck}
-                        disabled={checkStatus?.status === 'running' || imageCheckStatus?.status === 'running'}
-                        className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 h-10 shrink-0"
-                    >
-                        <ImageIcon className={`h-4 w-4 mr-2 text-brand-primary ${imageCheckStatus?.status === 'running' ? 'animate-spin' : ''}`} />
-                        Cek Gambar Aktif
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="outline"
+                                disabled={checkStatus?.status === 'running' || imageCheckStatus?.status === 'running' || syncBatchStatus?.status === 'running'}
+                                className="border-brand-primary/30 text-brand-primary hover:bg-brand-primary/10 h-10 shrink-0"
+                            >
+                                <Settings className={`h-4 w-4 mr-2 text-brand-primary ${checkStatus?.status === 'running' || imageCheckStatus?.status === 'running' || syncBatchStatus?.status === 'running' ? 'animate-spin' : ''}`} />
+                                Aksi Massal
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel>Pengecekan Tautan</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={handleStartCheck} className="cursor-pointer">
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Cek Tautan Mati
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleStartImageCheck} className="cursor-pointer">
+                                <ImageIcon className="h-4 w-4 mr-2" />
+                                Cek Gambar Mati
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Sinkronisasi Shopee</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleStartSyncBatch('data')} className="cursor-pointer">
+                                <Database className="h-4 w-4 mr-2" />
+                                Sync Data Semua Produk
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStartSyncBatch('image')} className="cursor-pointer">
+                                <ImageIcon className="h-4 w-4 mr-2" />
+                                Sync Gambar Semua Produk
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStartSyncBatch('description')} className="cursor-pointer">
+                                <AlignLeft className="h-4 w-4 mr-2" />
+                                Sync Deskripsi Semua Produk
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <Button
                         variant="outline"
                         onClick={() => setCsvDialogOpen(true)}
